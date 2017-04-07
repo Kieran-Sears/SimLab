@@ -1,10 +1,8 @@
-﻿using UnityEngine;
-using System.Xml.Serialization;
-using System.IO;
-using System.Collections.Generic;
+﻿using System.Xml.Serialization;
+
 
 [XmlRoot("frame")]
-public class Vital : MonoBehaviour {
+public class Vital {
     [XmlAttribute("name")]
     public string name;
 

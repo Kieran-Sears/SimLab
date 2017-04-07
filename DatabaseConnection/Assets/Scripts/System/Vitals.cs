@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 
 [XmlRoot("Vitals")]
-public class Vitals : MonoBehaviour {
+public class Vitals {
     [XmlArray("VitalsTimeFrame")]
     [XmlArrayItem("Vital")]
     public List<Vital> vitalsTimeFrame = new List<Vital>();
