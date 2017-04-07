@@ -1,0 +1,69 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Networking;
+
+
+
+[Serializable]
+public class VitalsData {
+    public List<VitalsDatum> data;
+}
+
+
+public class NetworkManager : MonoBehaviour {
+
+
+    public static NetworkManager instance { get; private set; }
+
+    private void Awake() {
+        if (instance) {
+            DestroyImmediate(this);
+        } else {
+            instance = this;
+        }
+    }
+
+    public void Upload(VitalsDatum data) {
+
+        WWWForm form = new WWWForm();
+        form.AddField("BreathingRate", data.BreathingRate);
+        form.AddField("HeartRate", data.HeartRate);
+        form.AddField("BloodPressure", data.SystolicBloodPressure);
+        form.AddField("OxygenSaturations", data.OxygenSaturations);
+        form.AddField("CapillaryRefill", data.CapillaryRefill);
+        form.AddField("Temperature", data.Temperature);
+     
+
+        UnityWebRequest www = UnityWebRequest.Post("http://localhost:8084/VisualAnalytics/VisualAnalyticsServlet", form);
+        www.Send();
+
+        if (www.isError) {
+            Debug.Log(www.error);
+        } else {
+            Debug.Log("Form upload complete!");
+        }
+    }
+
+    public VitalsData Download() {
+        WWW www = new WWW("http://localhost:8084/VisualAnalytics/VisualAnalyticsServlet");
+        StartCoroutine(WaitForRequest(www));
+        while (!www.isDone) { }
+        VitalsData vitalsData = JsonUtility.FromJson<VitalsData>(www.text);      
+        Debug.Log(vitalsData.data.Count + " rows found");
+        return vitalsData;
+    }
+
+    IEnumerator WaitForRequest(WWW www) {
+        yield return www;
+
+        // check for errors
+        if (www.error == null) {
+            Debug.Log("WWW Ok!: " + www.text);
+        } else {
+            Debug.Log("WWW Error: " + www.error);
+        }
+    }
+
+}
