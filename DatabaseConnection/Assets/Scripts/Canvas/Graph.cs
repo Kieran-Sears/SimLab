@@ -19,13 +19,16 @@ public class Graph : MonoBehaviour {
 
     private GameObject[] points;
     private GameObject[,] gridLines;
-    private Vector2 size;
+    //private Vector2 size;
     private int xScale;
     private int yScale;
 
-    public void Start() {
-        size = grid.GetComponent<RectTransform>().rect.size;
-    }
+    Vector3 bottomLeft;
+    Vector3 bottomRight;
+    Vector3 topLeft;
+    Vector3 topRight;
+
+
 
     public void GenerateGrid(int xStart, int xEnd, int yStart, int yEnd) {
         xScale = xEnd - xStart;
@@ -36,8 +39,6 @@ public class Graph : MonoBehaviour {
     }
 
     public void LayoutXScale() {
-
-
         for (int i = 1; i <= xScale; i++) {
             GameObject dashMarker = Instantiate(xDashMarkerPrefab);
             dashMarker.transform.SetParent(xAxis.transform);
@@ -50,7 +51,6 @@ public class Graph : MonoBehaviour {
     }
 
     public void LayoutYScale() {
-
         for (int i = 1; i <= yScale; i++) {
             GameObject dashMarker = Instantiate(yDashMarkerPrefab);
             dashMarker.transform.SetParent(yAxis.transform);
@@ -65,15 +65,11 @@ public class Graph : MonoBehaviour {
     }
 
     public void DrawGrid() {
-
-
         Vector2 size = new Vector2(graph.GetComponent<RectTransform>().rect.width, graph.GetComponent<RectTransform>().rect.height);
         GameObject dashMarker;
         LineRenderer lineRenderer;
 
-
         for (int i = 0; i <= xScale; i++) {
-
             dashMarker = Instantiate(lineRendererPrefab);
             dashMarker.transform.SetParent(grid.transform);
             dashMarker.transform.localScale = Vector3.one;
@@ -85,7 +81,6 @@ public class Graph : MonoBehaviour {
             lineRenderer.endWidth = 0.01f;
             lineRenderer.SetPosition(0, new Vector3((((size.x / xScale) * i) - (size.x / 2)), (-size.y / 2), 0));
             lineRenderer.SetPosition(1, new Vector3((((size.x / xScale) * i) - (size.x / 2)), (size.y / 2), 0));
-
 
             for (int n = 0; n <= yScale; n++) {
                 dashMarker = Instantiate(lineRendererPrefab);
@@ -99,45 +94,38 @@ public class Graph : MonoBehaviour {
                 lineRenderer.endWidth = 0.01f;
                 lineRenderer.SetPosition(0, new Vector3((-size.x / 2), (((size.y / yScale) * n) - (size.y / 2)), 0));
                 lineRenderer.SetPosition(1, new Vector3((size.x / 2), (((size.y / yScale) * n) - (size.y / 2)), 0));
-
             }
-
         }
     }
 
-    public void Update() {
-        if (Input.GetMouseButton(0)) {
-            Vector3 screenPoint = Input.mousePosition;
+    public void LateUpdate() {
+        if (Input.GetKeyUp(KeyCode.Mouse0)) {
             AddPoint();
         }
     }
 
     public void AddPoint() {
-        Debug.Log( "Graph " + graph.transform.position);
         Vector3 screenPoint = Input.mousePosition;
-        Debug.Log("screenPoint " + screenPoint);
+        Vector3 worldPoint = Camera.main.ScreenToWorldPoint(screenPoint);
         if (
-            (screenPoint.x > graph.transform.position.x - (size.x / 2) && screenPoint.x < graph.transform.position.x + (size.x / 2))
+            (worldPoint.x > -3 && worldPoint.x < 7)
             &&
-            (screenPoint.y > graph.transform.position.y - (size.y / 2) && screenPoint.y < graph.transform.position.y + (size.y / 2))
+            (worldPoint.y > -2.5 && worldPoint.y < 3)
             ) {
-         //   Debug.Log(screenPoint);
-            screenPoint.z = 1.0f; //distance of the plane from the camera
-            GameObject point = Instantiate(graphPointPrefab);
-            point.transform.SetParent(graph.transform);
+            GameObject point = Instantiate(graphPointPrefab, graph.transform);
             point.transform.localScale = Vector3.one;
             point.transform.position = Camera.main.ScreenToWorldPoint(screenPoint);
+            point.transform.localPosition += new Vector3(0,0, -point.transform.localPosition.z);
         }
     }
 
     public void AddPoint(float xValue, float yValue) {
         RectTransform rectTrans = graph.GetComponent<RectTransform>();
         GameObject point = Instantiate(graphPointPrefab, graph.transform);
+        point.transform.localScale = Vector3.one;
         point.transform.localPosition = Vector3.zero;
         // move to origin
         point.transform.localPosition += new Vector3((-rectTrans.rect.width / 2), (-rectTrans.rect.height / 2), 0);
-        Debug.Log(((rectTrans.rect.width / xScale) * xValue));
-        Debug.Log("rectTrans.rect.width " + rectTrans.rect.width + " xScale " + xScale + " xValue " + xValue + "   : on Graph " + gameObject.name);
         point.transform.localPosition += new Vector3(((rectTrans.rect.width / xScale) * xValue), (rectTrans.rect.height / 100) * yValue, 0);
     }
 
