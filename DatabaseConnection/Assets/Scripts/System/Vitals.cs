@@ -1,21 +1,30 @@
-﻿using UnityEngine;
+﻿using System;
 using System.Xml.Serialization;
-using System.IO;
 using System.Collections.Generic;
 
 
 [XmlRoot("Vitals")]
+[Serializable]
 public class Vitals {
-    [XmlArray("VitalsTimeFrame")]
+    [XmlArray("VitalsList")]
     [XmlArrayItem("Vital")]
-    public List<Vital> vitalsTimeFrame = new List<Vital>();
+    public List<Vital> vitalList = new List<Vital>();
 
-    public static Vitals Load(string path) {
-        TextAsset _xml = Resources.Load<TextAsset>(path);
-        XmlSerializer serializer = new XmlSerializer(typeof(Vitals));
-        StringReader reader = new StringReader(_xml.text);
-        Vitals vitalsTimeFrame = serializer.Deserialize(reader) as Vitals;
-        reader.Close();
-        return vitalsTimeFrame;
-    }
+
+}
+
+[XmlRoot("frame")]
+[Serializable]
+public class Vital {
+    [XmlAttribute("name")]
+    public string name;
+    [XmlElement("NodeID")]
+    public int nodeID { get; set; }
+    [XmlElement("Units")]
+    public string units { get; set; }
+    [XmlElement("Min")]
+    public float min { get; set; }
+    [XmlElement("Max")]
+    public float max { get; set; }
+
 }

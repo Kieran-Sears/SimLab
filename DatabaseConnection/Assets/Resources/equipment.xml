@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Equipment>
+  <EquipmentList>
+    <Item name="stethoscope">
+			<NodeID>0</NodeID>
+			<Units>
+			<Unit>bpm</Unit>
+			</Units>
+			<Vitals> 
+			<Vital>breathingRate</Vital> 
+			</Vitals>
+		</Item>
+	</EquipmentList>
+</Equipment>

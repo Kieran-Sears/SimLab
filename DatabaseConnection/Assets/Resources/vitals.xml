@@ -1,25 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Vitals>
-	<VitalsTimeFrame>
+	<VitalsList>
 		<Vital name="breathingRate">
-			<NodeID>1</NodeID>
+			<NodeID>0</NodeID>
 			<Units>bpm</Units>
-			<Value>28</Value>
+      	<Min>0</Min>
+      <Max>100</Max>
 		</Vital>
 		<Vital name="bloodPressure">
 			<NodeID>1</NodeID>
 			<Units>mmHg</Units>
-			<Value>60</Value>
+      <Min>0</Min>
+      <Max>120</Max>
 		</Vital>
 		<Vital name="heartRate">
 			<NodeID>2</NodeID>
 			<Units>bpm</Units>
-			<Value>32</Value>
+      <Min>0</Min>
+      <Max>120</Max>
 		</Vital>
 		<Vital name="temperature">
 			<NodeID>3</NodeID>
 			<Units>Celsius</Units>
-			<Value>37</Value>
+      <Min>0</Min>
+      <Max>60</Max>
 		</Vital>
-	</VitalsTimeFrame>
+	</VitalsList>
 </Vitals>

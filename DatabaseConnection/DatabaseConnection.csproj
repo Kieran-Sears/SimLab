@@ -82,15 +82,22 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\Canvas\Graph.cs" />
-    <Compile Include="Assets\Scripts\Canvas\TabManager.cs" />
-    <Compile Include="Assets\Scripts\System\DatabaseManager.cs" />
-    <Compile Include="Assets\Scripts\System\ExportManager.cs" />
-    <Compile Include="Assets\Scripts\System\NetworkManager.cs" />
-    <Compile Include="Assets\Scripts\System\Vital.cs" />
+    <Compile Include="Assets\Scripts\Canvas\SimulationSetup.cs" />
+    <Compile Include="Assets\Scripts\Canvas\ViewPortArea.cs" />
+    <Compile Include="Assets\Scripts\Managers\DatabaseManager.cs" />
+    <Compile Include="Assets\Scripts\Managers\ExportManager.cs" />
+    <Compile Include="Assets\Scripts\Managers\NetworkManager.cs" />
+    <Compile Include="Assets\Scripts\Managers\TabManager.cs" />
+    <Compile Include="Assets\Scripts\System\Condition.cs" />
+    <Compile Include="Assets\Scripts\System\Drugs.cs" />
+    <Compile Include="Assets\Scripts\System\Equipment.cs" />
     <Compile Include="Assets\Scripts\System\Vitals.cs" />
     <Compile Include="Assets\Scripts\System\VitalsDatum.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assets\Resources\Conditions\asthma.xml" />
+    <None Include="Assets\Resources\drugs.xml" />
+    <None Include="Assets\Resources\equipment.xml" />
     <None Include="Assets\Resources\vitals.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

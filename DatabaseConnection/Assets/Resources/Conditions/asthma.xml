@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Condition>
+<Timeline>
+  <Time second="0">
+    <VitalValues>
+    <VitalValue vitalID="0">
+      <Value>46</Value>
+    </VitalValue>
+    <VitalValue vitalID="1">
+      <Value>84</Value>
+    </VitalValue>
+    <VitalValue vitalID="2">
+      <Value>23</Value>
+    </VitalValue>
+    <VitalValue vitalID="3">
+      <Value>34</Value>
+    </VitalValue>
+      </VitalValues>
+  </Time>
+  <Time second="1">
+    <VitalValues>
+    <VitalValue vitalID="0">
+      <Value>87</Value>
+    </VitalValue>
+    <VitalValue vitalID="1">
+      <Value>48</Value>
+    </VitalValue>
+    <VitalValue vitalID="2">
+      <Value>25</Value>
+    </VitalValue>
+    <VitalValue vitalID="3">
+      <Value>57</Value>
+    </VitalValue>
+      </VitalValues>
+  </Time>
+  <Time second="2">
+    <VitalValues>
+    <VitalValue vitalID="0">
+      <Value>84</Value>
+    </VitalValue>
+    <VitalValue vitalID="1">
+      <Value>38</Value>
+    </VitalValue>
+    <VitalValue vitalID="2">
+      <Value>57</Value>
+    </VitalValue>
+    <VitalValue vitalID="3">
+      <Value>89</Value>
+    </VitalValue>
+      </VitalValues>
+  </Time>
+  <Time second="3">
+    <VitalValues>
+    <VitalValue vitalID="0">
+      <Value>76</Value>
+    </VitalValue>
+    <VitalValue vitalID="1">
+      <Value>50</Value>
+    </VitalValue>
+    <VitalValue vitalID="2">
+      <Value>61</Value>
+    </VitalValue>
+    <VitalValue vitalID="3">
+      <Value>93</Value>
+    </VitalValue>
+      </VitalValues>
+  </Time>
+  <Time second="4">
+    <VitalValues>
+    <VitalValue vitalID="0">
+      <Value>48</Value>
+    </VitalValue>
+    <VitalValue vitalID="1">
+      <Value>59</Value>
+    </VitalValue>
+    <VitalValue vitalID="2">
+      <Value>61</Value>
+    </VitalValue>
+    <VitalValue vitalID="3">
+      <Value>47</Value>
+    </VitalValue>
+      </VitalValues>
+  </Time>
+  <Time second="5">
+    <VitalValues>
+    <VitalValue vitalID="0">
+      <Value>45</Value>
+    </VitalValue>
+    <VitalValue vitalID="1">
+      <Value>85</Value>
+    </VitalValue>
+    <VitalValue vitalID="2">
+      <Value>47</Value>
+    </VitalValue>
+    <VitalValue vitalID="3">
+      <Value>36</Value>
+    </VitalValue>
+      </VitalValues>
+  </Time>
+  <Time second="6">
+    <VitalValues>
+    <VitalValue vitalID="0">
+      <Value>39</Value>
+    </VitalValue>
+    <VitalValue vitalID="1">
+      <Value>28</Value>
+    </VitalValue>
+    <VitalValue vitalID="2">
+      <Value>37</Value>
+    </VitalValue>
+    <VitalValue vitalID="3">
+      <Value>54</Value>
+    </VitalValue>
+      </VitalValues>
+  </Time>
+  <Time second="7">
+    <VitalValues>
+    <VitalValue vitalID="0">
+      <Value>37</Value>
+    </VitalValue>
+    <VitalValue vitalID="1">
+      <Value>28</Value>
+    </VitalValue>
+    <VitalValue vitalID="2">
+      <Value>85</Value>
+    </VitalValue>
+    <VitalValue vitalID="3">
+      <Value>26</Value>
+    </VitalValue>
+      </VitalValues>
+  </Time>
+  </Timeline>
+</Condition>

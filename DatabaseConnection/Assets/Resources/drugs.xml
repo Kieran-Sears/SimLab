@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Drugs>
+	<DrugsList>
+		<Drug name="adrenaline">
+			<NodeID>1</NodeID>
+			<Units>
+			<Unit>2.25g/100mL</Unit>
+			<Unit>2.25mg/mL</Unit>
+			<Unit>
+			ml of a 2.25% solution 
+			in 2.0 ml normal saline
+			</Unit>
+			</Units>
+			<Min>0.10</Min>
+			<Max>1.00</Max>
+			<Duration>300</Duration>
+			<Vitals> 
+			<Vital>heartRate</Vital> 
+			</Vitals>
+			<Administrations>
+		     <Administration>Intravenous</Administration>
+	 		</Administrations>
+		</Drug>
+	</DrugsList>
+</Drugs>
