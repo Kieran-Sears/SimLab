@@ -19,20 +19,22 @@ public class Graph : MonoBehaviour {
 
     private GameObject[] points;
     private GameObject[,] gridLines;
-    //private Vector2 size;
+
     private int xScale;
     private int yScale;
 
-    Vector3 bottomLeft;
-    Vector3 bottomRight;
-    Vector3 topLeft;
-    Vector3 topRight;
+    private int xStart;
+    private int xEnd;
+    private int yStart;
+    private int yEnd;
 
-
-
-    public void GenerateGrid(int xStart, int xEnd, int yStart, int yEnd) {
-        xScale = xEnd - xStart;
-        yScale = yEnd - yStart;
+    public void GenerateGrid(int _xStart, int _xEnd, int _yStart, int _yEnd) {
+        xStart = _xStart;
+        xEnd = _xEnd;
+        yStart = _yStart;
+        yEnd = _yEnd;
+        xScale = _xEnd - _xStart;
+        yScale = _yEnd - _yStart;
         LayoutXScale();
         LayoutYScale();
         DrawGrid();
@@ -59,7 +61,7 @@ public class Graph : MonoBehaviour {
             dashMarker.transform.localPosition += new Vector3(0, (-grid.GetComponent<RectTransform>().rect.height / 2), 1);
             dashMarker.transform.localPosition += new Vector3(0, ((grid.GetComponent<RectTransform>().rect.height / yScale) * i), 1);
             Text text = dashMarker.GetComponent<Text>();
-            text.text = i.ToString();
+            text.text = (i + yStart).ToString();
             text.fontSize = 1;
         }
     }

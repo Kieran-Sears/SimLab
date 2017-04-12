@@ -8,14 +8,35 @@ public class SimulationSetup : MonoBehaviour {
 
     public TabManager tabs;
     public GameObject tableEntryPrefab;
+    public GameObject togglePrefab;
 
+    #region Condition
     public Dropdown presets;
     public InputField simulationDuration;
     public GameObject vitalsChosen;
     public GameObject drugsChosen;
     public GameObject equipmentChosen;
+    #endregion
 
-    public GameObject togglePrefab;
+    #region Vital
+    public GameObject newVitalPanel;
+    public InputField vitalName;
+    public InputField vitalUnit;
+    public InputField vitalMax;
+    public InputField vitalMin;
+    #endregion
+
+    #region Drug
+    public GameObject newDrugPanel;
+    public InputField drugName;
+    public InputField drugUnit;
+    public InputField drugMax;
+    public InputField drugMin;
+    public InputField drugDuration;
+    public GameObject drugVitalsAffected;
+    public GameObject drugAdministrations;
+    #endregion
+
 
     private Drugs drugs;
     private Vitals vitals;
@@ -67,6 +88,8 @@ public class SimulationSetup : MonoBehaviour {
         }
     }
 
+    void PopulateAdministrations() { }
+
     void PopulateEquipment() {
         equipment = ExportManager.instance.Load("equipment") as Equipment;
         foreach (Item item in equipment.itemList) {
@@ -110,8 +133,8 @@ public class SimulationSetup : MonoBehaviour {
         for (int i = 0; i < condition.timeline.Count; i++) {
             Time time = condition.timeline[i];
             foreach (Value data in time.vitalValues) {
-            Vital vital = vitals.vitalList[data.vitalID];
-            tabs.transform.GetChild(vital.nodeID).GetComponent<Graph>().AddPoint(i, data.value);
+                Vital vital = vitals.vitalList[data.vitalID];
+                tabs.transform.GetChild(vital.nodeID).GetComponent<Graph>().AddPoint(i, data.value);
             }
         }
     }
@@ -125,6 +148,49 @@ public class SimulationSetup : MonoBehaviour {
         return -1;
     }
 
+    public void AddVital() {
+        Vital vital = new Vital();
+        vital.name = vitalName.text;
+        vital.units = vitalUnit.text;
+        vital.max = float.Parse(vitalMax.text);
+        vital.min = float.Parse(vitalMin.text);
+        newVitalPanel.SetActive(false);
+        GameObject toggleObject = Instantiate(togglePrefab);
+        toggleObject.transform.SetParent(vitalsChosen.transform);
+        toggleObject.transform.localScale = Vector3.one;
+        toggleObject.transform.localPosition = Vector3.zero;
+        toggleObject.transform.GetChild(1).GetComponent<Text>().text = vital.name;
+        Toggle toggle = toggleObject.GetComponent<Toggle>();
+        toggle.name = vital.name;
+    }
+
+    public void AddDrug() {
+        Drug drug = new Drug();
+        //drug.nodeID = ; //TODO assign ID based on Id's already present
+        drug.name = drugName.text;
+        drug.units = drugUnit.text;
+        drug.max = float.Parse(drugMax.text);
+        drug.min = float.Parse(drugMin.text);
+        drug.duration = float.Parse(drugDuration.text);
+
+        for (int i = 0; i < drugVitalsAffected.transform.childCount; i++) {
+            drug.vitals.Add(drugVitalsAffected.transform.GetChild(i).name);
+        }
+
+        for (int i = 0; i < drugAdministrations.transform.childCount; i++) {
+            drug.administrations.Add(drugAdministrations.transform.GetChild(i).name);
+        }
+
+        newDrugPanel.SetActive(false);
+
+        GameObject toggleObject = Instantiate(togglePrefab);
+        toggleObject.transform.SetParent(drugsChosen.transform);
+        toggleObject.transform.localScale = Vector3.one;
+        toggleObject.transform.localPosition = Vector3.zero;
+        toggleObject.transform.GetChild(1).GetComponent<Text>().text = drug.name;
+        Toggle toggle = toggleObject.GetComponent<Toggle>();
+        toggle.name = drug.name;
+    }
 
     void LoadVitalsTabs() {
         for (int i = 0; i < vitalsChosen.transform.childCount; i++) {
@@ -132,7 +198,7 @@ public class SimulationSetup : MonoBehaviour {
                 Debug.Log("creating tab " + vitals.vitalList[i].name);
                 tab = tabs.GenerateTab(vitals.vitalList[i].name);
                 graph = tab.GetComponent<Graph>();
-                graph.container.transform.localPosition += new Vector3(-tab.GetComponent<RectTransform>().rect.width * i, 0, 0);
+                graph.container.transform.localPosition += new Vector3(-tab.GetComponent<RectTransform>().rect.width * tab.transform.GetSiblingIndex(), 0, 0);
                 graph.GenerateGrid(1, GetDuration(), 1, (int)Math.Ceiling(vitals.vitalList[i].max - vitals.vitalList[i].min));
                 if (i != 0) {
                     graph.container.transform.gameObject.SetActive(false);

@@ -67,8 +67,17 @@ public class ExportManager : MonoBehaviour {
 
     }
 
-    public void Save() {
+    public void AddVital(Vital vital) {
 
     }
+
+    public void AddDrug() {
+
+    }
+
+    public void AddEquipment() {
+
+    }
+
 
 }

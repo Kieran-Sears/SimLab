@@ -17,8 +17,10 @@ public class Drugs {
 [XmlRoot("frame")]
 [Serializable]
 public class Drug {
+
     [XmlAttribute("name")]
     public string name;
+
     [XmlElement("NodeID")]
     public int nodeID { get; set; }
 
@@ -28,15 +30,18 @@ public class Drug {
     [XmlElement("Min")]
     public float min { get; set; }
 
+    [XmlElement("Max")]
+    public float max { get; set; }
+
     [XmlElement("Duration")]
-    public float Duration { get; set; }
+    public float duration { get; set; }
 
     [XmlArray("Vitals")]
     [XmlArrayItem("Vital")]
-    public List<string> Vitals = new List<string>();
+    public List<string> vitals = new List<string>();
 
     [XmlArray("Administrations")]
     [XmlArrayItem("Administration")]
-    public List<string> Administrations = new List<string>();
+    public List<string> administrations = new List<string>();
 
 }
