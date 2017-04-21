@@ -37,6 +37,9 @@ public class SimulationSetup : MonoBehaviour {
     public GameObject drugAdministrations;
     #endregion
 
+    #region Bins
+    public GameObject inactiveTabs;
+    #endregion
 
     private Drugs drugs;
     private Vitals vitals;
@@ -105,36 +108,43 @@ public class SimulationSetup : MonoBehaviour {
 
     void ClearPreviousTabs() {
         if (tabs.transform.childCount > 0) {
-            for (int i = 0; i < tabs.transform.childCount; i++) {
-                tabs.transform.GetChild(i).gameObject.SetActive(false);
+            Debug.Log(tabs.transform.childCount);
+            for (int i = tabs.transform.childCount-1; i >= 0; i--) {
+                Transform tab = tabs.transform.GetChild(i);
+                Debug.Log("Getting rid of tab " + tab.name);
+                tab.gameObject.SetActive(false);
+                tab.SetParent(inactiveTabs.transform);
             }
         }
     }
 
     public void LoadCondition(int index) {
         ClearPreviousTabs();
-        Debug.Log("Finding condition: " + presets.options[index].text);
-        Condition condition = ExportManager.instance.Load("Conditions/" + presets.options[index].text) as Condition;
-        Debug.Log(condition.timeline.Count);
-        List<Value> vitalData = condition.timeline[0].vitalValues;
-        Debug.Log(vitalData.Count);
-        for (int i = 0; i < vitalData.Count; i++) {
-            Vital vital = vitals.vitalList[vitalData[i].vitalID];
-            Debug.Log(vital.name);
-            tab = tabs.GenerateTab(vital.name);
-            graph = tab.GetComponent<Graph>();
-            graph.container.transform.localPosition += new Vector3(-tab.GetComponent<RectTransform>().rect.width * i, 0, 0);
-            graph.GenerateGrid(1, condition.timeline.Count, 1, (int)Math.Ceiling(vital.max - vital.min));
-            if (i != 0) {
-                graph.container.transform.gameObject.SetActive(false);
-            }
-        }
+        if (presets.options[index].text != "None") {
+            Debug.Log("Finding condition: " + presets.options[index].text);
+            Condition condition = ExportManager.instance.Load("Conditions/" + presets.options[index].text) as Condition;
+            if (condition == null) {
+                Error.instance.DisplayMessage("Condition could not be found.");
+            } else {
+                List<Value> vitalData = condition.timeline[0].vitalValues;
+                for (int i = 0; i < vitalData.Count; i++) {
+                    Vital vital = vitals.vitalList[vitalData[i].vitalID];
+                    tab = tabs.GenerateTab(vital.name);
+                    graph = tab.GetComponent<Graph>();
+                    graph.container.transform.localPosition += new Vector3(-tab.GetComponent<RectTransform>().rect.width * i, 0, 0);
+                    graph.GenerateGrid(1, condition.timeline.Count, 1, (int)Math.Ceiling(vital.max - vital.min));
+                    if (i != 0) {
+                        graph.container.transform.gameObject.SetActive(false);
+                    }
+                }
 
-        for (int i = 0; i < condition.timeline.Count; i++) {
-            Time time = condition.timeline[i];
-            foreach (Value data in time.vitalValues) {
-                Vital vital = vitals.vitalList[data.vitalID];
-                tabs.transform.GetChild(vital.nodeID).GetComponent<Graph>().AddPoint(i, data.value);
+                for (int i = 0; i < condition.timeline.Count; i++) {
+                    Time time = condition.timeline[i];
+                    foreach (Value data in time.vitalValues) {
+                        Vital vital = vitals.vitalList[data.vitalID];
+                        tabs.transform.GetChild(vital.nodeID).GetComponent<Graph>().AddPoint(i, data.value);
+                    }
+                }
             }
         }
     }
