@@ -1,7 +1,5 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.EventSystems;
-using System.Collections.Generic;
 
 public class Graph : MonoBehaviour {
 
@@ -28,7 +26,17 @@ public class Graph : MonoBehaviour {
     private int yStart;
     private int yEnd;
 
+    public void LateUpdate() {
+        var d = Input.GetAxis("Mouse ScrollWheel");
+        if (d > 0f) {
+            // scroll up
+        } else if (d < 0f) {
+            // scroll down
+        }
+    }
+
     public void GenerateGrid(int _xStart, int _xEnd, int _yStart, int _yEnd) {
+        graph.GetComponent<BoxCollider>().size = new Vector2(graph.GetComponent<RectTransform>().rect.width, graph.GetComponent<RectTransform>().rect.height);
         xStart = _xStart;
         xEnd = _xEnd;
         yStart = _yStart;
@@ -100,35 +108,40 @@ public class Graph : MonoBehaviour {
         }
     }
 
-    public void LateUpdate() {
-        if (Input.GetKeyUp(KeyCode.Mouse0)) {
-            AddPoint();
-        }
-    }
-
-    public void AddPoint() {
-        Vector3 screenPoint = Input.mousePosition;
+    public void AddPoint(Vector3 screenPoint) {
         Vector3 worldPoint = Camera.main.ScreenToWorldPoint(screenPoint);
-        if (
-            (worldPoint.x > -3 && worldPoint.x < 7)
-            &&
-            (worldPoint.y > -2.5 && worldPoint.y < 3)
-            ) {
-            GameObject point = Instantiate(graphPointPrefab, graph.transform);
-            point.transform.localScale = Vector3.one;
-            point.transform.position = Camera.main.ScreenToWorldPoint(screenPoint);
-            point.transform.localPosition += new Vector3(0,0, -point.transform.localPosition.z);
-        }
+        RectTransform rectTrans = graph.GetComponent<RectTransform>();
+        GameObject point = Instantiate(graphPointPrefab, graph.transform);
+        Slider slider = point.GetComponent<Slider>();
+
+        point.transform.localPosition -= new Vector3(0, rectTrans.rect.height / 2, 0);
+        float minValue = point.transform.position.y;
+        float currentValue = worldPoint.y - minValue;
+
+        point.transform.localPosition += new Vector3(0, rectTrans.rect.height, 0);
+        float maxValue = point.transform.position.y - minValue;
+        float percent = (currentValue / maxValue) * 100;
+
+        point.transform.localScale = Vector3.one;
+        point.GetComponent<RectTransform>().sizeDelta = new Vector2(20, rectTrans.rect.height + slider.handleRect.sizeDelta.y);
+        point.transform.position = new Vector3(worldPoint.x, 0, 1);
+        slider.minValue = yStart;
+        slider.maxValue = yEnd;
+        slider.value = ((slider.maxValue - slider.minValue) / 100) * percent + slider.minValue;
     }
 
     public void AddPoint(float xValue, float yValue) {
         RectTransform rectTrans = graph.GetComponent<RectTransform>();
         GameObject point = Instantiate(graphPointPrefab, graph.transform);
+        Slider slider = point.GetComponent<Slider>();
         point.transform.localScale = Vector3.one;
         point.transform.localPosition = Vector3.zero;
-        // move to origin
         point.transform.localPosition += new Vector3((-rectTrans.rect.width / 2), (-rectTrans.rect.height / 2), 0);
-        point.transform.localPosition += new Vector3(((rectTrans.rect.width / xScale) * xValue), (rectTrans.rect.height / 100) * yValue, 0);
+        point.transform.localPosition += new Vector3(((rectTrans.rect.width / xScale) * xValue), rectTrans.rect.height / 2, -1);
+        point.GetComponent<RectTransform>().sizeDelta = new Vector2(20, rectTrans.rect.height + slider.handleRect.sizeDelta.y);
+        slider.minValue = yStart;
+        slider.maxValue = yEnd;
+        slider.value = yValue;
     }
 
     public void DrawThresholds() { }

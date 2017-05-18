@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -52,6 +51,23 @@ public class SimulationSetup : MonoBehaviour {
         PopulateVitals();
         PopulateDrugs();
         PopulateEquipment();
+    }
+
+    void LateUpdate() {
+        RaycastWorldUI();
+    }
+
+    void RaycastWorldUI() {
+        if (Input.GetMouseButtonDown(0)) {
+            RaycastHit hitInfo;
+            if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, Mathf.Infinity)) {
+                if (hitInfo.collider.tag == "Handle") {
+                
+                } else if (hitInfo.collider.tag == "Graph") {
+                    tabs.activeGraph.AddPoint(Camera.main.WorldToScreenPoint(hitInfo.point));
+                }
+            } 
+        }
     }
 
     void PopulatePresets() {
@@ -109,7 +125,7 @@ public class SimulationSetup : MonoBehaviour {
     void ClearPreviousTabs() {
         if (tabs.transform.childCount > 0) {
             Debug.Log(tabs.transform.childCount);
-            for (int i = tabs.transform.childCount-1; i >= 0; i--) {
+            for (int i = tabs.transform.childCount - 1; i >= 0; i--) {
                 Transform tab = tabs.transform.GetChild(i);
                 Debug.Log("Getting rid of tab " + tab.name);
                 tab.gameObject.SetActive(false);

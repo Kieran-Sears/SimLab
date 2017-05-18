@@ -81,10 +81,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\Canvas\Error.cs" />
     <Compile Include="Assets\Scripts\Canvas\Graph.cs" />
     <Compile Include="Assets\Scripts\Canvas\SimulationSetup.cs" />
     <Compile Include="Assets\Scripts\Canvas\ViewPortArea.cs" />
-    <Compile Include="Assets\Scripts\Error.cs" />
     <Compile Include="Assets\Scripts\Managers\DatabaseManager.cs" />
     <Compile Include="Assets\Scripts\Managers\ExportManager.cs" />
     <Compile Include="Assets\Scripts\Managers\NetworkManager.cs" />
