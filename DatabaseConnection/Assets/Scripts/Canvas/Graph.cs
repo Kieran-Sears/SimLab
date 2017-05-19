@@ -32,21 +32,24 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
     private Rect gridRect;
 
     private bool onObj = false;
+    private float scrollWheel = 1;
     #endregion
 
     #region Inspector fields
+    [SerializeField]
+    float startSize = 1;
+    [SerializeField]
+    float minSize = 0.1f;
+    [SerializeField]
+    float maxSize = 10;
 
-    public float startSize = 1;
-    public float minSize = 0.01f;
-    public float maxSize = 100;
-    public float zoomRate = 2f;
-    public float scrollWheel;
-    int nullcount = 0;
+    [SerializeField]
+    private float zoomRate = 1f;
     #endregion
 
     #region Unity Methods
     private void Update() {
-        scrollWheel += -Input.GetAxisRaw("Mouse ScrollWheel");
+        scrollWheel += -Input.GetAxis("Mouse ScrollWheel");
 
         if (onObj && scrollWheel > 1) {
             SetZoom(scrollWheel);
@@ -69,12 +72,19 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
     #endregion
 
     #region Private Methods
+    private void ChangeZoom(float scrollWheel) {
+        float rate = 1 + zoomRate * UnityEngine.Time.deltaTime;
+        if (scrollWheel > 0) {
+            SetZoom(Mathf.Clamp(transform.localScale.y / rate, minSize, maxSize));
+        } else {
+            SetZoom(Mathf.Clamp(transform.localScale.y * rate, minSize, maxSize));
+        }
+    }
+
     private void SetZoom(float targetSize) {
-        if (graph != null) {
-            graph.transform.localScale = new Vector3(targetSize, targetSize, 1);
-            grid.transform.localScale = new Vector3(targetSize, targetSize, 1);
-            // change scales also
-        } 
+        graph.transform.localScale = new Vector3(targetSize, targetSize, 1);
+        grid.transform.localScale = new Vector3(targetSize, targetSize, 1);
+        // change scales also
     }
 
     private void LayoutXScale() {
@@ -171,7 +181,7 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
 
         point.transform.localScale = Vector3.one;
         point.GetComponent<RectTransform>().sizeDelta = new Vector2(20, rectTrans.rect.height + slider.handleRect.sizeDelta.y);
-        point.transform.position = new Vector3(worldPoint.x, 0, 10);
+        point.transform.position = new Vector3(worldPoint.x, 0, 1);
         slider.minValue = yStart;
         slider.maxValue = yEnd;
         slider.value = ((slider.maxValue - slider.minValue) / 100) * percent + slider.minValue;
@@ -184,7 +194,7 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
         point.transform.localScale = Vector3.one;
         point.transform.localPosition = Vector3.zero;
         point.transform.localPosition += new Vector3((-gridRect.width / 2), (-gridRect.height / 2), 0);
-        point.transform.localPosition += new Vector3(((gridRect.width / xScale) * xValue), gridRect.height / 2, -10);
+        point.transform.localPosition += new Vector3(((gridRect.width / xScale) * xValue), gridRect.height / 2, -1);
         point.GetComponent<RectTransform>().sizeDelta = new Vector2(20, gridRect.height + slider.handleRect.sizeDelta.y);
         slider.minValue = yStart;
         slider.maxValue = yEnd;

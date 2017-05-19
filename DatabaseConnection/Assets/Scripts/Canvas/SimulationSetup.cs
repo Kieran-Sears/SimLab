@@ -57,16 +57,16 @@ public class SimulationSetup : MonoBehaviour {
     }
 
     void LateUpdate() {
+
         RaycastWorldUI();
     }
 
     void RaycastWorldUI() {
-        // difference in time needed to figure out if user was moving the graph or wanted to add a point to it
         if (Input.GetMouseButton(0)) {
             mouseHold += UnityEngine.Time.deltaTime;
         }
         if (Input.GetMouseButtonUp(0)) {
-            if (mouseHold < 0.3) {
+            if (mouseHold < 0.3f) {
                 RaycastHit hitInfo;
                 if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, Mathf.Infinity)) {
                     if (hitInfo.collider.tag == "Handle") {
@@ -75,9 +75,9 @@ public class SimulationSetup : MonoBehaviour {
                         tabs.activeGraph.AddPoint(Camera.main.WorldToScreenPoint(hitInfo.point));
                     }
                 }
-            }
+            } 
             mouseHold = 0;
-        }
+        } 
     }
 
     void PopulatePresets() {
