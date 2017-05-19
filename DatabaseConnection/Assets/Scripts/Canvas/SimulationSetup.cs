@@ -8,6 +8,7 @@ public class SimulationSetup : MonoBehaviour {
     public TabManager tabs;
     public GameObject tableEntryPrefab;
     public GameObject togglePrefab;
+    public GameObject graphs;
 
     #region Condition
     public Dropdown presets;
@@ -46,6 +47,8 @@ public class SimulationSetup : MonoBehaviour {
     private GameObject tab;
     private Graph graph;
 
+    private float mouseHold;
+
     void Start() {
         PopulatePresets();
         PopulateVitals();
@@ -58,15 +61,22 @@ public class SimulationSetup : MonoBehaviour {
     }
 
     void RaycastWorldUI() {
-        if (Input.GetMouseButtonDown(0)) {
-            RaycastHit hitInfo;
-            if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, Mathf.Infinity)) {
-                if (hitInfo.collider.tag == "Handle") {
-                
-                } else if (hitInfo.collider.tag == "Graph") {
-                    tabs.activeGraph.AddPoint(Camera.main.WorldToScreenPoint(hitInfo.point));
+        // difference in time needed to figure out if user was moving the graph or wanted to add a point to it
+        if (Input.GetMouseButton(0)) {
+            mouseHold += UnityEngine.Time.deltaTime;
+        }
+        if (Input.GetMouseButtonUp(0)) {
+            if (mouseHold < 0.3) {
+                RaycastHit hitInfo;
+                if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, Mathf.Infinity)) {
+                    if (hitInfo.collider.tag == "Handle") {
+
+                    } else if (hitInfo.collider.tag == "Graph") {
+                        tabs.activeGraph.AddPoint(Camera.main.WorldToScreenPoint(hitInfo.point));
+                    }
                 }
-            } 
+            }
+            mouseHold = 0;
         }
     }
 
@@ -145,12 +155,10 @@ public class SimulationSetup : MonoBehaviour {
                 List<Value> vitalData = condition.timeline[0].vitalValues;
                 for (int i = 0; i < vitalData.Count; i++) {
                     Vital vital = vitals.vitalList[vitalData[i].vitalID];
-                    tab = tabs.GenerateTab(vital.name);
-                    graph = tab.GetComponent<Graph>();
-                    graph.container.transform.localPosition += new Vector3(-tab.GetComponent<RectTransform>().rect.width * i, 0, 0);
+                    graph = tabs.GenerateTab(vital.name);
                     graph.GenerateGrid(1, condition.timeline.Count, 1, (int)Math.Ceiling(vital.max - vital.min));
                     if (i != 0) {
-                        graph.container.transform.gameObject.SetActive(false);
+                        graph.transform.gameObject.SetActive(false);
                     }
                 }
 
@@ -158,7 +166,7 @@ public class SimulationSetup : MonoBehaviour {
                     Time time = condition.timeline[i];
                     foreach (Value data in time.vitalValues) {
                         Vital vital = vitals.vitalList[data.vitalID];
-                        tabs.transform.GetChild(vital.nodeID).GetComponent<Graph>().AddPoint(i, data.value);
+                        graphs.transform.FindChild(vital.name).GetComponent<Graph>().AddPoint(i, data.value);
                     }
                 }
             }
@@ -221,13 +229,10 @@ public class SimulationSetup : MonoBehaviour {
     void LoadVitalsTabs() {
         for (int i = 0; i < vitalsChosen.transform.childCount; i++) {
             if (vitalsChosen.transform.GetChild(i).GetComponent<Toggle>().isOn) {
-                Debug.Log("creating tab " + vitals.vitalList[i].name);
-                tab = tabs.GenerateTab(vitals.vitalList[i].name);
-                graph = tab.GetComponent<Graph>();
-                graph.container.transform.localPosition += new Vector3(-tab.GetComponent<RectTransform>().rect.width * tab.transform.GetSiblingIndex(), 0, 0);
+                graph = tabs.GenerateTab(vitals.vitalList[i].name);
                 graph.GenerateGrid(1, GetDuration(), 1, (int)Math.Ceiling(vitals.vitalList[i].max - vitals.vitalList[i].min));
                 if (i != 0) {
-                    graph.container.transform.gameObject.SetActive(false);
+                    graph.gameObject.SetActive(false);
                 }
             }
         }

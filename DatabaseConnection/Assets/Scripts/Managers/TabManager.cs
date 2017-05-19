@@ -3,24 +3,27 @@ using System.Text;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections.Generic;
 
 public class TabManager : MonoBehaviour {
     public GameObject tabPrefab;
+    public GameObject containerPrefab;
     public Graph activeGraph;
 
+    private Dictionary<Toggle, Graph> tabGraphs = new Dictionary<Toggle, Graph>();
 
     public void SwitchTab() {
-       Graph[] graphs = GetComponentsInChildren<Graph>();
-        foreach (Graph item in graphs) {
-            item.container.SetActive(false);
+     
+        foreach (Graph item in tabGraphs.Values) {
+            item.gameObject.SetActive(false);
         }
 
         Toggle selected = GetComponent<ToggleGroup>().ActiveToggles().FirstOrDefault();
-        activeGraph = selected.GetComponent<Graph>();
-        activeGraph.container.SetActive(true); 
+        activeGraph = tabGraphs[selected];
+        activeGraph.gameObject.SetActive(true);
     }
 
-    public GameObject GenerateTab(string vitalName) {
+    public Graph GenerateTab(string vitalName) {
         GameObject tab = Instantiate(tabPrefab, transform);
         tab.transform.localScale = Vector3.one;
         tab.transform.localPosition = Vector3.one;
@@ -37,11 +40,19 @@ public class TabManager : MonoBehaviour {
             builder.Append(letters[i]);
         }
         tab.transform.GetComponentInChildren<Text>().text = builder.ToString();
+        GameObject graph = Instantiate(containerPrefab) as GameObject;
+        graph.name = vitalName;
+        RectTransform graphTrans = graph.GetComponent<RectTransform>();
+        graphTrans.SetParent(transform.parent);
+        graphTrans.sizeDelta = transform.parent.GetComponent<RectTransform>().sizeDelta;
+        graphTrans.position = transform.parent.transform.position;
+        graphTrans.localScale = Vector3.one;
         Toggle toggle = tab.GetComponent<Toggle>();
+        tabGraphs.Add(toggle, graph.GetComponent<Graph>());
         toggle.onValueChanged.AddListener((bool toggled) => { SwitchTab(); });
         toggle.group = GetComponent<ToggleGroup>();
         toggle.isOn = false;
-        return tab;
+        return tabGraphs[toggle];
     }
 
 
