@@ -82,6 +82,7 @@
 -define:UNITY_PRO_LICENSE
 Assets/Scripts/Canvas/Error.cs
 Assets/Scripts/Canvas/Graph.cs
+Assets/Scripts/Canvas/NoScrollRect.cs
 Assets/Scripts/Canvas/SimulationSetup.cs
 Assets/Scripts/Canvas/ViewPortArea.cs
 Assets/Scripts/Managers/DatabaseManager.cs
