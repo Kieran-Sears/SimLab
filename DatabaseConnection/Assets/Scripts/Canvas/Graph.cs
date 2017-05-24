@@ -38,6 +38,9 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
 
     private bool onObj = false;
     private float scrollWheel = 1;
+    private Vector2 localpoint;
+    private RectTransform graphContentRectTrans;
+    private RectTransform scrollRectGraphRectTrans;
     #endregion
 
     #region Inspector fields
@@ -56,11 +59,14 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
 
     private void Update() {
         scrollWheel += Input.GetAxis("Mouse ScrollWheel");
+        if (onObj) {
+            if (scrollWheel >= 1f) {
+                SetZoom(scrollWheel);
+            } else if (scrollWheel < 1f) {
+                scrollWheel = 1f;
+            }
 
-        if (onObj && scrollWheel >= 1f) {
-            SetZoom(scrollWheel);
-        } else if (scrollWheel < 1f) {
-            scrollWheel = 1f;
+         
         }
     }
 
@@ -87,8 +93,19 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
         }
     }
 
+    private void SetPivotToMousePoint() {
+        Vector2 size = graphContentRectTrans.rect.size;
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(scrollRectGraphRectTrans, Input.mousePosition, GetComponentInParent<Canvas>().worldCamera, out localpoint);
+        Vector2 pivot = new Vector2(localpoint.x / scrollRectGraphRectTrans.rect.size.x, (localpoint.y / scrollRectGraphRectTrans.rect.size.y ) + 1 );
+        Vector2 deltaPivot = graphContentRectTrans.pivot - pivot;
+        Vector3 deltaPosition = new Vector3(deltaPivot.x * size.x, deltaPivot.y * size.y);
+        graphContentRectTrans.pivot = pivot;
+        graphContentRectTrans.localPosition -= deltaPosition;
+    }
+
     private void SetZoom(float targetSize) {
         if (graph != null) {
+            SetPivotToMousePoint();
             graphContent.transform.localScale = new Vector3(targetSize, targetSize, 1);
             xAxisContent.transform.localScale = new Vector3(targetSize, 1, 1);
             yAxisContent.transform.localScale = new Vector3(1, targetSize, 1);
@@ -112,8 +129,6 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
             dashMarker.transform.localPosition += new Vector3(((gridRect.width / xScale) * i), 0, 1);
             dashMarker.GetComponent<Text>().text = i.ToString();
         }
-        scrollRectXAxis.verticalNormalizedPosition = 1;
-        scrollRectXAxis.scrollSensitivity = 0;
     }
 
     private void LayoutYScale() {
@@ -138,8 +153,6 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
                 text.fontSize = 1;
             }
         }
-        scrollRectYAxis.verticalNormalizedPosition = 0;
-        scrollRectYAxis.scrollSensitivity = 0;
     }
 
     private void DrawGrid() {
@@ -181,6 +194,8 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
 
     #region Public Methods
     public void GenerateGrid(int _xStart, int _xEnd, int _yStart, int _yEnd) {
+        graphContentRectTrans = graphContent.GetComponent<RectTransform>();
+        scrollRectGraphRectTrans =  scrollRectGraph.transform.GetChild(0).GetComponent<RectTransform>();
         graphContent.GetComponent<RectTransform>().sizeDelta = new Vector2(scrollRectGraph.GetComponent<RectTransform>().rect.x * -2, scrollRectGraph.GetComponent<RectTransform>().rect.y * -2) ;
         gridRect = graphContent.GetComponent<RectTransform>().rect;
         graph.GetComponent<BoxCollider>().size = new Vector2(gridRect.width, gridRect.height);
@@ -191,7 +206,11 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
         xScale = _xEnd - _xStart;
         yScale = _yEnd - _yStart;
         LayoutXScale();
+        scrollRectXAxis.verticalNormalizedPosition = 1;
+        scrollRectXAxis.scrollSensitivity = 0;
         LayoutYScale();
+        scrollRectYAxis.verticalNormalizedPosition = 0;
+        scrollRectYAxis.scrollSensitivity = 0;
         DrawGrid();
         scrollRectGraph.scrollSensitivity = 0;
         scrollRectGraph.onValueChanged.AddListener(ListenerMethod);
@@ -199,10 +218,11 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
 
     }
 
-
     public void ListenerMethod(Vector2 value) {
         scrollRectXAxis.normalizedPosition = scrollRectGraph.normalizedPosition;
         scrollRectYAxis.normalizedPosition = scrollRectGraph.normalizedPosition;
+        LayoutXScale();
+        LayoutYScale();
     }
 
     public void AddPoint(Vector3 screenPoint) {
