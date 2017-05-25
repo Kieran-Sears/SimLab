@@ -13,9 +13,12 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
     public GameObject graphContent;
     public GameObject xAxisContent;
     public GameObject yAxisContent;
-    public ScrollRect scrollRectGraph;
-    public ScrollRect scrollRectXAxis;
-    public ScrollRect scrollRectYAxis;
+    public RectTransform graphViewport;
+    public RectTransform xAxisViewport;
+    public RectTransform yAxisViewport;
+    public ScrollRect GraphScrollRect;
+    public ScrollRect xAxisScrollRect;
+    public ScrollRect yAxisScrollRect;
 
     public GameObject xDashMarkerPrefab;
     public GameObject yDashMarkerPrefab;
@@ -38,35 +41,24 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
 
     private bool onObj = false;
     private float scrollWheel = 1;
+    private float newScrollWheel;
     private Vector2 localpoint;
     private RectTransform graphContentRectTrans;
-    private RectTransform scrollRectGraphRectTrans;
-    #endregion
-
-    #region Inspector fields
-    [SerializeField]
-    float startSize = 1;
-    [SerializeField]
-    float minSize = 0.1f;
-    [SerializeField]
-    float maxSize = 10;
-
-    [SerializeField]
-    private float zoomRate = 1f;
     #endregion
 
     #region Unity Methods
-
     private void Update() {
-        scrollWheel += Input.GetAxis("Mouse ScrollWheel");
-        if (onObj) {
+        newScrollWheel = scrollWheel + Input.GetAxis("Mouse ScrollWheel");
+
+        if (onObj && scrollWheel != newScrollWheel) {
+            scrollWheel = newScrollWheel;
             if (scrollWheel >= 1f) {
                 SetZoom(scrollWheel);
             } else if (scrollWheel < 1f) {
                 scrollWheel = 1f;
             }
 
-         
+
         }
     }
 
@@ -84,43 +76,73 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
     #endregion
 
     #region Private Methods
-    private void ChangeZoom(float scrollWheel) {
-        float rate = 1 + zoomRate * UnityEngine.Time.deltaTime;
-        if (scrollWheel > 0) {
-            SetZoom(Mathf.Clamp(transform.localScale.y / rate, minSize, maxSize));
-        } else {
-            SetZoom(Mathf.Clamp(transform.localScale.y * rate, minSize, maxSize));
-        }
-    }
 
-    private void SetPivotToMousePoint() {
-        Vector2 size = graphContentRectTrans.rect.size;
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(scrollRectGraphRectTrans, Input.mousePosition, GetComponentInParent<Canvas>().worldCamera, out localpoint);
-        Vector2 pivot = new Vector2(localpoint.x / scrollRectGraphRectTrans.rect.size.x, (localpoint.y / scrollRectGraphRectTrans.rect.size.y ) + 1 );
-        Vector2 deltaPivot = graphContentRectTrans.pivot - pivot;
-        Vector3 deltaPosition = new Vector3(deltaPivot.x * size.x, deltaPivot.y * size.y);
-        graphContentRectTrans.pivot = pivot;
-        graphContentRectTrans.localPosition -= deltaPosition;
-    }
 
     private void SetZoom(float targetSize) {
         if (graph != null) {
-            SetPivotToMousePoint();
+            //grid : setting the pivot point to be at the location of the cursor
+            if (graphContentRectTrans == null) return;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(graphViewport, Input.mousePosition, GetComponentInParent<Canvas>().worldCamera, out localpoint);
+            Vector2 pivot = new Vector2(localpoint.x / graphViewport.rect.size.x, (localpoint.y / graphViewport.rect.size.y) + 1);
+
+            Vector2 deltaPivot = graphContentRectTrans.pivot - pivot;
+            Vector2 size = graphContentRectTrans.rect.size;
+            Vector3 deltaPosition = new Vector3(deltaPivot.x * size.x, deltaPivot.y * size.y);
+            graphContentRectTrans.pivot = pivot;
+            graphContentRectTrans.localPosition -= deltaPosition;
             graphContent.transform.localScale = new Vector3(targetSize, targetSize, 1);
+            //xAxis
+            RectTransform xRectTrans = xAxisContent.GetComponent<RectTransform>();
+            size = xRectTrans.rect.size;
+            deltaPivot = xRectTrans.pivot - (Vector2.right * pivot.x);
+            deltaPosition = new Vector3(deltaPivot.x * size.x, deltaPivot.y * size.y);
+            xRectTrans.pivot = xRectTrans.pivot + (Vector2.right * pivot.x);
+            xRectTrans.localPosition -= deltaPosition;
             xAxisContent.transform.localScale = new Vector3(targetSize, 1, 1);
+            //yAxis
+            RectTransform yRectTrans = yAxisContent.GetComponent<RectTransform>();
+            size = yRectTrans.rect.size;
+            deltaPivot = yRectTrans.pivot - (Vector2.up * pivot.y);
+            deltaPosition = new Vector3(deltaPivot.x * size.x, deltaPivot.y * size.y);
+            yRectTrans.pivot = yRectTrans.pivot + (Vector2.up * pivot.y);
+            yRectTrans.localPosition -= deltaPosition;
             yAxisContent.transform.localScale = new Vector3(1, targetSize, 1);
 
-            for (int i = 0; i < xAxisContent.transform.childCount; i++) {
-                xAxisContent.transform.GetChild(i).localScale = Vector3.one;
-            }
-            for (int i = 0; i < yAxisContent.transform.childCount; i++) {
-                yAxisContent.transform.GetChild(i).localScale = Vector3.one;
-            }
+            LayoutYScale();
+            LayoutXScale();
+            // TODO prevent the unit markers from scaling their text when zooming
+            //for (int i = 0; i < xAxisContent.transform.GetChild(0).childCount; i++) {
+            //    xAxisContent.transform.GetChild(0).GetChild(i).localScale = xAxisContent.transform.localScale - Vector3.right;
+            //}
+            //for (int i = 0; i < yAxisContent.transform.GetChild(0).childCount; i++) {
+            //    yAxisContent.transform.GetChild(0).GetChild(i).localScale = xAxisContent.transform.localScale - Vector3.up;
+            //}
         }
     }
 
     private void LayoutXScale() {
         xAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(gridRect.width, xAxisContent.GetComponent<RectTransform>().sizeDelta.y);
+        if (xAxis.transform.childCount > 25) {
+            for (int i = 0; i < xAxis.transform.childCount; i++) {
+                xAxis.transform.GetChild(i).gameObject.SetActive(false);
+                if (graphContent.transform.localScale.x < 1.4f) {
+                    if ((i + 1) % 10 == 0) {
+                        xAxis.transform.GetChild(i).gameObject.SetActive(true);
+                    }
+                } else if (graphContent.transform.localScale.x >= 1.4f && graphContent.transform.localScale.x < 2f) {
+                    if ((i + 1) % 5 == 0) {
+                        xAxis.transform.GetChild(i).gameObject.SetActive(true);
+                    }
+                } else {
+                    if ( (i + 1) % 2 == 0) {
+                        xAxis.transform.GetChild(i).gameObject.SetActive(true);
+                    }
+                }
+            }
+        }
+    }
+
+    private void InitialiseXScale() {
         for (int i = 1; i <= xScale; i++) {
             GameObject dashMarker = Instantiate(xDashMarkerPrefab, xAxis.transform);
             dashMarker.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
@@ -133,25 +155,36 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
 
     private void LayoutYScale() {
         yAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(yAxisContent.GetComponent<RectTransform>().sizeDelta.x, gridRect.height);
-        float scaleRatio = 0;
+        if (yAxis.transform.childCount > 25) {
+            for (int i = 0; i < yAxis.transform.childCount; i++) {
+                yAxis.transform.GetChild(i).gameObject.SetActive(false);
+                if (graphContent.transform.localScale.y < 1.4f) {
+                    if ((i + 2) % 10 == 0) {
+                        yAxis.transform.GetChild(i).gameObject.SetActive(true);
+                    }
+                } else if (graphContent.transform.localScale.y >= 1.4f && graphContent.transform.localScale.y < 2f) {
+                    if ((i + 2) % 5 == 0) {
+                        yAxis.transform.GetChild(i).gameObject.SetActive(true);
+                    }
+                } else {
+                    if ((i + 2) % 2 == 0) {
+                        yAxis.transform.GetChild(i).gameObject.SetActive(true);
+                    }
+                }
+            }
+        }
+    }
+
+    private void InitialiseYScale() {
         for (int i = 1; i <= yScale; i++) {
-            if (yScale < 20) {
-                scaleRatio = 2;
-            } else if (yScale > 20 && yScale < 40) {
-                scaleRatio = 4;
-            } else {
-                scaleRatio = 10;
-            }
-            if ((i + 1) % scaleRatio == 0) {
-                GameObject dashMarker = Instantiate(yDashMarkerPrefab, yAxis.transform);
-                dashMarker.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
-                dashMarker.transform.localPosition = Vector3.zero;
-                dashMarker.transform.localPosition += new Vector3(0, (-gridRect.height / 2), 1);
-                dashMarker.transform.localPosition += new Vector3(0, ((gridRect.height / yScale) * i), 1);
-                Text text = dashMarker.GetComponent<Text>();
-                text.text = (i + yStart).ToString();
-                text.fontSize = 1;
-            }
+            GameObject dashMarker = Instantiate(yDashMarkerPrefab, yAxis.transform);
+            dashMarker.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
+            dashMarker.transform.localPosition = Vector3.zero;
+            dashMarker.transform.localPosition += new Vector3(0, (-gridRect.height / 2), 1);
+            dashMarker.transform.localPosition += new Vector3(0, ((gridRect.height / yScale) * i), 1);
+            Text text = dashMarker.GetComponent<Text>();
+            text.text = (i + yStart).ToString();
+            text.fontSize = 1;
         }
     }
 
@@ -161,8 +194,7 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
         LineRenderer lineRenderer;
 
         for (int i = 0; i <= xScale; i++) {
-            dashMarker = Instantiate(lineRendererPrefab);
-            dashMarker.transform.SetParent(grid.transform);
+            dashMarker = Instantiate(lineRendererPrefab, grid.transform);
             dashMarker.transform.localScale = Vector3.one;
             dashMarker.transform.localPosition = Vector3.zero;
 
@@ -174,8 +206,7 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
             lineRenderer.SetPosition(1, new Vector3((((size.x / xScale) * i) - (size.x / 2)), (size.y / 2), 0));
 
             for (int n = 0; n <= yScale; n++) {
-                dashMarker = Instantiate(lineRendererPrefab);
-                dashMarker.transform.SetParent(grid.transform);
+                dashMarker = Instantiate(lineRendererPrefab, grid.transform);
                 dashMarker.transform.localScale = Vector3.one;
                 dashMarker.transform.localPosition = new Vector3(0, 0, 0);
 
@@ -195,8 +226,8 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
     #region Public Methods
     public void GenerateGrid(int _xStart, int _xEnd, int _yStart, int _yEnd) {
         graphContentRectTrans = graphContent.GetComponent<RectTransform>();
-        scrollRectGraphRectTrans =  scrollRectGraph.transform.GetChild(0).GetComponent<RectTransform>();
-        graphContent.GetComponent<RectTransform>().sizeDelta = new Vector2(scrollRectGraph.GetComponent<RectTransform>().rect.x * -2, scrollRectGraph.GetComponent<RectTransform>().rect.y * -2) ;
+        graphContentRectTrans.sizeDelta = new Vector2(GraphScrollRect.GetComponent<RectTransform>().rect.x * -2, GraphScrollRect.GetComponent<RectTransform>().rect.y * -2);
+        graphContentRectTrans.localPosition = Vector3.zero;
         gridRect = graphContent.GetComponent<RectTransform>().rect;
         graph.GetComponent<BoxCollider>().size = new Vector2(gridRect.width, gridRect.height);
         xStart = _xStart;
@@ -205,24 +236,24 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
         yEnd = _yEnd;
         xScale = _xEnd - _xStart;
         yScale = _yEnd - _yStart;
+        InitialiseXScale();
         LayoutXScale();
-        scrollRectXAxis.verticalNormalizedPosition = 1;
-        scrollRectXAxis.scrollSensitivity = 0;
+        xAxisScrollRect.verticalNormalizedPosition = 1;
+        xAxisScrollRect.scrollSensitivity = 0;
+        InitialiseYScale();
         LayoutYScale();
-        scrollRectYAxis.verticalNormalizedPosition = 0;
-        scrollRectYAxis.scrollSensitivity = 0;
+        yAxisScrollRect.verticalNormalizedPosition = 0;
+        yAxisScrollRect.scrollSensitivity = 0;
         DrawGrid();
-        scrollRectGraph.scrollSensitivity = 0;
-        scrollRectGraph.onValueChanged.AddListener(ListenerMethod);
-        scrollRectGraph.normalizedPosition = new Vector2(0,0);
+        GraphScrollRect.scrollSensitivity = 0;
+        GraphScrollRect.onValueChanged.AddListener(ListenerMethod);
+        GraphScrollRect.normalizedPosition = new Vector2(0, 0);
 
     }
 
     public void ListenerMethod(Vector2 value) {
-        scrollRectXAxis.normalizedPosition = scrollRectGraph.normalizedPosition;
-        scrollRectYAxis.normalizedPosition = scrollRectGraph.normalizedPosition;
-        LayoutXScale();
-        LayoutYScale();
+        xAxisScrollRect.normalizedPosition = GraphScrollRect.normalizedPosition;
+        yAxisScrollRect.normalizedPosition = GraphScrollRect.normalizedPosition;
     }
 
     public void AddPoint(Vector3 screenPoint) {
@@ -240,7 +271,7 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
         float percent = (currentValue / maxValue) * 100;
 
         point.transform.localScale = Vector3.one;
-        point.GetComponent<RectTransform>().sizeDelta = new Vector2(20, rectTrans.rect.height + slider.handleRect.sizeDelta.y);
+        point.GetComponent<RectTransform>().sizeDelta = new Vector2(20, rectTrans.rect.height );
         point.transform.position = new Vector3(worldPoint.x, 0, 1);
         slider.minValue = yStart;
         slider.maxValue = yEnd;

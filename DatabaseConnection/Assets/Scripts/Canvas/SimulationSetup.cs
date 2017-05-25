@@ -141,6 +141,10 @@ public class SimulationSetup : MonoBehaviour {
                 tab.gameObject.SetActive(false);
                 tab.SetParent(inactiveTabs.transform);
             }
+            for (int i = graphs.transform.childCount -1; i > 1; i--) {
+                print(graphs.transform.GetChild(i).gameObject.name);
+                graphs.transform.GetChild(i).gameObject.SetActive(false);
+            }
         }
     }
 
@@ -184,6 +188,7 @@ public class SimulationSetup : MonoBehaviour {
 
     public void AddVital() {
         Vital vital = new Vital();
+        vital.nodeID = vitals.vitalList.Count;
         vital.name = vitalName.text;
         vital.units = vitalUnit.text;
         vital.max = float.Parse(vitalMax.text);
@@ -196,6 +201,7 @@ public class SimulationSetup : MonoBehaviour {
         toggleObject.transform.GetChild(1).GetComponent<Text>().text = vital.name;
         Toggle toggle = toggleObject.GetComponent<Toggle>();
         toggle.name = vital.name;
+        vitals.vitalList.Add(vital);
     }
 
     public void AddDrug() {
@@ -229,10 +235,15 @@ public class SimulationSetup : MonoBehaviour {
     void LoadVitalsTabs() {
         for (int i = 0; i < vitalsChosen.transform.childCount; i++) {
             if (vitalsChosen.transform.GetChild(i).GetComponent<Toggle>().isOn) {
-                graph = tabs.GenerateTab(vitals.vitalList[i].name);
-                graph.GenerateGrid(1, GetDuration(), 1, (int)Math.Ceiling(vitals.vitalList[i].max - vitals.vitalList[i].min));
-                if (i != 0) {
-                    graph.gameObject.SetActive(false);
+                print(vitals.vitalList[i]);
+                if (vitals.vitalList[i] == null) {
+                    print("add clause for new vital here");
+                } else {
+                    graph = tabs.GenerateTab(vitals.vitalList[i].name);
+                    graph.GenerateGrid(1, GetDuration(), 1, (int)Math.Ceiling(vitals.vitalList[i].max - vitals.vitalList[i].min));
+                    if (i != 0) {
+                        graph.gameObject.SetActive(false);
+                    }
                 }
             }
         }
