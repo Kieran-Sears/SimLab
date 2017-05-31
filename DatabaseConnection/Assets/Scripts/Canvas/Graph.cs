@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using System.Collections.Generic;
 
 
 public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
@@ -24,12 +25,11 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
     public GameObject yDashMarkerPrefab;
     public GameObject graphPointPrefab;
     public GameObject lineRendererPrefab;
+
+    public SortedList<float, Slider> points = new SortedList<float, Slider>();
     #endregion
 
     #region Private Variables
-    private GameObject[] points;
-    private GameObject[,] gridLines;
-
     private int xScale;
     private int yScale;
     private int xStart;
@@ -37,7 +37,7 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
     private int yStart;
     private int yEnd;
 
-    private Rect gridRect;
+    //private Rect gridRect;
 
     private bool onObj = false;
     private float scrollWheel = 1;
@@ -57,8 +57,9 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
             } else if (scrollWheel < 1f) {
                 scrollWheel = 1f;
             }
-
-
+        }
+        if (Input.GetKeyDown(KeyCode.A)) {
+           // DrawLinkedPointLines();
         }
     }
 
@@ -121,7 +122,7 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
     }
 
     private void LayoutXScale() {
-        xAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(gridRect.width, xAxisContent.GetComponent<RectTransform>().sizeDelta.y);
+        xAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(graphContentRectTrans.rect.width, xAxisContent.GetComponent<RectTransform>().sizeDelta.y);
         if (xAxis.transform.childCount > 25) {
             for (int i = 0; i < xAxis.transform.childCount; i++) {
                 xAxis.transform.GetChild(i).gameObject.SetActive(false);
@@ -147,14 +148,14 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
             GameObject dashMarker = Instantiate(xDashMarkerPrefab, xAxis.transform);
             dashMarker.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
             dashMarker.transform.localPosition = Vector3.zero;
-            dashMarker.transform.localPosition += new Vector3((-gridRect.width / 2), 0, 1);
-            dashMarker.transform.localPosition += new Vector3(((gridRect.width / xScale) * i), 0, 1);
+            dashMarker.transform.localPosition += new Vector3((-graphContentRectTrans.rect.width / 2), 0, 1);
+            dashMarker.transform.localPosition += new Vector3(((graphContentRectTrans.rect.width / xScale) * i), 0, 1);
             dashMarker.GetComponent<Text>().text = i.ToString();
         }
     }
 
     private void LayoutYScale() {
-        yAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(yAxisContent.GetComponent<RectTransform>().sizeDelta.x, gridRect.height);
+        yAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(yAxisContent.GetComponent<RectTransform>().sizeDelta.x, graphContentRectTrans.rect.height);
         if (yAxis.transform.childCount > 25) {
             for (int i = 0; i < yAxis.transform.childCount; i++) {
                 yAxis.transform.GetChild(i).gameObject.SetActive(false);
@@ -180,8 +181,8 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
             GameObject dashMarker = Instantiate(yDashMarkerPrefab, yAxis.transform);
             dashMarker.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
             dashMarker.transform.localPosition = Vector3.zero;
-            dashMarker.transform.localPosition += new Vector3(0, (-gridRect.height / 2), 1);
-            dashMarker.transform.localPosition += new Vector3(0, ((gridRect.height / yScale) * i), 1);
+            dashMarker.transform.localPosition += new Vector3(0, (-graphContentRectTrans.rect.height / 2), 1);
+            dashMarker.transform.localPosition += new Vector3(0, ((graphContentRectTrans.rect.height / yScale) * i), 1);
             Text text = dashMarker.GetComponent<Text>();
             text.text = (i + yStart).ToString();
             text.fontSize = 1;
@@ -189,7 +190,7 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
     }
 
     private void DrawGrid() {
-        Vector2 size = new Vector2(gridRect.width, gridRect.height);
+        Vector2 size = new Vector2(graphContentRectTrans.rect.width, graphContentRectTrans.rect.height);
         GameObject dashMarker;
         LineRenderer lineRenderer;
 
@@ -221,6 +222,69 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
     }
 
     private void DrawThresholds() { }
+
+    private void DrawLinkedPointLines() {
+        GameObject dashMarker;
+        LineRenderer lineRenderer;
+        Vector3[] arrayToCurve = new Vector3[points.Count];
+
+        for (int i = 0; i < points.Count; i++) {
+            print(points[i].handleRect.position);
+            arrayToCurve[i] = points[i].transform.position;
+        }
+
+        //MakeSmoothCurve(arrayToCurve, 3);
+
+        dashMarker = Instantiate(lineRendererPrefab, graphContent.transform);
+        dashMarker.transform.localScale = Vector3.one;
+        dashMarker.transform.localPosition = Vector3.zero;
+
+        lineRenderer = dashMarker.GetComponent<LineRenderer>();
+        lineRenderer.startColor = Color.red;
+        lineRenderer.endColor = Color.red;
+        lineRenderer.startWidth = 0.5f;
+        lineRenderer.endWidth = 0.5f;
+        lineRenderer.numPositions = points.Count;
+
+        int counter = 0;
+        for (int i = 0; i < points.Count; i++) {
+            lineRenderer.SetPosition(counter, arrayToCurve[i]);
+            ++counter;
+        }
+    }
+
+
+    public static Vector3[] MakeSmoothCurve(Vector3[] arrayToCurve, float smoothness) {
+        List<Vector3> points;
+        List<Vector3> curvedPoints;
+        int pointsLength = 0;
+        int curvedLength = 0;
+
+        if (smoothness < 1.0f) smoothness = 1.0f;
+
+        pointsLength = arrayToCurve.Length;
+
+        curvedLength = (pointsLength * Mathf.RoundToInt(smoothness)) - 1;
+        curvedPoints = new List<Vector3>(curvedLength);
+
+        float t = 0.0f;
+        for (int pointInTimeOnCurve = 0; pointInTimeOnCurve < curvedLength + 1; pointInTimeOnCurve++) {
+            t = Mathf.InverseLerp(0, curvedLength, pointInTimeOnCurve);
+
+            points = new List<Vector3>(arrayToCurve);
+
+            for (int j = pointsLength - 1; j > 0; j--) {
+                for (int i = 0; i < j; i++) {
+                    points[i] = (1 - t) * points[i] + t * points[i + 1];
+                }
+            }
+
+            curvedPoints.Add(points[0]);
+        }
+
+        return (curvedPoints.ToArray());
+    }
+
     #endregion
 
     #region Public Methods
@@ -228,8 +292,7 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
         graphContentRectTrans = graphContent.GetComponent<RectTransform>();
         graphContentRectTrans.sizeDelta = new Vector2(GraphScrollRect.GetComponent<RectTransform>().rect.x * -2, GraphScrollRect.GetComponent<RectTransform>().rect.y * -2);
         graphContentRectTrans.localPosition = Vector3.zero;
-        gridRect = graphContent.GetComponent<RectTransform>().rect;
-        graph.GetComponent<BoxCollider>().size = new Vector2(gridRect.width, gridRect.height);
+        graph.GetComponent<BoxCollider>().size = new Vector2(graphContentRectTrans.rect.width, graphContentRectTrans.rect.height);
         xStart = _xStart;
         xEnd = _xEnd;
         yStart = _yStart;
@@ -271,11 +334,16 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
         float percent = (currentValue / maxValue) * 100;
 
         point.transform.localScale = Vector3.one;
-        point.GetComponent<RectTransform>().sizeDelta = new Vector2(20, rectTrans.rect.height );
+        point.GetComponent<RectTransform>().sizeDelta = new Vector2(20, rectTrans.rect.height + slider.handleRect.sizeDelta.y);
         point.transform.position = new Vector3(worldPoint.x, 0, 1);
+        point.transform.localPosition += (Vector3.up * -point.transform.localPosition.y);
+
         slider.minValue = yStart;
         slider.maxValue = yEnd;
         slider.value = ((slider.maxValue - slider.minValue) / 100) * percent + slider.minValue;
+
+        float pointTime = (slider.transform.localPosition.x + (rectTrans.rect.width / 2)) / (rectTrans.rect.width / xScale) ;
+        points.Add(pointTime, slider);
     }
 
     public void AddPoint(float xValue, float yValue) {
@@ -284,12 +352,13 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
         Slider slider = point.GetComponent<Slider>();
         point.transform.localScale = Vector3.one;
         point.transform.localPosition = Vector3.zero;
-        point.transform.localPosition += new Vector3((-gridRect.width / 2), (-gridRect.height / 2), 0);
-        point.transform.localPosition += new Vector3(((gridRect.width / xScale) * xValue), gridRect.height / 2, -1);
-        point.GetComponent<RectTransform>().sizeDelta = new Vector2(20, gridRect.height + slider.handleRect.sizeDelta.y);
+        point.transform.localPosition += new Vector3((-graphContentRectTrans.rect.width / 2), (-graphContentRectTrans.rect.height / 2), 0);
+        point.transform.localPosition += new Vector3(((graphContentRectTrans.rect.width / xScale) * xValue), graphContentRectTrans.rect.height / 2, -1);
+        point.GetComponent<RectTransform>().sizeDelta = new Vector2(20, graphContentRectTrans.rect.height + slider.handleRect.sizeDelta.y);
         slider.minValue = yStart;
         slider.maxValue = yEnd;
         slider.value = yValue;
+        points.Add(xValue, slider);
     }
     #endregion
 

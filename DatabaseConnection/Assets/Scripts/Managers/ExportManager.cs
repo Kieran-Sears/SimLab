@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
-using System;
 using System.IO;
 using System.Xml.Serialization;
+using System.Collections.Generic;
 
 
 
@@ -64,6 +64,20 @@ public class ExportManager : MonoBehaviour {
                 }
                 return null;
         }
+
+    }
+
+
+
+    public void SaveCondition(Dictionary<string, SortedList<float, float>> conditionValues) {
+        Condition condition = new Condition();
+        foreach (var item in conditionValues.Values) {
+
+        }
+        Time time = new Time();
+        Value value = new Value();
+    
+
 
     }
 

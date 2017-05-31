@@ -30,6 +30,8 @@ public class Value {
     public float value;
 }
 
+// Example XML below
+
 //<Condition>
 //<Timeline>
 //  <Time second = "0" >
