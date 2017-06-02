@@ -1,10 +1,16 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.Events;
 using System.Collections.Generic;
 
 
+
+
 public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
+
+
+
 
     #region Public Variables
     public GameObject graph;
@@ -44,6 +50,7 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
     private float newScrollWheel;
     private Vector2 localpoint;
     private RectTransform graphContentRectTrans;
+    private LineRenderer lineRenderer;
     #endregion
 
     #region Unity Methods
@@ -58,9 +65,9 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
                 scrollWheel = 1f;
             }
         }
-        if (Input.GetKeyDown(KeyCode.A)) {
-           // DrawLinkedPointLines();
-        }
+        //if (Input.GetKeyDown(KeyCode.A)) {
+        //    DrawLinkedPointLines();
+        //}
     }
 
     public void OnPointerEnter(PointerEventData eventData) {
@@ -111,6 +118,12 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
 
             LayoutYScale();
             LayoutXScale();
+
+            //if (lineRenderer != null) {
+            //    lineRenderer.transform.localScale = new Vector3(targetSize, targetSize, 1);
+            //}
+            //DrawLinkedPointLines();
+
             // TODO prevent the unit markers from scaling their text when zooming
             //for (int i = 0; i < xAxisContent.transform.GetChild(0).childCount; i++) {
             //    xAxisContent.transform.GetChild(0).GetChild(i).localScale = xAxisContent.transform.localScale - Vector3.right;
@@ -135,7 +148,7 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
                         xAxis.transform.GetChild(i).gameObject.SetActive(true);
                     }
                 } else {
-                    if ( (i + 1) % 2 == 0) {
+                    if ((i + 1) % 2 == 0) {
                         xAxis.transform.GetChild(i).gameObject.SetActive(true);
                     }
                 }
@@ -225,25 +238,26 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
 
     private void DrawLinkedPointLines() {
         GameObject dashMarker;
-        LineRenderer lineRenderer;
         Vector3[] arrayToCurve = new Vector3[points.Count];
 
         for (int i = 0; i < points.Count; i++) {
-            print(points[i].handleRect.position);
-            arrayToCurve[i] = points[i].transform.position;
+            arrayToCurve[i] = Camera.main.WorldToScreenPoint(points[i].handleRect.transform.position) - Camera.main.WorldToScreenPoint(graphContent.transform.position);
         }
 
-        //MakeSmoothCurve(arrayToCurve, 3);
+        MakeSmoothCurve(arrayToCurve, 3);
+        if (lineRenderer == null) {
+            dashMarker = Instantiate(lineRendererPrefab, graph.transform);
+            dashMarker.transform.localScale = Vector3.one;
+            dashMarker.transform.localPosition = Vector3.zero;
 
-        dashMarker = Instantiate(lineRendererPrefab, graphContent.transform);
-        dashMarker.transform.localScale = Vector3.one;
-        dashMarker.transform.localPosition = Vector3.zero;
+            lineRenderer = dashMarker.GetComponent<LineRenderer>();
+            lineRenderer.startColor = Color.red;
+            lineRenderer.endColor = Color.red;
+            lineRenderer.startWidth = 0.1f;
+            lineRenderer.endWidth = 0.1f;
+        }
 
-        lineRenderer = dashMarker.GetComponent<LineRenderer>();
-        lineRenderer.startColor = Color.red;
-        lineRenderer.endColor = Color.red;
-        lineRenderer.startWidth = 0.5f;
-        lineRenderer.endWidth = 0.5f;
+        lineRenderer.transform.SetAsLastSibling();
         lineRenderer.numPositions = points.Count;
 
         int counter = 0;
@@ -251,6 +265,22 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
             lineRenderer.SetPosition(counter, arrayToCurve[i]);
             ++counter;
         }
+    }
+
+    public void ChangeLinkedPointLineWithSlider(float value) {
+        Slider slider = EventSystem.current.currentSelectedGameObject.GetComponent<Slider>();
+        Vector3 pos = new Vector3(
+            (Camera.main.WorldToScreenPoint(slider.handleRect.position) - Camera.main.WorldToScreenPoint(graph.transform.position / graphContent.transform.localScale.x)).x / graphContent.transform.localScale.x, 
+            (Camera.main.WorldToScreenPoint(slider.handleRect.position) - Camera.main.WorldToScreenPoint(graph.transform.position / graphContent.transform.localScale.y)).y / graphContent.transform.localScale.y,
+            1) ; 
+             lineRenderer.SetPosition(points.IndexOfValue(slider), pos ); 
+
+
+
+
+
+
+
     }
 
 
@@ -321,29 +351,25 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
 
     public void AddPoint(Vector3 screenPoint) {
         Vector3 worldPoint = Camera.main.ScreenToWorldPoint(screenPoint);
-        RectTransform rectTrans = graph.GetComponent<RectTransform>();
         GameObject point = Instantiate(graphPointPrefab, graph.transform);
         Slider slider = point.GetComponent<Slider>();
-
-        point.transform.localPosition -= new Vector3(0, rectTrans.rect.height / 2, 0);
-        float minValue = point.transform.position.y;
-        float currentValue = worldPoint.y - minValue;
-
-        point.transform.localPosition += new Vector3(0, rectTrans.rect.height, 0);
-        float maxValue = point.transform.position.y - minValue;
-        float percent = (currentValue / maxValue) * 100;
-
         point.transform.localScale = Vector3.one;
-        point.GetComponent<RectTransform>().sizeDelta = new Vector2(20, rectTrans.rect.height + slider.handleRect.sizeDelta.y);
-        point.transform.position = new Vector3(worldPoint.x, 0, 1);
-        point.transform.localPosition += (Vector3.up * -point.transform.localPosition.y);
-
+        point.GetComponent<RectTransform>().sizeDelta = new Vector2(20, graph.GetComponent<RectTransform>().rect.height + slider.handleRect.sizeDelta.y);
+        point.transform.localPosition = Vector3.zero;
         slider.minValue = yStart;
         slider.maxValue = yEnd;
-        slider.value = ((slider.maxValue - slider.minValue) / 100) * percent + slider.minValue;
-
-        float pointTime = (slider.transform.localPosition.x + (rectTrans.rect.width / 2)) / (rectTrans.rect.width / xScale) ;
+        slider.value = yStart;
+        float minValue = slider.handleRect.transform.position.y;
+        slider.value = yEnd;
+        float maxValue = slider.handleRect.transform.position.y - minValue;
+        float currentValue = worldPoint.y  - minValue;
+        float percent = (currentValue / maxValue) * 100;
+        point.transform.position = new Vector3(worldPoint.x, point.transform.position.y, 1);
+        slider.value = (((slider.maxValue - slider.minValue) / 100) * percent);
+        float pointTime = (slider.transform.localPosition.x + (graph.GetComponent<RectTransform>().rect.width / 2)) / (graph.GetComponent<RectTransform>().rect.width / xScale);
         points.Add(pointTime, slider);
+        slider.onValueChanged.AddListener(ChangeLinkedPointLineWithSlider);
+        DrawLinkedPointLines();
     }
 
     public void AddPoint(float xValue, float yValue) {
@@ -359,6 +385,8 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
         slider.maxValue = yEnd;
         slider.value = yValue;
         points.Add(xValue, slider);
+        slider.onValueChanged.AddListener(ChangeLinkedPointLineWithSlider);
+        DrawLinkedPointLines();
     }
     #endregion
 
