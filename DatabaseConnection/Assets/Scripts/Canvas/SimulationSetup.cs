@@ -70,7 +70,7 @@ public class SimulationSetup : MonoBehaviour {
                 RaycastHit hitInfo;
                 if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, Mathf.Infinity)) {
                     if (hitInfo.collider.tag == "Handle") {
-
+                  
                     } else if (hitInfo.collider.tag == "Graph") {
                         tabs.activeGraph.AddPoint(Camera.main.WorldToScreenPoint(hitInfo.point));
                     }

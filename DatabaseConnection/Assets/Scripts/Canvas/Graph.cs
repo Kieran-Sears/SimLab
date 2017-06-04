@@ -240,11 +240,13 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
         GameObject dashMarker;
         Vector3[] arrayToCurve = new Vector3[points.Count];
 
-        for (int i = 0; i < points.Count; i++) {
-            arrayToCurve[i] = Camera.main.WorldToScreenPoint(points[i].handleRect.transform.position) - Camera.main.WorldToScreenPoint(graphContent.transform.position);
+        int counter = 0;
+        foreach (KeyValuePair<float, Slider> item in points) {
+            arrayToCurve[counter] = Camera.main.WorldToScreenPoint(item.Value.handleRect.transform.position) - Camera.main.WorldToScreenPoint(graphContent.transform.position);
+            counter++;
         }
 
-        MakeSmoothCurve(arrayToCurve, 3);
+        MakeSmoothCurve(arrayToCurve, 30);
         if (lineRenderer == null) {
             dashMarker = Instantiate(lineRendererPrefab, graph.transform);
             dashMarker.transform.localScale = Vector3.one;
@@ -260,7 +262,7 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
         lineRenderer.transform.SetAsLastSibling();
         lineRenderer.numPositions = points.Count;
 
-        int counter = 0;
+        counter = 0;
         for (int i = 0; i < points.Count; i++) {
             lineRenderer.SetPosition(counter, arrayToCurve[i]);
             ++counter;
@@ -269,23 +271,13 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
 
     public void ChangeLinkedPointLineWithSlider(float value) {
         Slider slider = EventSystem.current.currentSelectedGameObject.GetComponent<Slider>();
-        Vector3 pos = new Vector3(
-            (Camera.main.WorldToScreenPoint(slider.handleRect.position) - Camera.main.WorldToScreenPoint(graph.transform.position / graphContent.transform.localScale.x)).x / graphContent.transform.localScale.x, 
-            (Camera.main.WorldToScreenPoint(slider.handleRect.position) - Camera.main.WorldToScreenPoint(graph.transform.position / graphContent.transform.localScale.y)).y / graphContent.transform.localScale.y,
-            1) ; 
-             lineRenderer.SetPosition(points.IndexOfValue(slider), pos ); 
-
-
-
-
-
-
-
+        float yPos = (Camera.main.WorldToScreenPoint(slider.handleRect.position) - Camera.main.WorldToScreenPoint(graph.transform.position / graphContent.transform.localScale.y)).y / graphContent.transform.localScale.y;
+        Vector3 pos = new Vector3(lineRenderer.GetPosition(points.IndexOfValue(slider)).x, yPos, -1);
+        lineRenderer.SetPosition(points.IndexOfValue(slider), pos);
     }
 
-
     public static Vector3[] MakeSmoothCurve(Vector3[] arrayToCurve, float smoothness) {
-        List<Vector3> points;
+        List<Vector3> pointy;
         List<Vector3> curvedPoints;
         int pointsLength = 0;
         int curvedLength = 0;
@@ -301,15 +293,15 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
         for (int pointInTimeOnCurve = 0; pointInTimeOnCurve < curvedLength + 1; pointInTimeOnCurve++) {
             t = Mathf.InverseLerp(0, curvedLength, pointInTimeOnCurve);
 
-            points = new List<Vector3>(arrayToCurve);
+            pointy = new List<Vector3>(arrayToCurve);
 
             for (int j = pointsLength - 1; j > 0; j--) {
                 for (int i = 0; i < j; i++) {
-                    points[i] = (1 - t) * points[i] + t * points[i + 1];
+                    pointy[i] = (1 - t) * pointy[i] + t * pointy[i + 1];
                 }
             }
 
-            curvedPoints.Add(points[0]);
+            curvedPoints.Add(pointy[0]);
         }
 
         return (curvedPoints.ToArray());
@@ -318,6 +310,7 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
     #endregion
 
     #region Public Methods
+
     public void GenerateGrid(int _xStart, int _xEnd, int _yStart, int _yEnd) {
         graphContentRectTrans = graphContent.GetComponent<RectTransform>();
         graphContentRectTrans.sizeDelta = new Vector2(GraphScrollRect.GetComponent<RectTransform>().rect.x * -2, GraphScrollRect.GetComponent<RectTransform>().rect.y * -2);
@@ -362,7 +355,7 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
         float minValue = slider.handleRect.transform.position.y;
         slider.value = yEnd;
         float maxValue = slider.handleRect.transform.position.y - minValue;
-        float currentValue = worldPoint.y  - minValue;
+        float currentValue = worldPoint.y - minValue;
         float percent = (currentValue / maxValue) * 100;
         point.transform.position = new Vector3(worldPoint.x, point.transform.position.y, 1);
         slider.value = (((slider.maxValue - slider.minValue) / 100) * percent);
@@ -388,6 +381,7 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
         slider.onValueChanged.AddListener(ChangeLinkedPointLineWithSlider);
         DrawLinkedPointLines();
     }
+
     #endregion
 
 
