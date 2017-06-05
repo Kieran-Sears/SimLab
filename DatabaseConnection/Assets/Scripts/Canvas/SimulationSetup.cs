@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class SimulationSetup : MonoBehaviour {
+
+    public static SimulationSetup instance { get; private set; }
 
     public TabManager tabs;
     public GameObject tableEntryPrefab;
@@ -47,7 +50,13 @@ public class SimulationSetup : MonoBehaviour {
     private GameObject tab;
     private Graph graph;
 
-    private float mouseHold;
+    private void Awake() {
+        if (instance) {
+            DestroyImmediate(this);
+        } else {
+            instance = this;
+        }
+    }
 
     void Start() {
         PopulatePresets();
@@ -56,29 +65,8 @@ public class SimulationSetup : MonoBehaviour {
         PopulateEquipment();
     }
 
-    void LateUpdate() {
+ 
 
-        RaycastWorldUI();
-    }
-
-    void RaycastWorldUI() {
-        if (Input.GetMouseButton(0)) {
-            mouseHold += UnityEngine.Time.deltaTime;
-        }
-        if (Input.GetMouseButtonUp(0)) {
-            if (mouseHold < 0.3f) {
-                RaycastHit hitInfo;
-                if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, Mathf.Infinity)) {
-                    if (hitInfo.collider.tag == "Handle") {
-                  
-                    } else if (hitInfo.collider.tag == "Graph") {
-                        tabs.activeGraph.AddPoint(Camera.main.WorldToScreenPoint(hitInfo.point));
-                    }
-                }
-            } 
-            mouseHold = 0;
-        } 
-    }
 
     void PopulatePresets() {
         UnityEngine.Object[] files = Resources.LoadAll("Conditions");
@@ -141,7 +129,7 @@ public class SimulationSetup : MonoBehaviour {
                 tab.gameObject.SetActive(false);
                 tab.SetParent(inactiveTabs.transform);
             }
-            for (int i = graphs.transform.childCount -1; i > 1; i--) {
+            for (int i = graphs.transform.childCount - 1; i > 1; i--) {
                 print(graphs.transform.GetChild(i).gameObject.name);
                 graphs.transform.GetChild(i).gameObject.SetActive(false);
             }

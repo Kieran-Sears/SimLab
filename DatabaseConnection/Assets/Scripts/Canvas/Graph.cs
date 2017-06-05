@@ -43,14 +43,20 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
     private int yStart;
     private int yEnd;
 
-    //private Rect gridRect;
-
     private bool onObj = false;
     private float scrollWheel = 1;
     private float newScrollWheel;
     private Vector2 localpoint;
     private RectTransform graphContentRectTrans;
     private LineRenderer lineRenderer;
+
+    private float mouseHold;
+    private RaycastHit[] hits;
+    private bool cursorOverHandle;
+    private Transform handleTrans;
+    private bool addPoint;
+    private Vector3 hitPoint;
+    private float pointTimeOld;
     #endregion
 
     #region Unity Methods
@@ -65,9 +71,65 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
                 scrollWheel = 1f;
             }
         }
-        //if (Input.GetKeyDown(KeyCode.A)) {
-        //    DrawLinkedPointLines();
-        //}
+
+        if (Input.GetMouseButton(0)) {
+            mouseHold += UnityEngine.Time.deltaTime;
+        }
+
+        if (Input.GetMouseButtonDown(0)) {
+            hits = Physics.RaycastAll(Camera.main.ScreenPointToRay(Input.mousePosition), 1000);
+            foreach (RaycastHit hit in hits) {
+                if (hit.collider.tag == "Handle") {
+                    cursorOverHandle = true;
+                    handleTrans = hit.transform;
+                } else if (hit.collider.tag == "Graph") {
+                    addPoint = true;
+                    hitPoint = hit.point;
+                }
+            }
+        }
+
+        if (cursorOverHandle) {
+            Slider slider = handleTrans.parent.parent.GetComponent<Slider>();
+            if (points.IndexOfValue(slider) == -1) return;
+            float index = points.Keys[points.IndexOfValue(slider)];
+            Vector3 newPos = new Vector3(Camera.main.ScreenToWorldPoint(Input.mousePosition).x, handleTrans.parent.parent.transform.position.y, handleTrans.parent.parent.transform.position.z);
+            if (graph == null) return;
+            float pointTime = (slider.transform.localPosition.x + (graph.GetComponent<RectTransform>().rect.width / 2)) / (graph.GetComponent<RectTransform>().rect.width / xScale);
+            if (pointTime != pointTimeOld) {
+
+                if (index - 1 >= 0 && pointTime < points.Keys[points.IndexOfKey(index) - 1]) {
+                    print("Removing " + index);
+                    points.Remove(index);
+                    points.Add(pointTime, slider);
+                    print("Adding " + pointTime);
+        
+                }
+
+               if (index - 1 >= 0 && index + 1 < points.Count && pointTime > points.Keys[points.IndexOfKey(index) + 1]) {
+                   
+                    if (points.IndexOfKey(index) != -1) {
+                        print( index + " replacing" + points.Keys[points.IndexOfKey(index) + 1]  );
+                        points.Remove(points.IndexOfKey(index));
+                        points.Add(pointTime, slider);
+                    }
+                   
+                }
+
+                pointTimeOld = pointTime;
+            }
+
+            handleTrans.parent.parent.transform.position = newPos;
+            DrawLinkedPointLines();
+        }
+
+        if (Input.GetMouseButtonUp(0)) {
+            cursorOverHandle = false;
+            if (mouseHold < 0.3 && addPoint) {
+                AddPoint(Camera.main.WorldToScreenPoint(hitPoint));
+            }
+            mouseHold = 0;
+        }
     }
 
     public void OnPointerEnter(PointerEventData eventData) {
@@ -84,8 +146,6 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
     #endregion
 
     #region Private Methods
-
-
     private void SetZoom(float targetSize) {
         if (graph != null) {
             //grid : setting the pivot point to be at the location of the cursor
@@ -248,6 +308,7 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
 
         MakeSmoothCurve(arrayToCurve, 30);
         if (lineRenderer == null) {
+            if (graph == null) return;
             dashMarker = Instantiate(lineRendererPrefab, graph.transform);
             dashMarker.transform.localScale = Vector3.one;
             dashMarker.transform.localPosition = Vector3.zero;
@@ -272,7 +333,8 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
     public void ChangeLinkedPointLineWithSlider(float value) {
         Slider slider = EventSystem.current.currentSelectedGameObject.GetComponent<Slider>();
         float yPos = (Camera.main.WorldToScreenPoint(slider.handleRect.position) - Camera.main.WorldToScreenPoint(graph.transform.position / graphContent.transform.localScale.y)).y / graphContent.transform.localScale.y;
-        Vector3 pos = new Vector3(lineRenderer.GetPosition(points.IndexOfValue(slider)).x, yPos, -1);
+        Vector3 pos = new Vector3(lineRenderer.GetPosition(points.IndexOfValue(slider)).x, yPos, -1);//  these multiplied by a scale
+
         lineRenderer.SetPosition(points.IndexOfValue(slider), pos);
     }
 
@@ -285,10 +347,10 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
         if (smoothness < 1.0f) smoothness = 1.0f;
 
         pointsLength = arrayToCurve.Length;
-     
+
         curvedLength = (pointsLength * Mathf.RoundToInt(smoothness)) - 1;
 
-        print("here "+ curvedLength);
+
         if (curvedLength == -1) return null;
         curvedPoints = new List<Vector3>(curvedLength);
 
@@ -309,11 +371,9 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
 
         return (curvedPoints.ToArray());
     }
-
     #endregion
 
     #region Public Methods
-
     public void GenerateGrid(int _xStart, int _xEnd, int _yStart, int _yEnd) {
         graphContentRectTrans = graphContent.GetComponent<RectTransform>();
         graphContentRectTrans.sizeDelta = new Vector2(GraphScrollRect.GetComponent<RectTransform>().rect.x * -2, GraphScrollRect.GetComponent<RectTransform>().rect.y * -2);
@@ -347,6 +407,7 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
 
     public void AddPoint(Vector3 screenPoint) {
         Vector3 worldPoint = Camera.main.ScreenToWorldPoint(screenPoint);
+        if (graph == null) return;
         GameObject point = Instantiate(graphPointPrefab, graph.transform);
         Slider slider = point.GetComponent<Slider>();
         point.transform.localScale = Vector3.one;
@@ -384,7 +445,6 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
         slider.onValueChanged.AddListener(ChangeLinkedPointLineWithSlider);
         DrawLinkedPointLines();
     }
-
     #endregion
 
 
