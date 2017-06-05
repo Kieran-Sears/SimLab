@@ -236,7 +236,7 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
 
     private void DrawThresholds() { }
 
-    private void DrawLinkedPointLines() {
+    public void DrawLinkedPointLines() {
         GameObject dashMarker;
         Vector3[] arrayToCurve = new Vector3[points.Count];
 
@@ -285,8 +285,11 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
         if (smoothness < 1.0f) smoothness = 1.0f;
 
         pointsLength = arrayToCurve.Length;
-
+     
         curvedLength = (pointsLength * Mathf.RoundToInt(smoothness)) - 1;
+
+        print("here "+ curvedLength);
+        if (curvedLength == -1) return null;
         curvedPoints = new List<Vector3>(curvedLength);
 
         float t = 0.0f;
