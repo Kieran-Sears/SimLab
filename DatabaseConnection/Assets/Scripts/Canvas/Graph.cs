@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
-using UnityEngine.Events;
 using System.Collections.Generic;
 
 
@@ -56,7 +55,7 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
     private Transform handleTrans;
     private bool addPoint;
     private Vector3 hitPoint;
-    private float pointTimeOld;
+    private float previousFrameTime;
     #endregion
 
     #region Unity Methods
@@ -92,35 +91,47 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
         if (cursorOverHandle) {
             Slider slider = handleTrans.parent.parent.GetComponent<Slider>();
             if (points.IndexOfValue(slider) == -1) return;
-            float index = points.Keys[points.IndexOfValue(slider)];
+            int indexOfSliderMinipulated = points.IndexOfValue(slider);
+            // get the index of the slider we are minipulating
+            float originalSliderTime = points.Keys[indexOfSliderMinipulated];
+            // find position for the slider itself while its handleRect is being minipulated
             Vector3 newPos = new Vector3(Camera.main.ScreenToWorldPoint(Input.mousePosition).x, handleTrans.parent.parent.transform.position.y, handleTrans.parent.parent.transform.position.z);
             if (graph == null) return;
-            float pointTime = (slider.transform.localPosition.x + (graph.GetComponent<RectTransform>().rect.width / 2)) / (graph.GetComponent<RectTransform>().rect.width / xScale);
-            if (pointTime != pointTimeOld) {
+            // calculate how far the slider is along the timeline
+            float newSliderTime = (slider.transform.localPosition.x + (graph.GetComponent<RectTransform>().rect.width / 2)) / (graph.GetComponent<RectTransform>().rect.width / xScale);
 
-                if (index - 1 >= 0 && pointTime < points.Keys[points.IndexOfKey(index) - 1]) {
-                    print("Removing " + index);
-                    points.Remove(index);
-                    points.Add(pointTime, slider);
-                    print("Adding " + pointTime);
-        
-                }
+            // prevent overlap of graph point line
+            //##############################################################
+            // if the position in the timeline is different to the last frame
+            if (newSliderTime != previousFrameTime) {
+                // if the time is less than the previous time in the sortedList
+                //if (sliderKey - 1 >= 0 && pointTime < points.Keys[points.IndexOfKey(sliderKey) - 1]) {
+                //    // remove the Key-Value for the slider where it is currently in the sorted list
+                //    print("Removing " + sliderKey);
+                //    points.Remove(sliderKey);
+                //    // and add it to the new time slot
+                //    points.Add(pointTime, slider);
+                //    print("Adding " + pointTime);
+                //}
 
-               if (index - 1 >= 0 && index + 1 < points.Count && pointTime > points.Keys[points.IndexOfKey(index) + 1]) {
-                   
-                    if (points.IndexOfKey(index) != -1) {
-                        print( index + " replacing" + points.Keys[points.IndexOfKey(index) + 1]  );
-                        points.Remove(points.IndexOfKey(index));
-                        points.Add(pointTime, slider);
+                if (indexOfSliderMinipulated != -1 && !points.ContainsKey(newSliderTime)) {
+
+                    if (indexOfSliderMinipulated - 1 >= 0 && indexOfSliderMinipulated + 1 < points.Count) {
+                        if (newSliderTime > points.Keys[indexOfSliderMinipulated + 1] || newSliderTime < points.Keys[indexOfSliderMinipulated - 1]) {
+                            points.RemoveAt(indexOfSliderMinipulated);
+                            points.Add(newSliderTime, slider);           
+                        } 
                     }
-                   
+                  
                 }
 
-                pointTimeOld = pointTime;
+                previousFrameTime = newSliderTime;
             }
 
             handleTrans.parent.parent.transform.position = newPos;
             DrawLinkedPointLines();
+
+            //##############################################################
         }
 
         if (Input.GetMouseButtonUp(0)) {
@@ -179,18 +190,21 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
             LayoutYScale();
             LayoutXScale();
 
-            //if (lineRenderer != null) {
-            //    lineRenderer.transform.localScale = new Vector3(targetSize, targetSize, 1);
-            //}
-            //DrawLinkedPointLines();
+            lineRenderer.transform.localScale = new Vector3(1 / targetSize, 1 / targetSize, 1);
 
-            // TODO prevent the unit markers from scaling their text when zooming
-            //for (int i = 0; i < xAxisContent.transform.GetChild(0).childCount; i++) {
-            //    xAxisContent.transform.GetChild(0).GetChild(i).localScale = xAxisContent.transform.localScale - Vector3.right;
-            //}
-            //for (int i = 0; i < yAxisContent.transform.GetChild(0).childCount; i++) {
-            //    yAxisContent.transform.GetChild(0).GetChild(i).localScale = xAxisContent.transform.localScale - Vector3.up;
-            //}
+
+            for (int i = 0; i < points.Count; i++) {
+                lineRenderer.SetPosition(i, (Camera.main.WorldToScreenPoint(points.Values[i].handleRect.position) - Camera.main.WorldToScreenPoint(graphContent.transform.position)));        
+            }
+
+
+            for (int i = 0; i < xAxisContent.transform.GetChild(0).childCount; i++) {
+                xAxisContent.transform.GetChild(0).GetChild(i).localScale = (Vector3.one - Vector3.right) + (Vector3.right / targetSize);
+            }
+            print ((Vector3.one - Vector3.up) + (Vector3.up / targetSize));
+            for (int i = 0; i < yAxisContent.transform.GetChild(0).childCount; i++) {
+                yAxisContent.transform.GetChild(0).GetChild(i).localScale = (Vector3.one - Vector3.up) + (Vector3.up / targetSize);
+            }
         }
     }
 
@@ -309,7 +323,7 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
         MakeSmoothCurve(arrayToCurve, 30);
         if (lineRenderer == null) {
             if (graph == null) return;
-            dashMarker = Instantiate(lineRendererPrefab, graph.transform);
+            dashMarker = Instantiate(lineRendererPrefab, graphContent.transform);
             dashMarker.transform.localScale = Vector3.one;
             dashMarker.transform.localPosition = Vector3.zero;
 
@@ -424,9 +438,21 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
         point.transform.position = new Vector3(worldPoint.x, point.transform.position.y, 1);
         slider.value = (((slider.maxValue - slider.minValue) / 100) * percent);
         float pointTime = (slider.transform.localPosition.x + (graph.GetComponent<RectTransform>().rect.width / 2)) / (graph.GetComponent<RectTransform>().rect.width / xScale);
+        HierachyPositionSearch(point);
         points.Add(pointTime, slider);
         slider.onValueChanged.AddListener(ChangeLinkedPointLineWithSlider);
         DrawLinkedPointLines();
+    }
+
+
+    private void HierachyPositionSearch(GameObject point) {
+        for (int i = 0; i < graph.transform.childCount; i++) {
+            if (graph.transform.GetChild(i).localPosition.x > point.transform.localPosition.x) {
+                point.transform.SetSiblingIndex(i);
+                return;
+            }
+
+        }
     }
 
     public void AddPoint(float xValue, float yValue) {
