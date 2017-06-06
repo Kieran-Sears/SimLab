@@ -28,6 +28,10 @@ public class Value {
     public int vitalID;
     [XmlElement("Value")]
     public float value;
+    [XmlElement("UpperThreshold")]
+    public float upperThreshold;
+    [XmlElement("LowerThreshold")]
+    public float lowerThreshold;
 }
 
 // Example XML below

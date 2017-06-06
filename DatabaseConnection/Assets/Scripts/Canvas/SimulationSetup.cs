@@ -158,8 +158,21 @@ public class SimulationSetup : MonoBehaviour {
                     Time time = condition.timeline[i];
                     foreach (Value data in time.vitalValues) {
                         Vital vital = vitals.vitalList[data.vitalID];
-                        graphs.transform.FindChild(vital.name).GetComponent<Graph>().AddPoint(i, data.value);
+                        Graph graph = graphs.transform.FindChild(vital.name).GetComponent<Graph>();
+                        graph.AddPoint(i, data.value);
+                   
+                        if (data.upperThreshold != 0 && data.upperThreshold != null) {
+                            print("Upper " + data.upperThreshold);
+                            graph.AddThresholdPointUpper(i, data.upperThreshold);
+                                }
+
+                        if (data.lowerThreshold != 0 && data.lowerThreshold != null) {
+                            print("Upper " + data.upperThreshold);
+                            graph.AddThresholdPointLower(i, data.lowerThreshold);
+                        }
                     }
+
+                    // if contains threshold values (add here)
                 }
             }
         }

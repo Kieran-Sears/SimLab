@@ -21,7 +21,6 @@ public class TabManager : MonoBehaviour {
         Toggle selected = GetComponent<ToggleGroup>().ActiveToggles().FirstOrDefault();
         activeGraph = tabGraphs[selected];
         activeGraph.gameObject.SetActive(true);
-        activeGraph.GetComponent<Graph>().DrawLinkedPointLines();
     }
 
     public Graph GenerateTab(string vitalName) {

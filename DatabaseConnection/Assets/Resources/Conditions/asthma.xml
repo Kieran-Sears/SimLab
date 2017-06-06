@@ -5,6 +5,8 @@
     <VitalValues>
     <VitalValue vitalID="0">
       <Value>46</Value>
+      <UpperThreshold>60</UpperThreshold>
+      <LowerThreshold>10</LowerThreshold>
     </VitalValue>
     <VitalValue vitalID="1">
       <Value>84</Value>
@@ -117,6 +119,8 @@
     <VitalValues>
     <VitalValue vitalID="0">
       <Value>37</Value>
+      <UpperThreshold>60</UpperThreshold>
+      <LowerThreshold>10</LowerThreshold>
     </VitalValue>
     <VitalValue vitalID="1">
       <Value>28</Value>
