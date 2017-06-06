@@ -10,12 +10,18 @@
     </VitalValue>
     <VitalValue vitalID="1">
       <Value>84</Value>
+      <UpperThreshold>-1</UpperThreshold>
+      <LowerThreshold>-1</LowerThreshold>
     </VitalValue>
     <VitalValue vitalID="2">
       <Value>23</Value>
+      <UpperThreshold>-1</UpperThreshold>
+      <LowerThreshold>-1</LowerThreshold>
     </VitalValue>
     <VitalValue vitalID="3">
       <Value>34</Value>
+      <UpperThreshold>-1</UpperThreshold>
+      <LowerThreshold>-1</LowerThreshold>
     </VitalValue>
       </VitalValues>
   </Time>
@@ -23,15 +29,23 @@
     <VitalValues>
     <VitalValue vitalID="0">
       <Value>87</Value>
+      <UpperThreshold>-1</UpperThreshold>
+      <LowerThreshold>-1</LowerThreshold>
     </VitalValue>
     <VitalValue vitalID="1">
       <Value>48</Value>
+      <UpperThreshold>-1</UpperThreshold>
+      <LowerThreshold>-1</LowerThreshold>
     </VitalValue>
     <VitalValue vitalID="2">
       <Value>25</Value>
+      <UpperThreshold>-1</UpperThreshold>
+      <LowerThreshold>-1</LowerThreshold>
     </VitalValue>
     <VitalValue vitalID="3">
       <Value>57</Value>
+      <UpperThreshold>-1</UpperThreshold>
+      <LowerThreshold>-1</LowerThreshold>
     </VitalValue>
       </VitalValues>
   </Time>
@@ -39,15 +53,23 @@
     <VitalValues>
     <VitalValue vitalID="0">
       <Value>84</Value>
+      <UpperThreshold>-1</UpperThreshold>
+      <LowerThreshold>-1</LowerThreshold>
     </VitalValue>
     <VitalValue vitalID="1">
       <Value>38</Value>
+      <UpperThreshold>-1</UpperThreshold>
+      <LowerThreshold>-1</LowerThreshold>
     </VitalValue>
     <VitalValue vitalID="2">
       <Value>57</Value>
+      <UpperThreshold>-1</UpperThreshold>
+      <LowerThreshold>-1</LowerThreshold>
     </VitalValue>
     <VitalValue vitalID="3">
       <Value>89</Value>
+      <UpperThreshold>-1</UpperThreshold>
+      <LowerThreshold>-1</LowerThreshold>
     </VitalValue>
       </VitalValues>
   </Time>
@@ -55,15 +77,23 @@
     <VitalValues>
     <VitalValue vitalID="0">
       <Value>76</Value>
+      <UpperThreshold>-1</UpperThreshold>
+      <LowerThreshold>-1</LowerThreshold>
     </VitalValue>
     <VitalValue vitalID="1">
       <Value>50</Value>
+      <UpperThreshold>-1</UpperThreshold>
+      <LowerThreshold>-1</LowerThreshold>
     </VitalValue>
     <VitalValue vitalID="2">
       <Value>61</Value>
+      <UpperThreshold>-1</UpperThreshold>
+      <LowerThreshold>-1</LowerThreshold>
     </VitalValue>
     <VitalValue vitalID="3">
       <Value>93</Value>
+      <UpperThreshold>-1</UpperThreshold>
+      <LowerThreshold>-1</LowerThreshold>
     </VitalValue>
       </VitalValues>
   </Time>
@@ -71,15 +101,23 @@
     <VitalValues>
     <VitalValue vitalID="0">
       <Value>48</Value>
+      <UpperThreshold>-1</UpperThreshold>
+      <LowerThreshold>-1</LowerThreshold>
     </VitalValue>
     <VitalValue vitalID="1">
       <Value>59</Value>
+      <UpperThreshold>-1</UpperThreshold>
+      <LowerThreshold>-1</LowerThreshold>
     </VitalValue>
     <VitalValue vitalID="2">
       <Value>61</Value>
+      <UpperThreshold>-1</UpperThreshold>
+      <LowerThreshold>-1</LowerThreshold>
     </VitalValue>
     <VitalValue vitalID="3">
       <Value>47</Value>
+      <UpperThreshold>-1</UpperThreshold>
+      <LowerThreshold>-1</LowerThreshold>
     </VitalValue>
       </VitalValues>
   </Time>
@@ -87,15 +125,23 @@
     <VitalValues>
     <VitalValue vitalID="0">
       <Value>45</Value>
+      <UpperThreshold>-1</UpperThreshold>
+      <LowerThreshold>-1</LowerThreshold>
     </VitalValue>
     <VitalValue vitalID="1">
       <Value>85</Value>
+      <UpperThreshold>-1</UpperThreshold>
+      <LowerThreshold>-1</LowerThreshold>
     </VitalValue>
     <VitalValue vitalID="2">
       <Value>47</Value>
+      <UpperThreshold>-1</UpperThreshold>
+      <LowerThreshold>-1</LowerThreshold>
     </VitalValue>
     <VitalValue vitalID="3">
       <Value>36</Value>
+      <UpperThreshold>-1</UpperThreshold>
+      <LowerThreshold>-1</LowerThreshold>
     </VitalValue>
       </VitalValues>
   </Time>
@@ -103,15 +149,23 @@
     <VitalValues>
     <VitalValue vitalID="0">
       <Value>39</Value>
+      <UpperThreshold>-1</UpperThreshold>
+      <LowerThreshold>-1</LowerThreshold>
     </VitalValue>
     <VitalValue vitalID="1">
       <Value>28</Value>
+      <UpperThreshold>-1</UpperThreshold>
+      <LowerThreshold>-1</LowerThreshold>
     </VitalValue>
     <VitalValue vitalID="2">
       <Value>37</Value>
+      <UpperThreshold>-1</UpperThreshold>
+      <LowerThreshold>-1</LowerThreshold>
     </VitalValue>
     <VitalValue vitalID="3">
       <Value>54</Value>
+      <UpperThreshold>-1</UpperThreshold>
+      <LowerThreshold>-1</LowerThreshold>
     </VitalValue>
       </VitalValues>
   </Time>
@@ -124,12 +178,18 @@
     </VitalValue>
     <VitalValue vitalID="1">
       <Value>28</Value>
+      <UpperThreshold>-1</UpperThreshold>
+      <LowerThreshold>-1</LowerThreshold>
     </VitalValue>
     <VitalValue vitalID="2">
       <Value>85</Value>
+      <UpperThreshold>-1</UpperThreshold>
+      <LowerThreshold>-1</LowerThreshold>
     </VitalValue>
     <VitalValue vitalID="3">
       <Value>26</Value>
+      <UpperThreshold>-1</UpperThreshold>
+      <LowerThreshold>-1</LowerThreshold>
     </VitalValue>
       </VitalValues>
   </Time>

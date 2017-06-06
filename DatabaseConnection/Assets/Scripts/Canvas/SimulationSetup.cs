@@ -161,12 +161,12 @@ public class SimulationSetup : MonoBehaviour {
                         Graph graph = graphs.transform.FindChild(vital.name).GetComponent<Graph>();
                         graph.AddPoint(i, data.value);
                    
-                        if (data.upperThreshold != 0 && data.upperThreshold != null) {
+                        if (data.upperThreshold != -1) {
                             print("Upper " + data.upperThreshold);
                             graph.AddThresholdPointUpper(i, data.upperThreshold);
                                 }
 
-                        if (data.lowerThreshold != 0 && data.lowerThreshold != null) {
+                        if (data.lowerThreshold != -1) {
                             print("Upper " + data.upperThreshold);
                             graph.AddThresholdPointLower(i, data.lowerThreshold);
                         }

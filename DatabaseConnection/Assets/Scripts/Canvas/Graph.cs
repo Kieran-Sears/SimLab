@@ -66,67 +66,85 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
 
     #region Unity Methods
     private void Update() {
-        newScrollWheel = scrollWheel + Input.GetAxis("Mouse ScrollWheel");
 
-        if (onObj && scrollWheel != newScrollWheel) {
-            scrollWheel = newScrollWheel;
-            if (scrollWheel >= 1f) {
-                SetZoom(scrollWheel);
-            } else if (scrollWheel < 1f) {
-                scrollWheel = 1f;
-            }
-        }
+        if (onObj) {
 
-        if (Input.GetMouseButton(0)) {
-            mouseHold += UnityEngine.Time.deltaTime;
-        }
+            newScrollWheel = scrollWheel + Input.GetAxis("Mouse ScrollWheel");
 
-        if (Input.GetMouseButtonDown(0)) {
-            hits = Physics.RaycastAll(Camera.main.ScreenPointToRay(Input.mousePosition), 1000);
-            foreach (RaycastHit hit in hits) {
-                if (hit.collider.tag == "Handle") {
-                    cursorOverHandle = true;
-                    handleTrans = hit.transform;
-                } else if (hit.collider.tag == "Graph") {
-                    addPoint = true;
-                    hitPoint = hit.point;
+            if (scrollWheel != newScrollWheel) {
+                scrollWheel = newScrollWheel;
+                if (scrollWheel >= 1f) {
+                    SetZoom(scrollWheel);
+                } else if (scrollWheel < 1f) {
+                    scrollWheel = 1f;
                 }
             }
-        }
 
-        // prevent overlap of graph point line
-        if (cursorOverHandle) {
-            Slider slider = handleTrans.parent.parent.GetComponent<Slider>();
-            if (points.IndexOfValue(slider) == -1) return;
-            int indexOfSliderMinipulated = points.IndexOfValue(slider);
-            float originalSliderTime = points.Keys[indexOfSliderMinipulated];
-            Vector3 newPos = new Vector3(Camera.main.ScreenToWorldPoint(Input.mousePosition).x, handleTrans.parent.parent.transform.position.y, handleTrans.parent.parent.transform.position.z);
-            if (graph == null) return;
-            float newSliderTime = (slider.transform.localPosition.x + (graph.GetComponent<RectTransform>().rect.width / 2)) / (graph.GetComponent<RectTransform>().rect.width / xScale);
-            if (newSliderTime != previousFrameTime) {
-                if (indexOfSliderMinipulated != -1 && !points.ContainsKey(newSliderTime)) {
-                    if (indexOfSliderMinipulated - 1 >= 0 && indexOfSliderMinipulated + 1 < points.Count) {
-                        if (newSliderTime > points.Keys[indexOfSliderMinipulated + 1] || newSliderTime < points.Keys[indexOfSliderMinipulated - 1]) {
-                            points.RemoveAt(indexOfSliderMinipulated);
-                            points.Add(newSliderTime, slider);           
-                        } 
-                    }        
+            if (Input.GetMouseButton(0)) {
+                mouseHold += UnityEngine.Time.deltaTime;
+            }
+
+            if (Input.GetMouseButtonDown(0)) {
+                hits = Physics.RaycastAll(Camera.main.ScreenPointToRay(Input.mousePosition), 1000);
+                foreach (RaycastHit hit in hits) {
+                    if (hit.collider.tag == "Handle") {
+                        cursorOverHandle = true;
+                        handleTrans = hit.transform;
+                    } else if (hit.collider.tag == "Graph") {
+                        addPoint = true;
+                        hitPoint = hit.point;
+                    }
                 }
-                previousFrameTime = newSliderTime;
             }
-            // TODO update the slider key for slider being minipulated in points
-            handleTrans.parent.parent.transform.position = newPos;
-            DrawLinkedPointLines();
-            DrawThresholds();
-        }
 
-        // Add point to graph
-        if (Input.GetMouseButtonUp(0)) {
-            cursorOverHandle = false;
-            if (mouseHold < 0.3 && addPoint) {
-                AddPoint(Camera.main.WorldToScreenPoint(hitPoint));
+            if (Input.GetMouseButtonUp(1)) {
+                hits = Physics.RaycastAll(Camera.main.ScreenPointToRay(Input.mousePosition), 1000);
+                foreach (RaycastHit hit in hits) {
+                    if (hit.collider.tag == "Handle") {
+                        Slider slider = hit.transform.parent.parent.GetComponent<Slider>();
+                        if (points.IndexOfValue(slider) == -1) return;
+                        points.RemoveAt(points.IndexOfValue(slider));
+                        Destroy(slider.gameObject);
+                        DrawLinkedPointLines();
+                    } 
+                }
             }
-            mouseHold = 0;
+
+            // prevent overlap of graph point line
+            if (cursorOverHandle) {
+                Slider slider = handleTrans.parent.parent.GetComponent<Slider>();
+                if (points.IndexOfValue(slider) == -1) return;
+                int indexOfSliderMinipulated = points.IndexOfValue(slider);
+                float originalSliderTime = points.Keys[indexOfSliderMinipulated];
+                Vector3 newPos = new Vector3(Camera.main.ScreenToWorldPoint(Input.mousePosition).x, handleTrans.parent.parent.transform.position.y, handleTrans.parent.parent.transform.position.z);
+                if (graph == null) return;
+                float newSliderTime = (slider.transform.localPosition.x + (graph.GetComponent<RectTransform>().rect.width / 2)) / (graph.GetComponent<RectTransform>().rect.width / xScale);
+                if (newSliderTime != previousFrameTime) {
+                    if (indexOfSliderMinipulated != -1 && !points.ContainsKey(newSliderTime)) {
+                        if (indexOfSliderMinipulated - 1 >= 0 && indexOfSliderMinipulated + 1 < points.Count) {
+                            if (newSliderTime > points.Keys[indexOfSliderMinipulated + 1] || newSliderTime < points.Keys[indexOfSliderMinipulated - 1]) {
+                                points.RemoveAt(indexOfSliderMinipulated);
+                                points.Add(newSliderTime, slider);
+                            }
+                        }
+                    }
+                    previousFrameTime = newSliderTime;
+                }
+                // TODO update the slider key for slider being minipulated in points
+                handleTrans.parent.parent.transform.position = newPos;
+                DrawLinkedPointLines();
+                DrawThresholds();
+
+            }
+
+            // Add point to graph
+            if (Input.GetMouseButtonUp(0)) {
+                cursorOverHandle = false;
+                if (mouseHold < 0.3 && addPoint) {
+                    AddPoint(Camera.main.WorldToScreenPoint(hitPoint));
+                }
+                mouseHold = 0;
+            }
         }
     }
 
