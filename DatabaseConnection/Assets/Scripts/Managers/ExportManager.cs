@@ -51,11 +51,11 @@ public class ExportManager : MonoBehaviour {
                 reader.Close();
                 return equipment;
             default:
-                Debug.Log(path);
                 _xml = Resources.Load<TextAsset>(path);
                 if (_xml == null) {
                     Debug.Log("Unrecognised condition name. Please check corrosponding xml filename for " + path);
                 } else {
+                    Debug.Log("Loading " + path);
                     serializer = new XmlSerializer(typeof(Condition));
                     reader = new StringReader(_xml.text);
                     condition = serializer.Deserialize(reader) as Condition;
@@ -69,15 +69,8 @@ public class ExportManager : MonoBehaviour {
 
 
 
-    public void SaveCondition(Dictionary<string, SortedList<float, float>> conditionValues) {
-        Condition condition = new Condition();
-        foreach (var item in conditionValues.Values) {
-
-        }
-        Time time = new Time();
-        Value value = new Value();
-    
-
+    public void SaveCondition(Condition condition) {
+  
 
     }
 

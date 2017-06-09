@@ -8,9 +8,6 @@ public class Toolbar : MonoBehaviour {
     public Dropdown file;
     public GameObject graphPanel;
 
-
-    Dictionary<string, SortedList<float, float>> Condition = new Dictionary<string, SortedList<float, float>>();
-
     public void FileDropdownSelection() {
         switch (file.options[file.value].text) {
             case "Save":

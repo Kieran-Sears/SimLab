@@ -47,7 +47,7 @@ public class SimulationSetup : MonoBehaviour {
     private Drugs drugs;
     private Vitals vitals;
     private Equipment equipment;
-    private GameObject tab;
+   // private GameObject tab;
     private Graph graph;
 
     private void Awake() {
@@ -63,9 +63,15 @@ public class SimulationSetup : MonoBehaviour {
         PopulateVitals();
         PopulateDrugs();
         PopulateEquipment();
+        simulationDuration.onValidateInput += delegate (string input, int charIndex, char addedChar) { return SimulationDurationChangeValue(input, charIndex, addedChar); };
     }
 
- 
+    public char SimulationDurationChangeValue(string input, int charIndex, char character) {
+        if (charIndex == 2) {
+            return ':';
+        }
+        return character;
+    }
 
 
     void PopulatePresets() {
@@ -75,19 +81,21 @@ public class SimulationSetup : MonoBehaviour {
             presets.options.Add(new Dropdown.OptionData() { text = files[i].name });
         }
         presets.captionText.text = "Preset Conditions...";
-
     }
 
     void PopulateVitals() {
         vitals = ExportManager.instance.Load("vitals") as Vitals;
-        foreach (Vital item in vitals.vitalList) {
+        foreach (Vital vital in vitals.vitalList) {
             GameObject toggleObject = Instantiate(togglePrefab);
             toggleObject.transform.SetParent(vitalsChosen.transform);
             toggleObject.transform.localScale = Vector3.one;
             toggleObject.transform.localPosition = Vector3.zero;
-            toggleObject.transform.GetChild(1).GetComponent<Text>().text = item.name;
+            toggleObject.transform.GetChild(1).GetComponent<Text>().text = vital.name;
             Toggle toggle = toggleObject.GetComponent<Toggle>();
-            toggle.name = item.name;
+            toggle.name = vital.name;
+            toggle.isOn = false;
+            //  toggle.group = vitalsToggleGroup;
+            toggle.onValueChanged.AddListener((bool value) => loadChosenVital(value, toggleObject.transform.GetSiblingIndex(), vital.name));
         }
     }
 
@@ -117,6 +125,7 @@ public class SimulationSetup : MonoBehaviour {
             toggleObject.transform.GetChild(1).GetComponent<Text>().text = item.name;
             Toggle toggle = toggleObject.GetComponent<Toggle>();
             toggle.name = item.name;
+            //  toggle.onValueChanged.AddListener((bool value) => loadChosenVital(value, toggleObject.transform.GetSiblingIndex()));
         }
     }
 
@@ -160,14 +169,12 @@ public class SimulationSetup : MonoBehaviour {
                         Vital vital = vitals.vitalList[data.vitalID];
                         Graph graph = graphs.transform.FindChild(vital.name).GetComponent<Graph>();
                         graph.AddPoint(i, data.value);
-                   
+
                         if (data.upperThreshold != -1) {
-                            print("Upper " + data.upperThreshold);
                             graph.AddThresholdPointUpper(i, data.upperThreshold);
-                                }
+                        }
 
                         if (data.lowerThreshold != -1) {
-                            print("Upper " + data.upperThreshold);
                             graph.AddThresholdPointLower(i, data.lowerThreshold);
                         }
                     }
@@ -179,12 +186,21 @@ public class SimulationSetup : MonoBehaviour {
     }
 
     int GetDuration() {
-        int duration;
-        if (int.TryParse(simulationDuration.text, out duration)) {
+        int duration = 0;
+        string[] times = simulationDuration.text.Split(':');
+        int store;
+        if (int.TryParse(times[0], out store)) {
+            duration = store * 60;
+        } else {
+            return -1;
+        }
+        print(times.Length);
+        if (times.Length != 1 && int.TryParse(times[1], out store)) {
+            duration += store;
+        } else {
             return duration;
         }
-        Debug.Log("Not a number exception : TODO Provide warning to user ");
-        return -1;
+        return duration;
     }
 
     public void AddVital() {
@@ -197,12 +213,15 @@ public class SimulationSetup : MonoBehaviour {
         newVitalPanel.SetActive(false);
         GameObject toggleObject = Instantiate(togglePrefab);
         toggleObject.transform.SetParent(vitalsChosen.transform);
+        toggleObject.transform.SetAsFirstSibling();
         toggleObject.transform.localScale = Vector3.one;
         toggleObject.transform.localPosition = Vector3.zero;
         toggleObject.transform.GetChild(1).GetComponent<Text>().text = vital.name;
         Toggle toggle = toggleObject.GetComponent<Toggle>();
         toggle.name = vital.name;
-        vitals.vitalList.Add(vital);
+        toggle.onValueChanged.AddListener((bool value) => loadChosenVital(value, toggleObject.transform.GetSiblingIndex(), vital.name));
+        vitals.vitalList.Insert(0, vital);
+        loadChosenVital(true, 0, vital.name);
     }
 
     public void AddDrug() {
@@ -233,26 +252,56 @@ public class SimulationSetup : MonoBehaviour {
         toggle.name = drug.name;
     }
 
-    void LoadVitalsTabs() {
-        for (int i = 0; i < vitalsChosen.transform.childCount; i++) {
-            if (vitalsChosen.transform.GetChild(i).GetComponent<Toggle>().isOn) {
-                print(vitals.vitalList[i]);
-                if (vitals.vitalList[i] == null) {
-                    print("add clause for new vital here");
-                } else {
-                    graph = tabs.GenerateTab(vitals.vitalList[i].name);
-                    graph.GenerateGrid(1, GetDuration(), 1, (int)Math.Ceiling(vitals.vitalList[i].max - vitals.vitalList[i].min));
-                    if (i != 0) {
-                        graph.gameObject.SetActive(false);
-                    }
+    public void loadChosenVital(bool chosen, int index, string vitalName) {
+        if (chosen) { 
+            Transform vitalTrans = graphs.transform.FindChild(vitalName);
+            if (vitalTrans == null) {
+                int duration = GetDuration();
+                if (duration == -1) {
+                    print("Alert. No duration set.");
+                    return;
                 }
+                graph = tabs.GenerateTab(vitals.vitalList[index].name);
+                int yRange = (int)Math.Ceiling(vitals.vitalList[index].max - vitals.vitalList[index].min);
+                graph.GenerateGrid(1, duration, 1, yRange);
+                graph.gameObject.SetActive(false);
+                tabs.SwitchTab();
+            } else {
+                vitalTrans.gameObject.SetActive(true);
+                Transform vitalTab = inactiveTabs.transform.FindChild(vitalName);
+                vitalTab.SetParent(tabs.transform);
+                vitalTab.gameObject.SetActive(true);
+                tabs.SwitchTab();
             }
+        } else {
+
+            Transform tab = tabs.transform.FindChild(vitalName);
+            tab.gameObject.SetActive(false);
+            tab.SetParent(inactiveTabs.transform);
+            graphs.transform.FindChild(vitalName).gameObject.SetActive(false);
         }
     }
 
-    public void GenerateGraph() {
-        ClearPreviousTabs();
-        LoadVitalsTabs();
-    }
+    //void LoadVitalsTabs() {
+    //    for (int i = 0; i < vitalsChosen.transform.childCount; i++) {
+    //        if (vitalsChosen.transform.GetChild(i).GetComponent<Toggle>().isOn) {
+    //            print(vitals.vitalList[i]);
+    //            if (vitals.vitalList[i] == null) {
+    //                print("add clause for new vital here");
+    //            } else {
+    //                graph = tabs.GenerateTab(vitals.vitalList[i].name);
+    //                graph.GenerateGrid(1, GetDuration(), 1, (int)Math.Ceiling(vitals.vitalList[i].max - vitals.vitalList[i].min));
+    //                if (i != 0) {
+    //                    graph.gameObject.SetActive(false);
+    //                }
+    //            }
+    //        }
+    //    }
+    //}
+
+    //public void GenerateGraph() {
+    //    ClearPreviousTabs();
+    //    LoadVitalsTabs();
+    //}
 
 }

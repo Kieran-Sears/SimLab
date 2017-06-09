@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 
 
-public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
+public class Graph : MonoBehaviour {
 
 
 
@@ -40,12 +40,12 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
     #region Private Variables
     private int xScale;
     private int yScale;
-    private int xStart;
-    private int xEnd;
+    //private int xStart;
+    //private int xEnd;
     private int yStart;
     private int yEnd;
 
-    private bool onObj = false;
+
     private float scrollWheel = 1;
     private float newScrollWheel;
     private Vector2 localpoint;
@@ -67,8 +67,8 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
     #region Unity Methods
     private void Update() {
 
-        if (onObj) {
-
+        if (graphViewport != null && graphViewport.GetComponent<CusorSensor>().mouseOver) {
+            hits = Physics.RaycastAll(Camera.main.ScreenPointToRay(Input.mousePosition), 800);
             newScrollWheel = scrollWheel + Input.GetAxis("Mouse ScrollWheel");
 
             if (scrollWheel != newScrollWheel) {
@@ -85,7 +85,6 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
             }
 
             if (Input.GetMouseButtonDown(0)) {
-                hits = Physics.RaycastAll(Camera.main.ScreenPointToRay(Input.mousePosition), 1000);
                 foreach (RaycastHit hit in hits) {
                     if (hit.collider.tag == "Handle") {
                         cursorOverHandle = true;
@@ -106,7 +105,7 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
                         points.RemoveAt(points.IndexOfValue(slider));
                         Destroy(slider.gameObject);
                         DrawLinkedPointLines();
-                    } 
+                    }
                 }
             }
 
@@ -148,18 +147,6 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
         }
     }
 
-    public void OnPointerEnter(PointerEventData eventData) {
-        onObj = true;
-    }
-
-    public void OnPointerExit(PointerEventData eventData) {
-        onObj = false;
-    }
-
-    public void OnDisable() {
-        onObj = false;
-    }
-
     public void OnEnable() {
         DrawLinkedPointLines();
         DrawThresholds();
@@ -167,6 +154,108 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
     #endregion
 
     #region Private Methods
+    private void DrawGrid() {
+        Vector2 size = new Vector2(graphContentRectTrans.rect.width, graphContentRectTrans.rect.height);
+        GameObject dashMarker;
+        LineRenderer lineRenderer;
+
+        for (int i = 0; i <= xScale; i++) {
+            dashMarker = Instantiate(lineRendererPrefab, grid.transform);
+            dashMarker.transform.localScale = Vector3.one;
+            dashMarker.transform.localPosition = Vector3.zero;
+
+            lineRenderer = dashMarker.GetComponent<LineRenderer>();
+            lineRenderer.transform.localScale = new Vector3(1f, 1f, 1f);
+            lineRenderer.startWidth = 0.01f;
+            lineRenderer.endWidth = 0.01f;
+            lineRenderer.SetPosition(0, new Vector3((((size.x / xScale) * i) - (size.x / 2)), (-size.y / 2), 0));
+            lineRenderer.SetPosition(1, new Vector3((((size.x / xScale) * i) - (size.x / 2)), (size.y / 2), 0));
+
+        }
+        for (int n = 0; n <= yScale; n++) {
+            dashMarker = Instantiate(lineRendererPrefab, grid.transform);
+            dashMarker.transform.localScale = Vector3.one;
+            dashMarker.transform.localPosition = new Vector3(0, 0, 0);
+
+            lineRenderer = dashMarker.GetComponent<LineRenderer>();
+            lineRenderer.transform.localScale = new Vector3(1f, 1f, 1f);
+            lineRenderer.startWidth = 0.01f;
+            lineRenderer.endWidth = 0.01f;
+            lineRenderer.SetPosition(0, new Vector3((-size.x / 2), (((size.y / yScale) * n) - (size.y / 2)), 0));
+            lineRenderer.SetPosition(1, new Vector3((size.x / 2), (((size.y / yScale) * n) - (size.y / 2)), 0));
+        }
+
+    }
+
+    private void InitialiseXScale() {
+        for (int i = 1; i <= xScale; i++) {
+            GameObject dashMarker = Instantiate(xDashMarkerPrefab, xAxis.transform);
+            dashMarker.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
+            dashMarker.transform.localPosition = Vector3.zero;
+            dashMarker.transform.localPosition += new Vector3((-graphContentRectTrans.rect.width / 2), 0, 1);
+            dashMarker.transform.localPosition += new Vector3(((graphContentRectTrans.rect.width / xScale) * i), 0, 1);
+            dashMarker.GetComponent<Text>().text = i.ToString();
+        }
+    }
+
+    private void InitialiseYScale() {
+        for (int i = 1; i <= yScale; i++) {
+            GameObject dashMarker = Instantiate(yDashMarkerPrefab, yAxis.transform);
+            dashMarker.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
+            dashMarker.transform.localPosition = Vector3.zero;
+            dashMarker.transform.localPosition += new Vector3(0, (-graphContentRectTrans.rect.height / 2), 1);
+            dashMarker.transform.localPosition += new Vector3(0, ((graphContentRectTrans.rect.height / yScale) * i), 1);
+            Text text = dashMarker.GetComponent<Text>();
+            text.text = (i + yStart).ToString();
+            text.fontSize = 1;
+        }
+    }
+
+    private void DrawThresholds() {
+        GameObject upperLineWriter;
+        GameObject lowerLineWriter;
+        if (thresholdLineLower == null) {
+            if (graph == null) return;
+            lowerLineWriter = Instantiate(lineRendererPrefab, graphContent.transform);
+            lowerLineWriter.transform.localScale = Vector3.one;
+            lowerLineWriter.transform.localPosition = Vector3.zero;
+            lowerLineWriter.name = "LowerThreshold";
+
+            thresholdLineLower = lowerLineWriter.GetComponent<LineRenderer>();
+            thresholdLineLower.startColor = Color.red;
+            thresholdLineLower.endColor = Color.red;
+            thresholdLineLower.startWidth = 0.1f;
+            thresholdLineLower.endWidth = 0.1f;
+        }
+
+        counter = 0;
+        foreach (KeyValuePair<float, Slider> item in pointsLowerThreshold) {
+            thresholdLineLower.SetPosition(counter, Camera.main.WorldToScreenPoint(item.Value.handleRect.transform.position) - Camera.main.WorldToScreenPoint(graphContent.transform.position));
+            counter++;
+        }
+
+
+        if (thresholdLineUpper == null) {
+            if (graph == null) return;
+            upperLineWriter = Instantiate(lineRendererPrefab, graphContent.transform);
+            upperLineWriter.transform.localScale = Vector3.one;
+            upperLineWriter.transform.localPosition = Vector3.zero;
+            upperLineWriter.name = "UpperThreshold";
+
+            thresholdLineUpper = upperLineWriter.GetComponent<LineRenderer>();
+            thresholdLineUpper.startColor = Color.red;
+            thresholdLineUpper.endColor = Color.red;
+            thresholdLineUpper.startWidth = 0.1f;
+            thresholdLineUpper.endWidth = 0.1f;
+        }
+
+        counter = 0;
+        foreach (KeyValuePair<float, Slider> item in pointsUpperThreshold) {
+            thresholdLineUpper.SetPosition(counter, Camera.main.WorldToScreenPoint(item.Value.handleRect.transform.position) - Camera.main.WorldToScreenPoint(graphContent.transform.position));
+            counter++;
+        }
+    }
+
     private void SetZoom(float targetSize) {
         if (graph != null) {
             //grid : setting the pivot point to be at the location of the cursor
@@ -197,16 +286,22 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
             yRectTrans.localPosition -= deltaPosition;
             yAxisContent.transform.localScale = new Vector3(1, targetSize, 1);
 
+            pointLine.transform.localScale = new Vector3(1 / targetSize, 1 / targetSize, 1);
+
             LayoutYScale();
             LayoutXScale();
 
-            pointLine.transform.localScale = new Vector3(1 / targetSize, 1 / targetSize, 1);
-
-
             for (int i = 0; i < points.Count; i++) {
-                pointLine.SetPosition(i, (Camera.main.WorldToScreenPoint(points.Values[i].handleRect.position) - Camera.main.WorldToScreenPoint(graphContent.transform.position)));        
+                pointLine.SetPosition(i, (Camera.main.WorldToScreenPoint(points.Values[i].handleRect.position) - Camera.main.WorldToScreenPoint(graphContent.transform.position)));
             }
 
+            for (int i = 0; i < pointsUpperThreshold.Count; i++) {
+                thresholdLineUpper.SetPosition(i, (Camera.main.WorldToScreenPoint(pointsUpperThreshold.Values[i].handleRect.position) - Camera.main.WorldToScreenPoint(graphContent.transform.position)));
+            }
+
+            for (int i = 0; i < pointsLowerThreshold.Count; i++) {
+                thresholdLineLower.SetPosition(i, (Camera.main.WorldToScreenPoint(pointsLowerThreshold.Values[i].handleRect.position) - Camera.main.WorldToScreenPoint(graphContent.transform.position)));
+            }
 
             for (int i = 0; i < xAxisContent.transform.GetChild(0).childCount; i++) {
                 xAxisContent.transform.GetChild(0).GetChild(i).localScale = (Vector3.one - Vector3.right) + (Vector3.right / targetSize);
@@ -220,146 +315,73 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
 
     private void LayoutXScale() {
         xAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(graphContentRectTrans.rect.width, xAxisContent.GetComponent<RectTransform>().sizeDelta.y);
-        if (xAxis.transform.childCount > 25) {
-            for (int i = 0; i < xAxis.transform.childCount; i++) {
-                xAxis.transform.GetChild(i).gameObject.SetActive(false);
-                if (graphContent.transform.localScale.x < 1.4f) {
-                    if ((i + 1) % 10 == 0) {
-                        xAxis.transform.GetChild(i).gameObject.SetActive(true);
-                    }
-                } else if (graphContent.transform.localScale.x >= 1.4f && graphContent.transform.localScale.x < 2f) {
-                    if ((i + 1) % 5 == 0) {
-                        xAxis.transform.GetChild(i).gameObject.SetActive(true);
-                    }
+        float minutes = xAxis.transform.childCount / 60;
+        if (minutes < 1) return;
+
+
+        for (int i = 0; i < xAxis.transform.childCount; i++) {
+          //  xAxis.transform.GetChild(i).gameObject.SetActive(false);
+         //   grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = false;
+            if (graphContent.transform.localScale.x < 1.4f) {
+                if ((i) % (2 * minutes) == 0) {
+                    xAxis.transform.GetChild(i).gameObject.SetActive(true);
+                    grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
                 } else {
-                    if ((i + 1) % 2 == 0) {
-                        xAxis.transform.GetChild(i).gameObject.SetActive(true);
-                    }
+                    xAxis.transform.GetChild(i).gameObject.SetActive(false);
+                    grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = false;
+                }
+            } else if (graphContent.transform.localScale.x >= 1.4f && graphContent.transform.localScale.x < 2f) {
+                if ((i) % (5 * minutes) == 0) {
+                    xAxis.transform.GetChild(i).gameObject.SetActive(true);
+                    grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
+                } else {
+                    xAxis.transform.GetChild(i).gameObject.SetActive(false);
+                    grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = false;
+                }
+            } else {
+                if ((i) % (2 * minutes) == 0) {
+                    xAxis.transform.GetChild(i).gameObject.SetActive(true);
+                    grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
+                } else {
+                    xAxis.transform.GetChild(i).gameObject.SetActive(false);
+                    grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = false;
                 }
             }
         }
-    }
-
-    private void InitialiseXScale() {
-        for (int i = 1; i <= xScale; i++) {
-            GameObject dashMarker = Instantiate(xDashMarkerPrefab, xAxis.transform);
-            dashMarker.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
-            dashMarker.transform.localPosition = Vector3.zero;
-            dashMarker.transform.localPosition += new Vector3((-graphContentRectTrans.rect.width / 2), 0, 1);
-            dashMarker.transform.localPosition += new Vector3(((graphContentRectTrans.rect.width / xScale) * i), 0, 1);
-            dashMarker.GetComponent<Text>().text = i.ToString();
-        }
+        grid.transform.GetChild(xScale - 1).GetComponent<LineRenderer>().enabled = true;
     }
 
     private void LayoutYScale() {
         yAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(yAxisContent.GetComponent<RectTransform>().sizeDelta.x, graphContentRectTrans.rect.height);
-        if (yAxis.transform.childCount > 25) {
-            for (int i = 0; i < yAxis.transform.childCount; i++) {
-                yAxis.transform.GetChild(i).gameObject.SetActive(false);
-                if (graphContent.transform.localScale.y < 1.4f) {
-                    if ((i + 2) % 10 == 0) {
-                        yAxis.transform.GetChild(i).gameObject.SetActive(true);
-                    }
-                } else if (graphContent.transform.localScale.y >= 1.4f && graphContent.transform.localScale.y < 2f) {
-                    if ((i + 2) % 5 == 0) {
-                        yAxis.transform.GetChild(i).gameObject.SetActive(true);
-                    }
+        float range = yAxis.transform.childCount / 100 + 1;
+        if (range < 1) return;
+        for (int i = 0; i < yAxis.transform.childCount; i++) {
+            if (graphContent.transform.localScale.y < 1.4f) {
+                if ((i + 2) % (10 * range) == 0) {
+                    yAxis.transform.GetChild(i).gameObject.SetActive(true);
+                    grid.transform.GetChild(xScale + i + 2).GetComponent<LineRenderer>().enabled = true;
                 } else {
-                    if ((i + 2) % 2 == 0) {
-                        yAxis.transform.GetChild(i).gameObject.SetActive(true);
-                    }
+                    yAxis.transform.GetChild(i).gameObject.SetActive(false);
+                    grid.transform.GetChild(xScale + i + 2).GetComponent<LineRenderer>().enabled = false;
+                }
+            } else if (graphContent.transform.localScale.y >= 1.4f && graphContent.transform.localScale.y < 2f) {
+                if ((i + 2) % (5 * range) == 0) {
+                    yAxis.transform.GetChild(i).gameObject.SetActive(true);
+                    grid.transform.GetChild(i - 3 + xScale).GetComponent<LineRenderer>().enabled = true;
+                } else {
+                    yAxis.transform.GetChild(i).gameObject.SetActive(false);
+                    grid.transform.GetChild(i - 3 + xScale).GetComponent<LineRenderer>().enabled = false;
                 }
             }
-        }
-    }
-
-    private void InitialiseYScale() {
-        for (int i = 1; i <= yScale; i++) {
-            GameObject dashMarker = Instantiate(yDashMarkerPrefab, yAxis.transform);
-            dashMarker.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
-            dashMarker.transform.localPosition = Vector3.zero;
-            dashMarker.transform.localPosition += new Vector3(0, (-graphContentRectTrans.rect.height / 2), 1);
-            dashMarker.transform.localPosition += new Vector3(0, ((graphContentRectTrans.rect.height / yScale) * i), 1);
-            Text text = dashMarker.GetComponent<Text>();
-            text.text = (i + yStart).ToString();
-            text.fontSize = 1;
-        }
-    }
-
-    private void DrawGrid() {
-        Vector2 size = new Vector2(graphContentRectTrans.rect.width, graphContentRectTrans.rect.height);
-        GameObject dashMarker;
-        LineRenderer lineRenderer;
-
-        for (int i = 0; i <= xScale; i++) {
-            dashMarker = Instantiate(lineRendererPrefab, grid.transform);
-            dashMarker.transform.localScale = Vector3.one;
-            dashMarker.transform.localPosition = Vector3.zero;
-
-            lineRenderer = dashMarker.GetComponent<LineRenderer>();
-            lineRenderer.transform.localScale = new Vector3(1f, 1f, 1f);
-            lineRenderer.startWidth = 0.01f;
-            lineRenderer.endWidth = 0.01f;
-            lineRenderer.SetPosition(0, new Vector3((((size.x / xScale) * i) - (size.x / 2)), (-size.y / 2), 0));
-            lineRenderer.SetPosition(1, new Vector3((((size.x / xScale) * i) - (size.x / 2)), (size.y / 2), 0));
-
-            for (int n = 0; n <= yScale; n++) {
-                dashMarker = Instantiate(lineRendererPrefab, grid.transform);
-                dashMarker.transform.localScale = Vector3.one;
-                dashMarker.transform.localPosition = new Vector3(0, 0, 0);
-
-                lineRenderer = dashMarker.GetComponent<LineRenderer>();
-                lineRenderer.transform.localScale = new Vector3(1f, 1f, 1f);
-                lineRenderer.startWidth = 0.01f;
-                lineRenderer.endWidth = 0.01f;
-                lineRenderer.SetPosition(0, new Vector3((-size.x / 2), (((size.y / yScale) * n) - (size.y / 2)), 0));
-                lineRenderer.SetPosition(1, new Vector3((size.x / 2), (((size.y / yScale) * n) - (size.y / 2)), 0));
+            else if(graphContent.transform.localScale.y >= 2f) {
+                if ((i + 2) % (2 * range) == 0) {
+                    yAxis.transform.GetChild(i).gameObject.SetActive(true);
+                    grid.transform.GetChild(i + xScale).GetComponent<LineRenderer>().enabled = true;
+                } else {
+                    yAxis.transform.GetChild(i).gameObject.SetActive(false);
+                    grid.transform.GetChild(i + xScale).GetComponent<LineRenderer>().enabled = false;
+                }
             }
-        }
-    }
-
-    private void DrawThresholds() {
-        GameObject upperLineWriter;
-        GameObject lowerLineWriter; 
-        if (thresholdLineLower == null) {
-            if (graph == null) return;
-            lowerLineWriter = Instantiate(lineRendererPrefab, graphContent.transform);
-            lowerLineWriter.transform.localScale = Vector3.one;
-            lowerLineWriter.transform.localPosition = Vector3.zero;
-            lowerLineWriter.name = "LowerThreshold";
-
-            thresholdLineLower = lowerLineWriter.GetComponent<LineRenderer>();
-            thresholdLineLower.startColor = Color.red;
-            thresholdLineLower.endColor = Color.red;
-            thresholdLineLower.startWidth = 0.1f;
-            thresholdLineLower.endWidth = 0.1f;
-        }
-
-        counter = 0;
-        foreach (KeyValuePair<float, Slider> item in pointsLowerThreshold) {
-            thresholdLineLower.SetPosition(counter, Camera.main.WorldToScreenPoint(item.Value.handleRect.transform.position) - Camera.main.WorldToScreenPoint(graphContent.transform.position));
-            counter++;
-        }
-      
-
-        if (thresholdLineUpper == null) {
-            if (graph == null) return;
-            upperLineWriter = Instantiate(lineRendererPrefab, graphContent.transform);
-            upperLineWriter.transform.localScale = Vector3.one;
-            upperLineWriter.transform.localPosition = Vector3.zero;
-            upperLineWriter.name = "UpperThreshold";
-
-            thresholdLineUpper = upperLineWriter.GetComponent<LineRenderer>();
-            thresholdLineUpper.startColor = Color.red;
-            thresholdLineUpper.endColor = Color.red;
-            thresholdLineUpper.startWidth = 0.1f;
-            thresholdLineUpper.endWidth = 0.1f;
-        }
-
-        counter = 0;
-        foreach (KeyValuePair<float, Slider> item in pointsUpperThreshold) {
-            thresholdLineUpper.SetPosition(counter, Camera.main.WorldToScreenPoint(item.Value.handleRect.transform.position) - Camera.main.WorldToScreenPoint(graphContent.transform.position));
-            counter++;
         }
     }
 
@@ -532,21 +554,21 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
         graphContentRectTrans.sizeDelta = new Vector2(GraphScrollRect.GetComponent<RectTransform>().rect.x * -2, GraphScrollRect.GetComponent<RectTransform>().rect.y * -2);
         graphContentRectTrans.localPosition = Vector3.zero;
         graph.GetComponent<BoxCollider>().size = new Vector2(graphContentRectTrans.rect.width, graphContentRectTrans.rect.height);
-        xStart = _xStart;
-        xEnd = _xEnd;
+        // xStart = _xStart;
+        // xEnd = _xEnd;
         yStart = _yStart;
         yEnd = _yEnd;
         xScale = _xEnd - _xStart;
         yScale = _yEnd - _yStart;
+        DrawGrid();
         InitialiseXScale();
+        InitialiseYScale();
         LayoutXScale();
+        LayoutYScale();
         xAxisScrollRect.verticalNormalizedPosition = 1;
         xAxisScrollRect.scrollSensitivity = 0;
-        InitialiseYScale();
-        LayoutYScale();
         yAxisScrollRect.verticalNormalizedPosition = 0;
         yAxisScrollRect.scrollSensitivity = 0;
-        DrawGrid();
         GraphScrollRect.scrollSensitivity = 0;
         GraphScrollRect.onValueChanged.AddListener(ListenerMethod);
         GraphScrollRect.normalizedPosition = new Vector2(0, 0);
@@ -634,7 +656,7 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
     }
 
     public void AddPoint(float xValue, float yValue) {
-        RectTransform rectTrans = graph.GetComponent<RectTransform>();
+        //  RectTransform rectTrans = graph.GetComponent<RectTransform>();
         GameObject point = Instantiate(graphPointPrefab, graph.transform);
         Slider slider = point.GetComponent<Slider>();
         point.transform.localScale = Vector3.one;
@@ -651,7 +673,7 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
     }
 
     public void AddThresholdPointUpper(float xValue, float yValue) {
-        RectTransform rectTrans = graph.GetComponent<RectTransform>();
+        //  RectTransform rectTrans = graph.GetComponent<RectTransform>();
         GameObject point = Instantiate(graphPointPrefab, thresholds.transform);
         Slider slider = point.GetComponent<Slider>();
         point.transform.localScale = Vector3.one;
@@ -668,7 +690,7 @@ public class Graph : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
     }
 
     public void AddThresholdPointLower(float xValue, float yValue) {
-        RectTransform rectTrans = graph.GetComponent<RectTransform>();
+        //  RectTransform rectTrans = graph.GetComponent<RectTransform>();
         GameObject point = Instantiate(graphPointPrefab, thresholds.transform);
         Slider slider = point.GetComponent<Slider>();
         point.transform.localScale = Vector3.one;
