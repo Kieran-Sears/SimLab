@@ -80,7 +80,7 @@
 -define:UNITY_TEAM_LICENSE
 -define:ENABLE_VSTU
 -define:UNITY_PRO_LICENSE
-Assets/CusorSensor.cs
+Assets/Scripts/Canvas/CusorSensor.cs
 Assets/Scripts/Canvas/Error.cs
 Assets/Scripts/Canvas/Graph.cs
 Assets/Scripts/Canvas/NoScrollRect.cs

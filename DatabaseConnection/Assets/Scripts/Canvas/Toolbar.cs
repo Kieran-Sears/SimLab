@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System.IO;
 
 
 public class Toolbar : MonoBehaviour {
@@ -8,9 +9,14 @@ public class Toolbar : MonoBehaviour {
     public Dropdown file;
     public GameObject graphPanel;
 
+    public void OnEnable() {
+        file.captionText.text = "File";
+    }
+
     public void FileDropdownSelection() {
         switch (file.options[file.value].text) {
             case "Save":
+                Save();
                 break;
             case "Save As...":
                 break;
@@ -26,10 +32,8 @@ public class Toolbar : MonoBehaviour {
     }
 
 
-    //private void Save() {
-    //    foreach (Graph graph in graphPanel.GetComponentsInChildren<Graph>()) {
-    //        Condition.Add(graph.gameObject.name, graph.points);
-    //    }
-    //    ExportManager.instance.SaveCondition(Condition);
-    //}
+    private void Save() {
+        print(Directory.GetDirectories("Resouces/Conditions/")[0]);
+     //   string[] files = Directory.GetFiles(path);
+    }
 }

@@ -367,10 +367,10 @@ public class Graph : MonoBehaviour {
             } else if (graphContent.transform.localScale.y >= 1.4f && graphContent.transform.localScale.y < 2f) {
                 if ((i + 2) % (5 * range) == 0) {
                     yAxis.transform.GetChild(i).gameObject.SetActive(true);
-                    grid.transform.GetChild(i - 3 + xScale).GetComponent<LineRenderer>().enabled = true;
+                    grid.transform.GetChild(i + 2 + xScale).GetComponent<LineRenderer>().enabled = true;
                 } else {
                     yAxis.transform.GetChild(i).gameObject.SetActive(false);
-                    grid.transform.GetChild(i - 3 + xScale).GetComponent<LineRenderer>().enabled = false;
+                    grid.transform.GetChild(i + 2 + xScale).GetComponent<LineRenderer>().enabled = false;
                 }
             }
             else if(graphContent.transform.localScale.y >= 2f) {
