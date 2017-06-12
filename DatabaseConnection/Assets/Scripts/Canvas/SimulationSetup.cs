@@ -204,6 +204,10 @@ public class SimulationSetup : MonoBehaviour {
     }
 
     public void AddVital() {
+        if (float.Parse(vitalMax.text) <= float.Parse(vitalMin.text)) {
+            print("Alert. Max value is less or equal to min for vital");
+            return;
+        }
         Vital vital = new Vital();
         vital.nodeID = vitals.vitalList.Count;
         vital.name = vitalName.text;
@@ -253,7 +257,7 @@ public class SimulationSetup : MonoBehaviour {
     }
 
     public void loadChosenVital(bool chosen, int index, string vitalName) {
-        if (chosen) { 
+        if (chosen) {
             Transform vitalTrans = graphs.transform.FindChild(vitalName);
             if (vitalTrans == null) {
                 int duration = GetDuration();
@@ -261,6 +265,7 @@ public class SimulationSetup : MonoBehaviour {
                     print("Alert. No duration set.");
                     return;
                 }
+              
                 graph = tabs.GenerateTab(vitals.vitalList[index].name);
                 int yRange = (int)Math.Ceiling(vitals.vitalList[index].max - vitals.vitalList[index].min);
                 graph.GenerateGrid(1, duration, 1, yRange);
@@ -276,9 +281,11 @@ public class SimulationSetup : MonoBehaviour {
         } else {
 
             Transform tab = tabs.transform.FindChild(vitalName);
-            tab.gameObject.SetActive(false);
-            tab.SetParent(inactiveTabs.transform);
-            graphs.transform.FindChild(vitalName).gameObject.SetActive(false);
+            if (tab != null) {
+                tab.gameObject.SetActive(false);
+                tab.SetParent(inactiveTabs.transform);
+                graphs.transform.FindChild(vitalName).gameObject.SetActive(false);
+            }
         }
     }
 
