@@ -315,15 +315,15 @@ public class Graph : MonoBehaviour {
 
     private void LayoutXScale() {
         xAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(graphContentRectTrans.rect.width, xAxisContent.GetComponent<RectTransform>().sizeDelta.y);
-        float minutes = xAxis.transform.childCount / 60;
-        if (minutes < 1) return;
-
+        float minutes = (xAxis.transform.childCount + 1) / 60;
+        if (minutes < 1) {
+            print("duration should exceed 1 minute for scaling to occur");
+            return;
+        }
 
         for (int i = 0; i < xAxis.transform.childCount; i++) {
-          //  xAxis.transform.GetChild(i).gameObject.SetActive(false);
-         //   grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = false;
             if (graphContent.transform.localScale.x < 1.4f) {
-                if ((i) % (2 * minutes) == 0) {
+                if ((i + 1) % (60) == 0) {
                     xAxis.transform.GetChild(i).gameObject.SetActive(true);
                     grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
                 } else {
@@ -331,7 +331,7 @@ public class Graph : MonoBehaviour {
                     grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = false;
                 }
             } else if (graphContent.transform.localScale.x >= 1.4f && graphContent.transform.localScale.x < 2f) {
-                if ((i) % (5 * minutes) == 0) {
+                if ((i + 1) % (30) == 0) {
                     xAxis.transform.GetChild(i).gameObject.SetActive(true);
                     grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
                 } else {
@@ -339,7 +339,7 @@ public class Graph : MonoBehaviour {
                     grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = false;
                 }
             } else {
-                if ((i) % (2 * minutes) == 0) {
+                if ((i + 1) % (10) == 0) {
                     xAxis.transform.GetChild(i).gameObject.SetActive(true);
                     grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
                 } else {
@@ -353,11 +353,14 @@ public class Graph : MonoBehaviour {
 
     private void LayoutYScale() {
         yAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(yAxisContent.GetComponent<RectTransform>().sizeDelta.x, graphContentRectTrans.rect.height);
-        float range = yAxis.transform.childCount / 100 + 1;
-        if (range < 1) return;
+        float range = yAxis.transform.childCount  / 100 + 1;
+        if (range < 1) {
+            print("Error: Y range should be above 1");
+            return;
+        }
         for (int i = 0; i < yAxis.transform.childCount; i++) {
             if (graphContent.transform.localScale.y < 1.4f) {
-                if ((i + 2) % (10 * range) == 0) {
+                if ((i + 1) % (10 * range) == 0) {
                     yAxis.transform.GetChild(i).gameObject.SetActive(true);
                     grid.transform.GetChild(xScale + i + 2).GetComponent<LineRenderer>().enabled = true;
                 } else {
@@ -365,7 +368,7 @@ public class Graph : MonoBehaviour {
                     grid.transform.GetChild(xScale + i + 2).GetComponent<LineRenderer>().enabled = false;
                 }
             } else if (graphContent.transform.localScale.y >= 1.4f && graphContent.transform.localScale.y < 2f) {
-                if ((i + 2) % (5 * range) == 0) {
+                if ((i + 1) % (5 * range) == 0) {
                     yAxis.transform.GetChild(i).gameObject.SetActive(true);
                     grid.transform.GetChild(i + 2 + xScale).GetComponent<LineRenderer>().enabled = true;
                 } else {
@@ -374,12 +377,12 @@ public class Graph : MonoBehaviour {
                 }
             }
             else if(graphContent.transform.localScale.y >= 2f) {
-                if ((i + 2) % (2 * range) == 0) {
+                if ((i + 1) % (2 * range) == 0) {
                     yAxis.transform.GetChild(i).gameObject.SetActive(true);
-                    grid.transform.GetChild(i + xScale).GetComponent<LineRenderer>().enabled = true;
+                    grid.transform.GetChild(i + 2 + xScale).GetComponent<LineRenderer>().enabled = true;
                 } else {
                     yAxis.transform.GetChild(i).gameObject.SetActive(false);
-                    grid.transform.GetChild(i + xScale).GetComponent<LineRenderer>().enabled = false;
+                    grid.transform.GetChild(i + 2 + xScale).GetComponent<LineRenderer>().enabled = false;
                 }
             }
         }
@@ -554,8 +557,6 @@ public class Graph : MonoBehaviour {
         graphContentRectTrans.sizeDelta = new Vector2(GraphScrollRect.GetComponent<RectTransform>().rect.x * -2, GraphScrollRect.GetComponent<RectTransform>().rect.y * -2);
         graphContentRectTrans.localPosition = Vector3.zero;
         graph.GetComponent<BoxCollider>().size = new Vector2(graphContentRectTrans.rect.width, graphContentRectTrans.rect.height);
-        // xStart = _xStart;
-        // xEnd = _xEnd;
         yStart = _yStart;
         yEnd = _yEnd;
         xScale = _xEnd - _xStart;

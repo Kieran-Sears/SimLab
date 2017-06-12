@@ -157,7 +157,7 @@ public class SimulationSetup : MonoBehaviour {
                 for (int i = 0; i < vitalData.Count; i++) {
                     Vital vital = vitals.vitalList[vitalData[i].vitalID];
                     graph = tabs.GenerateTab(vital.name);
-                    graph.GenerateGrid(1, condition.timeline.Count, 1, (int)Math.Ceiling(vital.max - vital.min));
+                    graph.GenerateGrid(0, condition.timeline.Count, (int)Math.Ceiling(vital.min), (int)Math.Ceiling(vital.max));
                     if (i != 0) {
                         graph.transform.gameObject.SetActive(false);
                     }
@@ -268,7 +268,7 @@ public class SimulationSetup : MonoBehaviour {
               
                 graph = tabs.GenerateTab(vitals.vitalList[index].name);
                 int yRange = (int)Math.Ceiling(vitals.vitalList[index].max - vitals.vitalList[index].min);
-                graph.GenerateGrid(1, duration, 1, yRange);
+                graph.GenerateGrid(1, duration, (int)Math.Ceiling(vitals.vitalList[index].min), (int)Math.Ceiling(vitals.vitalList[index].max));
                 graph.gameObject.SetActive(false);
                 tabs.SwitchTab();
             } else {
