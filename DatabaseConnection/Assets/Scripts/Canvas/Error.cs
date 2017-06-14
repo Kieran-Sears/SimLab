@@ -1,13 +1,12 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 public class Error : MonoBehaviour {
 
     public static Error instance { get; private set; }
 
-    public GameObject panelError;
+    public GameObject errorPanel;
+    public GameObject errorInputPanel;
 
     private void Awake() {
         if (instance) {
@@ -17,8 +16,22 @@ public class Error : MonoBehaviour {
         }
     }
 
-    public void DisplayMessage(string message) {
-        panelError.GetComponentInChildren<Text>().text = message;
-        panelError.SetActive(true);
+    public void PrintError(string message) {
+        errorPanel.GetComponentInChildren<Text>().text = message;
+        errorPanel.gameObject.SetActive(true);
+    }
+
+    public void PrintDurationError(string message) {
+        errorInputPanel.GetComponentInChildren<Text>().text = message;
+        errorInputPanel.gameObject.SetActive(true);
+        errorInputPanel.GetComponentInChildren<Button>().onClick.AddListener(GetValue);
+        errorInputPanel.GetComponentInChildren<InputField>().onValidateInput += delegate (string input, int charIndex, char addedChar) { return SimulationSetup.instance.SimulationDurationChangeValue(input, charIndex, addedChar); };
+    }
+
+    public void GetValue() {
+ 
+        SimulationSetup.instance.simulationDuration.text = errorInputPanel.GetComponentInChildren<InputField>().text;
+        SimulationSetup.instance.loadChosenVital(true, 0, SimulationSetup.instance.vitalName.text);
+        
     }
 }

@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections;
+using UnityEngine.Events;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -27,6 +27,7 @@ public class SimulationSetup : MonoBehaviour {
     public InputField vitalUnit;
     public InputField vitalMax;
     public InputField vitalMin;
+    public GameObject vitalNameDuplicateWarning;
     #endregion
 
     #region Drug
@@ -64,6 +65,7 @@ public class SimulationSetup : MonoBehaviour {
         PopulateDrugs();
         PopulateEquipment();
         simulationDuration.onValidateInput += delegate (string input, int charIndex, char addedChar) { return SimulationDurationChangeValue(input, charIndex, addedChar); };
+        vitalName.onValidateInput += delegate (string input, int charIndex, char addedChar) { return VitalNameChangeValue(input, charIndex, addedChar); };
     }
 
     public char SimulationDurationChangeValue(string input, int charIndex, char character) {
@@ -73,6 +75,14 @@ public class SimulationSetup : MonoBehaviour {
         return character;
     }
 
+    public char VitalNameChangeValue(string input, int charIndex, char character) {
+        if (vitalsChosen.transform.FindChild(input + character) != null) {
+            vitalNameDuplicateWarning.SetActive(true);
+        } else {
+            vitalNameDuplicateWarning.SetActive(false);
+        }
+        return character;
+    }
 
     void PopulatePresets() {
         UnityEngine.Object[] files = Resources.LoadAll("Conditions");
@@ -151,13 +161,13 @@ public class SimulationSetup : MonoBehaviour {
             Debug.Log("Finding condition: " + presets.options[index].text);
             Condition condition = ExportManager.instance.Load("Conditions/" + presets.options[index].text) as Condition;
             if (condition == null) {
-                Error.instance.DisplayMessage("Condition could not be found.");
+                Error.instance.PrintError("Condition could not be found.");
             } else {
                 List<Value> vitalData = condition.timeline[0].vitalValues;
                 for (int i = 0; i < vitalData.Count; i++) {
                     Vital vital = vitals.vitalList[vitalData[i].vitalID];
                     graph = tabs.GenerateTab(vital.name);
-                    graph.GenerateGrid(0, condition.timeline.Count, (int)Math.Ceiling(vital.min), (int)Math.Ceiling(vital.max));
+                    graph.GenerateGraph(0, condition.timeline.Count - 1, "Duration", (int)Math.Ceiling(vital.min), (int)Math.Ceiling(vital.max), vital.units);
                     if (i != 0) {
                         graph.transform.gameObject.SetActive(false);
                     }
@@ -194,7 +204,6 @@ public class SimulationSetup : MonoBehaviour {
         } else {
             return -1;
         }
-        print(times.Length);
         if (times.Length != 1 && int.TryParse(times[1], out store)) {
             duration += store;
         } else {
@@ -205,8 +214,12 @@ public class SimulationSetup : MonoBehaviour {
 
     public void AddVital() {
         if (float.Parse(vitalMax.text) <= float.Parse(vitalMin.text)) {
-            print("Alert. Max value is less or equal to min for vital");
+            Error.instance.PrintError("Max value is less or equal to min value for vital");
             return;
+        }
+        Transform vitalTrans = graphs.transform.FindChild(vitalName.text);
+        if (vitalTrans != null) {
+            Destroy(vitalTrans);
         }
         Vital vital = new Vital();
         vital.nodeID = vitals.vitalList.Count;
@@ -256,30 +269,36 @@ public class SimulationSetup : MonoBehaviour {
         toggle.name = drug.name;
     }
 
+
+
     public void loadChosenVital(bool chosen, int index, string vitalName) {
+        tabs.transform.GetComponent<ToggleGroup>().SetAllTogglesOff();
         if (chosen) {
             Transform vitalTrans = graphs.transform.FindChild(vitalName);
-            if (vitalTrans == null) {
+            if (vitalTrans == null || vitalName == "") {
                 int duration = GetDuration();
                 if (duration == -1) {
-                    print("Alert. No duration set.");
+                    Error.instance.PrintDurationError("What is the duration of the simulation?");
                     return;
                 }
-              
                 graph = tabs.GenerateTab(vitals.vitalList[index].name);
-                int yRange = (int)Math.Ceiling(vitals.vitalList[index].max - vitals.vitalList[index].min);
-                graph.GenerateGrid(1, duration, (int)Math.Ceiling(vitals.vitalList[index].min), (int)Math.Ceiling(vitals.vitalList[index].max));
+                graph.GenerateGraph(1, duration, "Duration (Seconds)", (int)Math.Ceiling(vitals.vitalList[index].min), (int)Math.Ceiling(vitals.vitalList[index].max), vitals.vitalList[index].units);
                 graph.gameObject.SetActive(false);
                 tabs.SwitchTab();
             } else {
+                // Overwrite existing vital
                 vitalTrans.gameObject.SetActive(true);
                 Transform vitalTab = inactiveTabs.transform.FindChild(vitalName);
+                if (vitalTab == null) {
+                    Error.instance.PrintError("Could not find inactiveTabs child : " + vitalName);
+                    Debug.Break();
+                }
                 vitalTab.SetParent(tabs.transform);
                 vitalTab.gameObject.SetActive(true);
                 tabs.SwitchTab();
             }
         } else {
-
+            Debug.Break();         
             Transform tab = tabs.transform.FindChild(vitalName);
             if (tab != null) {
                 tab.gameObject.SetActive(false);
@@ -311,4 +330,11 @@ public class SimulationSetup : MonoBehaviour {
     //    LoadVitalsTabs();
     //}
 
+    public void NewVitalPanelToggleActive() {
+        newVitalPanel.SetActive(!newVitalPanel.activeInHierarchy);
+    }
+
+    public void NewDrugPanelToggleActive() {
+        newDrugPanel.SetActive(!newDrugPanel.activeInHierarchy);
+    }
 }

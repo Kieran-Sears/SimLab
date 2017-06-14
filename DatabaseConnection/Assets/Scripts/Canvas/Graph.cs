@@ -20,6 +20,8 @@ public class Graph : MonoBehaviour {
     public GameObject graphContent;
     public GameObject xAxisContent;
     public GameObject yAxisContent;
+    public GameObject xAxisLabel;
+    public GameObject yAxisLabel;
     public RectTransform graphViewport;
     public RectTransform xAxisViewport;
     public RectTransform yAxisViewport;
@@ -46,7 +48,7 @@ public class Graph : MonoBehaviour {
     private int yEnd;
 
 
-    private float scrollWheel = 1;
+   // private float scrollWheel = 1;
     private float newScrollWheel;
     private Vector2 localpoint;
     private RectTransform graphContentRectTrans;
@@ -69,16 +71,16 @@ public class Graph : MonoBehaviour {
 
         if (graphViewport != null && graphViewport.GetComponent<CusorSensor>().mouseOver) {
             hits = Physics.RaycastAll(Camera.main.ScreenPointToRay(Input.mousePosition), 800);
-            newScrollWheel = scrollWheel + Input.GetAxis("Mouse ScrollWheel");
+          //  newScrollWheel = scrollWheel + Input.GetAxis("Mouse ScrollWheel");
 
-            if (scrollWheel != newScrollWheel) {
-                scrollWheel = newScrollWheel;
-                if (scrollWheel >= 1f) {
-                    SetZoom(scrollWheel);
-                } else if (scrollWheel < 1f) {
-                    scrollWheel = 1f;
-                }
-            }
+            //if (scrollWheel != newScrollWheel) {
+            //    scrollWheel = newScrollWheel;
+            //    if (scrollWheel >= 1f) {
+            //        SetZoom(scrollWheel);
+            //    } else if (scrollWheel < 1f) {
+            //        scrollWheel = 1f;
+            //    }
+            //}
 
             if (Input.GetMouseButton(0)) {
                 mouseHold += UnityEngine.Time.deltaTime;
@@ -320,17 +322,16 @@ public class Graph : MonoBehaviour {
             print("duration should exceed 1 minute for scaling to occur");
             return;
         }
-
         for (int i = 0; i < xAxis.transform.childCount; i++) {
-            if (graphContent.transform.localScale.x < 1.4f) {
-                if ((i + 1) % (60) == 0) {
+            if (minutes < 1) {
+                if ((i + 1) % (10) == 0) {
                     xAxis.transform.GetChild(i).gameObject.SetActive(true);
                     grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
                 } else {
                     xAxis.transform.GetChild(i).gameObject.SetActive(false);
                     grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = false;
                 }
-            } else if (graphContent.transform.localScale.x >= 1.4f && graphContent.transform.localScale.x < 2f) {
+            } else if (minutes >= 1 && minutes < 3) {
                 if ((i + 1) % (30) == 0) {
                     xAxis.transform.GetChild(i).gameObject.SetActive(true);
                     grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
@@ -339,7 +340,7 @@ public class Graph : MonoBehaviour {
                     grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = false;
                 }
             } else {
-                if ((i + 1) % (10) == 0) {
+                if ((i + 1) % (60) == 0) {
                     xAxis.transform.GetChild(i).gameObject.SetActive(true);
                     grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
                 } else {
@@ -348,12 +349,42 @@ public class Graph : MonoBehaviour {
                 }
             }
         }
+
+        // for zooming in and out and adjusting the scale units on each axis accordingly
+        //for (int i = 0; i < xAxis.transform.childCount; i++) {
+        //    if (graphContent.transform.localScale.x < 1.4f) {
+        //        if ((i + 1) % (10) == 0) {
+        //            xAxis.transform.GetChild(i).gameObject.SetActive(true);
+        //            grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
+        //        } else {
+        //            xAxis.transform.GetChild(i).gameObject.SetActive(false);
+        //            grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = false;
+        //        }
+        //    } else if (graphContent.transform.localScale.x >= 1.4f && graphContent.transform.localScale.x < 2f) {
+        //        if ((i + 1) % (30) == 0) {
+        //            xAxis.transform.GetChild(i).gameObject.SetActive(true);
+        //            grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
+        //        } else {
+        //            xAxis.transform.GetChild(i).gameObject.SetActive(false);
+        //            grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = false;
+        //        }
+        //    } else {
+        //        if ((i + 1) % (60) == 0) {
+        //            xAxis.transform.GetChild(i).gameObject.SetActive(true);
+        //            grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
+        //        } else {
+        //            xAxis.transform.GetChild(i).gameObject.SetActive(false);
+        //            grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = false;
+        //        }
+        //    }
+        //}
         grid.transform.GetChild(xScale - 1).GetComponent<LineRenderer>().enabled = true;
     }
 
     private void LayoutYScale() {
         yAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(yAxisContent.GetComponent<RectTransform>().sizeDelta.x, graphContentRectTrans.rect.height);
         float range = yAxis.transform.childCount  / 100 + 1;
+   
         if (range < 1) {
             print("Error: Y range should be above 1");
             return;
@@ -552,7 +583,7 @@ public class Graph : MonoBehaviour {
     #endregion
 
     #region Public Methods
-    public void GenerateGrid(int _xStart, int _xEnd, int _yStart, int _yEnd) {
+    public void GenerateGraph(int _xStart, int _xEnd, string xLabel, int _yStart, int _yEnd, string yLabel) {
         graphContentRectTrans = graphContent.GetComponent<RectTransform>();
         graphContentRectTrans.sizeDelta = new Vector2(GraphScrollRect.GetComponent<RectTransform>().rect.x * -2, GraphScrollRect.GetComponent<RectTransform>().rect.y * -2);
         graphContentRectTrans.localPosition = Vector3.zero;
@@ -566,6 +597,8 @@ public class Graph : MonoBehaviour {
         InitialiseYScale();
         LayoutXScale();
         LayoutYScale();
+        yAxisLabel.GetComponent<Text>().text = yLabel;
+        xAxisLabel.GetComponent<Text>().text = xLabel;
         xAxisScrollRect.verticalNormalizedPosition = 1;
         xAxisScrollRect.scrollSensitivity = 0;
         yAxisScrollRect.verticalNormalizedPosition = 0;
