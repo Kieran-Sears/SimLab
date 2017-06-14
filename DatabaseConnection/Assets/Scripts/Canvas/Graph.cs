@@ -201,14 +201,15 @@ public class Graph : MonoBehaviour {
     }
 
     private void InitialiseYScale() {
-        for (int i = 1; i <= yScale; i++) {
+        print("initialising y scale " + yScale);
+        for (int i = yStart; i <= yEnd; i++) {
             GameObject dashMarker = Instantiate(yDashMarkerPrefab, yAxis.transform);
             dashMarker.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
             dashMarker.transform.localPosition = Vector3.zero;
             dashMarker.transform.localPosition += new Vector3(0, (-graphContentRectTrans.rect.height / 2), 1);
             dashMarker.transform.localPosition += new Vector3(0, ((graphContentRectTrans.rect.height / yScale) * i), 1);
             Text text = dashMarker.GetComponent<Text>();
-            text.text = (i + yStart).ToString();
+            text.text = (i).ToString();
             text.fontSize = 1;
         }
     }
@@ -323,7 +324,7 @@ public class Graph : MonoBehaviour {
             return;
         }
         for (int i = 0; i < xAxis.transform.childCount; i++) {
-            if (minutes < 1) {
+            if (minutes < 3) {
                 if ((i + 1) % (10) == 0) {
                     xAxis.transform.GetChild(i).gameObject.SetActive(true);
                     grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
@@ -331,7 +332,7 @@ public class Graph : MonoBehaviour {
                     xAxis.transform.GetChild(i).gameObject.SetActive(false);
                     grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = false;
                 }
-            } else if (minutes >= 1 && minutes < 3) {
+            } else if (minutes >= 3 && minutes < 10) {
                 if ((i + 1) % (30) == 0) {
                     xAxis.transform.GetChild(i).gameObject.SetActive(true);
                     grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
@@ -389,7 +390,8 @@ public class Graph : MonoBehaviour {
             print("Error: Y range should be above 1");
             return;
         }
-        for (int i = 0; i < yAxis.transform.childCount; i++) {
+
+        for (int i = 0; i < yScale; i++) {
             if (graphContent.transform.localScale.y < 1.4f) {
                 if ((i + 1) % (10 * range) == 0) {
                     yAxis.transform.GetChild(i).gameObject.SetActive(true);

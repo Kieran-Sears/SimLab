@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 public class Error : MonoBehaviour {
 
@@ -25,13 +26,19 @@ public class Error : MonoBehaviour {
         errorInputPanel.GetComponentInChildren<Text>().text = message;
         errorInputPanel.gameObject.SetActive(true);
         errorInputPanel.GetComponentInChildren<Button>().onClick.AddListener(GetValue);
-        errorInputPanel.GetComponentInChildren<InputField>().onValidateInput += delegate (string input, int charIndex, char addedChar) { return SimulationSetup.instance.SimulationDurationChangeValue(input, charIndex, addedChar); };
+        InputField duration = errorInputPanel.GetComponentInChildren<InputField>();
+        duration.onValidateInput += delegate (string input, int charIndex, char addedChar) { return SimulationSetup.instance.SimulationDurationChangeValue(input, charIndex, addedChar); };
+        duration.Select();
+        duration.ActivateInputField();
+        duration.onEndEdit.AddListener(fieldValue => { GetValue(); });
     }
 
     public void GetValue() {
  
         SimulationSetup.instance.simulationDuration.text = errorInputPanel.GetComponentInChildren<InputField>().text;
         SimulationSetup.instance.loadChosenVital(true, 0, SimulationSetup.instance.vitalName.text);
-        
+        errorInputPanel.gameObject.SetActive(false);
     }
+
+
 }

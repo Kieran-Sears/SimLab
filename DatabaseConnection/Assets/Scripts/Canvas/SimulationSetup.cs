@@ -291,14 +291,12 @@ public class SimulationSetup : MonoBehaviour {
                 Transform vitalTab = inactiveTabs.transform.FindChild(vitalName);
                 if (vitalTab == null) {
                     Error.instance.PrintError("Could not find inactiveTabs child : " + vitalName);
-                    Debug.Break();
                 }
                 vitalTab.SetParent(tabs.transform);
                 vitalTab.gameObject.SetActive(true);
                 tabs.SwitchTab();
             }
-        } else {
-            Debug.Break();         
+        } else {       
             Transform tab = tabs.transform.FindChild(vitalName);
             if (tab != null) {
                 tab.gameObject.SetActive(false);
