@@ -81,6 +81,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\KeyboardCoordinate.cs" />
     <Compile Include="Assets\Scripts\Canvas\CusorSensor.cs" />
     <Compile Include="Assets\Scripts\Canvas\Error.cs" />
     <Compile Include="Assets\Scripts\Canvas\Graph.cs" />
