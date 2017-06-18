@@ -40,16 +40,17 @@ public class Graph : MonoBehaviour {
     public SortedList<float, Slider> sortedGraphPointsList = new SortedList<float, Slider>();
     public SortedList<float, Slider> pointsUpperThreshold = new SortedList<float, Slider>();
     public SortedList<float, Slider> pointsLowerThreshold = new SortedList<float, Slider>();
+
+    public int duration;
+    public int xScale;
+    public int xStart;
+    public int xEnd;
+    public int yScale;
+    public int yStart;
+    public int yEnd;
     #endregion
 
     #region Private Variables
-    private int xScale;
-    private int xStart;
-    private int xEnd;
-    private int yScale;
-    private int yStart;
-    private int yEnd;
-
     // private float scrollWheel = 1;
     private float newScrollWheel;
     private Vector2 localpoint;
@@ -69,6 +70,7 @@ public class Graph : MonoBehaviour {
     private float previousFrameTime;
     private int counter = 0;
     private bool activateCoordinateSystem;
+    private bool coordinateSystemActivated = false;
     #endregion
 
     #region Unity Methods
@@ -97,7 +99,7 @@ public class Graph : MonoBehaviour {
 
             #region determining cursor position
             //cycle through cursor raycast
-            for (int i = cursorRaycastHits.Length -1; i >= 0; i--) {
+            for (int i = cursorRaycastHits.Length - 1; i >= 0; i--) {
                 // get posititon to add the point
                 cursorRaycastHitPosition = cursorRaycastHits[i].point;
                 // if cursor is over the graph
@@ -105,6 +107,7 @@ public class Graph : MonoBehaviour {
                     cursorIsOverGraph = true;
                     // if cursor is over handle
                 } else if (cursorRaycastHits[i].collider.tag == "Handle") {
+                    sliderHandleTransform = cursorRaycastHits[i].transform;
                     int inde = sortedGraphPointsList.IndexOfValue(cursorRaycastHits[i].transform.parent.parent.GetComponent<Slider>());
                     if (inde != 0 || inde != sortedGraphPointsList.Count - 1) {
                         activateCoordinateSystem = true;
@@ -121,6 +124,7 @@ public class Graph : MonoBehaviour {
                 } else if (cursorRaycastHits[i].collider.tag == "CoordinateSystem") {
                     cursorIsOverGraph = false;
                     leftMouseButtonIsDown = false;
+                    coordinateSystem.SetActive(true);
                     print("CO ORD SYS");
                 }
             }
@@ -163,12 +167,11 @@ public class Graph : MonoBehaviour {
             if (activateCoordinateSystem) {
                 if (mouseHoverOverHandleTime > 3) {
                     print("Coordinate System Activated");
+                    coordinateSystemActivated = true;
                     coordinateSystem.SetActive(true);
-                    coordinateSystem.transform.position = transform.position;
                     coordinateSystem.transform.localPosition = Vector3.zero;
                     coordinateSystem.transform.localScale = new Vector3(0.5f, 0.5f, 1);
-                    cursorRaycastHitPosition.z = 1;
-                    coordinateSystem.transform.position = cursorRaycastHitPosition + new Vector3(0, 0, transform.position.z);
+                    coordinateSystem.transform.position = sliderHandleTransform.position + new Vector3(0.1f, 0.1f, 1);
                     activateCoordinateSystem = false;
                 }
             } else {
@@ -215,6 +218,7 @@ public class Graph : MonoBehaviour {
     #endregion
 
     #region Private Methods
+
     private void DrawGrid() {
         Vector2 size = new Vector2(graphContentRectTrans.rect.width, graphContentRectTrans.rect.height);
         GameObject dashMarker;
@@ -249,6 +253,12 @@ public class Graph : MonoBehaviour {
     }
 
     private void InitialiseXScale() {
+        if (xScale > 300) {
+            xAxisLabel.GetComponent<Text>().text = "Duration (Minutes)";
+            xScale /= 60;
+            print(xScale);
+        }
+
         for (int i = 0; i <= xScale; i++) {
             GameObject dashMarker = Instantiate(xDashMarkerPrefab, xAxis.transform);
             dashMarker.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
@@ -352,8 +362,9 @@ public class Graph : MonoBehaviour {
 
             pointLine.transform.localScale = new Vector3(1 / targetSize, 1 / targetSize, 1);
 
-            LayoutYScale();
             LayoutXScale();
+            LayoutYScale();
+
 
             for (int i = 0; i < sortedGraphPointsList.Count; i++) {
                 pointLine.SetPosition(i, (Camera.main.WorldToScreenPoint(sortedGraphPointsList.Values[i].handleRect.position) - Camera.main.WorldToScreenPoint(graphContent.transform.position)));
@@ -379,24 +390,49 @@ public class Graph : MonoBehaviour {
 
     private void LayoutXScale() {
         xAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(graphContentRectTrans.rect.width, xAxisContent.GetComponent<RectTransform>().sizeDelta.y);
-        int diff = 0;
-        if (xStart != 0) {
-            diff = 10 - (xStart % 10);
-        }
-        for (int i = 0; i < xScale; i++) {
-            if (i % (10) == diff) {
-                xAxis.transform.GetChild(i).gameObject.SetActive(true);
-                grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
-            } else {
-                xAxis.transform.GetChild(i).gameObject.SetActive(false);
-                grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = false;
+
+
+        if (xScale >= 180) {
+            for (int i = 0; i < xScale; i++) {
+                if (i % (20) == 0) {
+                    xAxis.transform.GetChild(i).gameObject.SetActive(true);
+                    grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
+                } else {
+                    xAxis.transform.GetChild(i).gameObject.SetActive(false);
+                    grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = false;
+                }
+            }
+        } else if (xScale >= 120) {
+            for (int i = 0; i < xScale; i++) {
+                if (i % (10) == 0) {
+                    xAxis.transform.GetChild(i).gameObject.SetActive(true);
+                    grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
+                } else {
+                    xAxis.transform.GetChild(i).gameObject.SetActive(false);
+                    grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = false;
+                }
             }
 
+        } else if (xScale >= 30) {
+            for (int i = 0; i < xScale; i++) {
+                if (i % (2) == 0) {
+                    xAxis.transform.GetChild(i).gameObject.SetActive(true);
+                    grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
+                } else {
+                    xAxis.transform.GetChild(i).gameObject.SetActive(false);
+                    grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = false;
+                }
+            }
+        } else {
+            for (int i = 0; i < xScale; i++) {
+                xAxis.transform.GetChild(i).gameObject.SetActive(true);
+                grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
+            }
         }
         xAxis.transform.GetChild(0).gameObject.SetActive(true);
         grid.transform.GetChild(0).GetComponent<LineRenderer>().enabled = true;
-        xAxis.transform.GetChild(xScale ).gameObject.SetActive(true);
-        grid.transform.GetChild(xScale ).GetComponent<LineRenderer>().enabled = true;
+        xAxis.transform.GetChild(xScale).gameObject.SetActive(true);
+        grid.transform.GetChild(xScale).GetComponent<LineRenderer>().enabled = true;
     }
 
     private void LayoutYScale() {
@@ -588,24 +624,33 @@ public class Graph : MonoBehaviour {
 
     #region Public Methods
     public void GenerateGraph(int _xStart, int _xEnd, string xLabel, int _yStart, int _yEnd, string yLabel) {
+        print("generating graph");
         graphContentRectTrans = graphContent.GetComponent<RectTransform>();
         graphContentRectTrans.sizeDelta = new Vector2(GraphScrollRect.GetComponent<RectTransform>().rect.x * -2, GraphScrollRect.GetComponent<RectTransform>().rect.y * -2);
         graphContentRectTrans.localPosition = Vector3.zero;
         graph.GetComponent<BoxCollider>().size = new Vector2(graphContentRectTrans.rect.width, graphContentRectTrans.rect.height);
         coordinateSystem.GetComponent<BoxCollider>().size = new Vector3(coordinateSystem.GetComponent<RectTransform>().rect.width, coordinateSystem.GetComponent<RectTransform>().rect.height, 1);
+
+        yAxisLabel.GetComponent<Text>().text = yLabel;
+        xAxisLabel.GetComponent<Text>().text = xLabel;
+
         xStart = _xStart;
         xEnd = _xEnd;
         yStart = _yStart;
         yEnd = _yEnd;
         xScale = _xEnd - _xStart;
         yScale = _yEnd - _yStart;
-        DrawGrid();
+
+        duration = xScale;
+
         InitialiseXScale();
         InitialiseYScale();
+
+        DrawGrid();
+
         LayoutXScale();
         LayoutYScale();
-        yAxisLabel.GetComponent<Text>().text = yLabel;
-        xAxisLabel.GetComponent<Text>().text = xLabel;
+     
         xAxisScrollRect.horizontalNormalizedPosition = 0;
         xAxisScrollRect.scrollSensitivity = 0;
         yAxisScrollRect.verticalNormalizedPosition = 0;
@@ -765,6 +810,12 @@ public class Graph : MonoBehaviour {
                 Error.instance.PrintError("please make sure coordinates are within range limits");
             }
         }
+    }
+
+    public KeyValuePair<int, int> GetValueForPoint(int index) {
+        print("Do reverse of AddPoint(xValue, yValue) in Graph class");
+
+        return new KeyValuePair<int, int>(0, 0);
     }
     #endregion
 
