@@ -81,10 +81,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\KeyboardCoordinate.cs" />
     <Compile Include="Assets\Scripts\Canvas\CusorSensor.cs" />
     <Compile Include="Assets\Scripts\Canvas\Error.cs" />
+    <Compile Include="Assets\Scripts\Canvas\ErrorInput.cs" />
     <Compile Include="Assets\Scripts\Canvas\Graph.cs" />
+    <Compile Include="Assets\Scripts\Canvas\KeyboardCoordinate.cs" />
     <Compile Include="Assets\Scripts\Canvas\NoScrollRect.cs" />
     <Compile Include="Assets\Scripts\Canvas\SimulationSetup.cs" />
     <Compile Include="Assets\Scripts\Canvas\Toolbar.cs" />

@@ -8,6 +8,7 @@ public class Error : MonoBehaviour {
 
     public GameObject errorPanel;
     public GameObject errorInputPanel;
+    public GameObject lastFocusedObject;
 
     private void Awake() {
         if (instance) {
@@ -23,19 +24,22 @@ public class Error : MonoBehaviour {
     }
 
     public void PrintDurationError(string message) {
-        errorInputPanel.GetComponentInChildren<Text>().text = message;
+        ErrorInput inputError = errorInputPanel.GetComponent<ErrorInput>();
+        inputError.message.text = message;
+        inputError.minutes.onValidateInput += delegate (string input, int charIndex, char addedChar) { return SimulationSetup.instance.SimulationDurationChangeValue(input, charIndex, addedChar); };
+        inputError.seconds.onValidateInput += delegate (string input, int charIndex, char addedChar) { return SimulationSetup.instance.SimulationDurationChangeValue(input, charIndex, addedChar); };
+        inputError.minutes.Select();
+        inputError.minutes.ActivateInputField();
+        inputError.minutes.onEndEdit.AddListener(fieldValue => { GetValue(); });
+        inputError.seconds.onEndEdit.AddListener(fieldValue => { GetValue(); });
         errorInputPanel.gameObject.SetActive(true);
         errorInputPanel.GetComponentInChildren<Button>().onClick.AddListener(GetValue);
-        InputField duration = errorInputPanel.GetComponentInChildren<InputField>();
-        duration.onValidateInput += delegate (string input, int charIndex, char addedChar) { return SimulationSetup.instance.SimulationDurationChangeValue(input, charIndex, addedChar); };
-        duration.Select();
-        duration.ActivateInputField();
-        duration.onEndEdit.AddListener(fieldValue => { GetValue(); });
     }
 
     public void GetValue() {
- 
-        SimulationSetup.instance.simulationDuration.text = errorInputPanel.GetComponentInChildren<InputField>().text;
+        ErrorInput inputError = errorInputPanel.GetComponent<ErrorInput>();
+        SimulationSetup.instance.simulationDurationMinutes.text = inputError.minutes.text;
+        SimulationSetup.instance.simulationDurationSeconds.text = inputError.seconds.text;
         SimulationSetup.instance.loadChosenVital(true, 0, SimulationSetup.instance.vitalName.text);
         errorInputPanel.gameObject.SetActive(false);
     }
