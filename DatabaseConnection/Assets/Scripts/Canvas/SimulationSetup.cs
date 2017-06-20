@@ -17,6 +17,8 @@ public class SimulationSetup : MonoBehaviour {
     public Dropdown presets;
     public InputField simulationDurationMinutes;
     public InputField simulationDurationSeconds;
+    public Button durationSubmit;
+    public int duration = -1;
     public GameObject vitalsChosen;
     public GameObject drugsChosen;
     public GameObject equipmentChosen;
@@ -54,7 +56,8 @@ public class SimulationSetup : MonoBehaviour {
     private void Awake() {
         if (instance) {
             DestroyImmediate(this);
-        } else {
+        }
+        else {
             instance = this;
         }
     }
@@ -64,32 +67,98 @@ public class SimulationSetup : MonoBehaviour {
         PopulateVitals();
         PopulateDrugs();
         PopulateEquipment();
-        simulationDurationMinutes.onValidateInput += delegate (string input, int charIndex, char addedChar) { return SimulationDurationChangeValue(input, charIndex, addedChar); };
-        simulationDurationSeconds.onValidateInput += delegate (string input, int charIndex, char addedChar) { return SimulationDurationChangeValue(input, charIndex, addedChar); };
-        vitalName.onValidateInput += delegate (string input, int charIndex, char addedChar) { return VitalNameChangeValue(input, charIndex, addedChar); };
+        // dynamic check for user input for the duration of simulation
+        //  simulationDurationMinutes.onValidateInput += delegate (string input, int charIndex, char addedChar) { return SimulationDurationChangeValue(input, charIndex, addedChar); };
+        //  simulationDurationSeconds.onValidateInput += delegate (string input, int charIndex, char addedChar) { return SimulationDurationChangeValue(input, charIndex, addedChar); };
+        simulationDurationMinutes.onValueChanged.AddListener(enableSubmitButton);
+
+            vitalName.onValidateInput += delegate (string input, int charIndex, char addedChar) { return VitalNameChangeValue(input, charIndex, addedChar); };
     }
 
-    public char SimulationDurationChangeValue(string input, int charIndex, char character) {
-        if (charIndex > 1) {
-            return '\0';
-        }
-        int v;
-        if (int.TryParse(input + character.ToString(), out v)) {
-            if (charIndex <= 1 && v > 60) {
-                Error.instance.PrintError("Number cannot exceed 60");
-                return '\0';
+    // dynamic check of duration instigated from the start function within this class
+    //public char SimulationDurationChangeValue(string input, int charIndex, char character) {
+    //    if (charIndex > 1) {
+    //        return '\0';
+    //    }
+    //    int v;
+    //    if (int.TryParse(input + character.ToString(), out v)) {
+    //        if (charIndex <= 1 && v > 60) {
+    //            Error.instance.PrintError("Number cannot exceed 60");
+    //            return '\0';
+    //        }
+    //    } else {
+    //        Error.instance.PrintError("Enter numerical values only.");
+    //        return '\0';
+    //    }
+    //    return character;
+    //}
+
+    public void enableSubmitButton(string input) {
+        durationSubmit.interactable = true;
+    }
+
+    public void SubmitDuration() {
+
+        int minutes = 0;
+        int seconds = 0;
+        if (int.TryParse(simulationDurationMinutes.text, out minutes)) {
+            if (minutes > 60) {
+                Error.instance.errorPanel.GetComponentInChildren<Text>().text = "Minutes cannot exceed 60.";
+                Error.instance.errorPanel.gameObject.SetActive(true);
+                Error.instance.errorPanel.GetComponentInChildren<Button>().onClick.AddListener(SelectMinutesDuration);
+            } else if (minutes < 0) {
+                Error.instance.errorPanel.GetComponentInChildren<Text>().text = "Minutes cannot be less than 0.";
+                Error.instance.errorPanel.gameObject.SetActive(true);
+                Error.instance.errorPanel.GetComponentInChildren<Button>().onClick.AddListener(SelectMinutesDuration);
             }
-        } else {
-            Error.instance.PrintError("Enter numerical values only.");
-            return '\0';
+            else {
+                durationSubmit.interactable = false;
+                duration += minutes * 60;
+            }
         }
-        return character;
+       
+        if (int.TryParse(simulationDurationSeconds.text, out seconds)) {
+            if (seconds > 60) {
+                Error.instance.errorPanel.GetComponentInChildren<Text>().text = "Seconds cannot exceed 60.";
+                Error.instance.errorPanel.gameObject.SetActive(true);
+                Error.instance.errorPanel.GetComponentInChildren<Button>().onClick.AddListener(SelectSecondsDuration);
+            }
+            else if (seconds < 0) {
+                Error.instance.errorPanel.GetComponentInChildren<Text>().text = "Seconds cannot be less than 0.";
+                Error.instance.errorPanel.gameObject.SetActive(true);
+                Error.instance.errorPanel.GetComponentInChildren<Button>().onClick.AddListener(SelectMinutesDuration);
+            }
+            else if (minutes == 0 && seconds < 30) {
+                Error.instance.errorPanel.GetComponentInChildren<Text>().text = "Simulation duration should exeed 30 seconds.";
+                Error.instance.errorPanel.gameObject.SetActive(true);
+                Error.instance.errorPanel.GetComponentInChildren<Button>().onClick.AddListener(SelectMinutesDuration);
+            }
+            else {
+                durationSubmit.interactable = false;
+                duration += seconds;
+            }
+        }
+    }
+
+    private void SelectMinutesDuration() {
+        Error.instance.errorPanel.SetActive(false);
+        simulationDurationMinutes.Select();
+        simulationDurationMinutes.ActivateInputField();
+        Error.instance.errorPanel.GetComponentInChildren<Button>().onClick.RemoveAllListeners();
+    }
+
+    private void SelectSecondsDuration() {
+        Error.instance.errorPanel.SetActive(false);
+        simulationDurationSeconds.Select();
+        simulationDurationSeconds.ActivateInputField();
+        Error.instance.errorPanel.GetComponentInChildren<Button>().onClick.RemoveAllListeners();
     }
 
     public char VitalNameChangeValue(string input, int charIndex, char character) {
         if (vitalsChosen.transform.FindChild(input + character) != null) {
             vitalNameDuplicateWarning.SetActive(true);
-        } else {
+        }
+        else {
             vitalNameDuplicateWarning.SetActive(false);
         }
         return character;
@@ -166,14 +235,21 @@ public class SimulationSetup : MonoBehaviour {
         }
     }
 
+    public void SetErrorPanelToFalse() {
+        Error.instance.errorPanel.gameObject.SetActive(true);
+    }
+
     public void LoadCondition(int index) {
         ClearPreviousTabs();
         if (presets.options[index].text != "None") {
             Debug.Log("Finding condition: " + presets.options[index].text);
             Condition condition = ExportManager.instance.Load("Conditions/" + presets.options[index].text) as Condition;
             if (condition == null) {
-                Error.instance.PrintError("Condition could not be found.");
-            } else {
+                Error.instance.errorPanel.GetComponentInChildren<Text>().text = "Condition could not be found.";
+                Error.instance.errorPanel.gameObject.SetActive(true);
+                Error.instance.errorPanel.GetComponentInChildren<Button>().onClick.AddListener(SetErrorPanelToFalse);
+            }
+            else {
                 List<Value> vitalData = condition.timeline[0].vitalValues;
                 for (int i = 0; i < vitalData.Count; i++) {
                     Vital vital = vitals.vitalList[vitalData[i].vitalID];
@@ -206,22 +282,34 @@ public class SimulationSetup : MonoBehaviour {
         }
     }
 
-    int GetDuration() {
-        int duration = -1;
-        if (simulationDurationMinutes.text != "") {
-            duration = int.Parse(simulationDurationMinutes.text) * 60;
-        } else {
-            Error.instance.PrintDurationError("Please set the duration of the simulation before selecting adding vitals.");
-        }
-        if (simulationDurationSeconds.text != "") {
-            duration += int.Parse(simulationDurationSeconds.text);
-        }
-        return duration;
+    //int GetDuration() {
+    //     duration = -1;
+    //    if (simulationDurationMinutes.text != "") {
+    //        duration = int.Parse(simulationDurationMinutes.text) * 60;
+    //    }
+    //    else {
+    //        Error.instance.errorPanel.GetComponentInChildren<Text>().text = "Please set the duration of the simulation before selecting adding vitals.";
+    //        Error.instance.errorPanel.gameObject.SetActive(true);
+    //        Error.instance.errorPanel.GetComponentInChildren<Button>().onClick.AddListener(SelectMinutesDuration);
+    //    }
+    //    if (simulationDurationSeconds.text != "") {
+    //        duration += int.Parse(simulationDurationSeconds.text);
+    //    }
+    //    return duration;
+    //}
+
+    public void SelectMaxVitalValue() {
+        Error.instance.errorPanel.SetActive(false);
+        vitalMax.Select();
+        vitalMax.ActivateInputField();
+        Error.instance.errorPanel.GetComponentInChildren<Button>().onClick.RemoveAllListeners();
     }
 
     public void AddVital() {
         if (float.Parse(vitalMax.text) <= float.Parse(vitalMin.text)) {
-            Error.instance.PrintError("Max value is less or equal to min value for vital");
+            Error.instance.errorPanel.GetComponentInChildren<Text>().text = "Max value is less or equal to min value for vital";
+            Error.instance.errorPanel.gameObject.SetActive(true);
+            Error.instance.errorPanel.GetComponentInChildren<Button>().onClick.AddListener(SelectMaxVitalValue);
             return;
         }
         Transform vitalTrans = graphs.transform.FindChild(vitalName.text);
@@ -236,7 +324,7 @@ public class SimulationSetup : MonoBehaviour {
         }
         if (vitalIndex != -1) {
             vitals.vitalList.RemoveAt(vitalIndex);
-           Destroy(vitalsChosen.transform.FindChild(vitalName.text).gameObject);
+            Destroy(vitalsChosen.transform.FindChild(vitalName.text).gameObject);
         }
 
 
@@ -294,28 +382,36 @@ public class SimulationSetup : MonoBehaviour {
         if (chosen) {
             Transform vitalTrans = graphs.transform.FindChild(vitalName);
             if (vitalTrans == null || vitalName == "") {
-                int duration = GetDuration();
+                if (duration == -1) {
+                    Error.instance.errorPanel.GetComponentInChildren<Text>().text = "Please set the duration of the simulation before selecting adding vitals.";
+                    Error.instance.errorPanel.gameObject.SetActive(true);
+                    Error.instance.errorPanel.GetComponentInChildren<Button>().onClick.AddListener(SelectMinutesDuration);
+                    return;
+                }
                 graph = tabs.GenerateTab(vitals.vitalList[index].name);
                 graph.GenerateGraph(0, duration, "Duration (Seconds)", (int)Math.Ceiling(vitals.vitalList[index].min), (int)Math.Ceiling(vitals.vitalList[index].max), vitals.vitalList[index].units);
                 if (graph.sortedGraphPointsList.Count == 0) {
-                   int halfValue = (int) Math.Ceiling( ((vitals.vitalList[index].max - vitals.vitalList[index].min) / 2) + vitals.vitalList[index].min );
+                    int halfValue = (int)Math.Ceiling(((vitals.vitalList[index].max - vitals.vitalList[index].min) / 2) + vitals.vitalList[index].min);
                     graph.AddPoint(0, halfValue);
                     graph.AddPoint(duration, halfValue);
                 }
                 graph.gameObject.SetActive(false);
                 tabs.SwitchTab();
-            } else {
+            }
+            else {
                 // Overwrite existing vital
                 vitalTrans.gameObject.SetActive(true);
                 Transform vitalTab = inactiveTabs.transform.FindChild(vitalName);
                 if (vitalTab == null) {
-                    Error.instance.PrintError("Could not find inactiveTabs child : " + vitalName);
+                    // Error.instance.PrintError("Could not find inactiveTabs child : " + vitalName);
+                    print("Could not find inactiveTabs child : " + vitalName);
                 }
                 vitalTab.SetParent(tabs.transform);
                 vitalTab.gameObject.SetActive(true);
                 tabs.SwitchTab();
             }
-        } else {
+        }
+        else {
             Transform tab = tabs.transform.FindChild(vitalName);
             if (tab != null) {
                 tab.gameObject.SetActive(false);
