@@ -26,5 +26,4 @@ public class Vital {
     public float min { get; set; }
     [XmlElement("Max")]
     public float max { get; set; }
-
 }

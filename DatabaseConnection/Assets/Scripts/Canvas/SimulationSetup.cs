@@ -71,8 +71,8 @@ public class SimulationSetup : MonoBehaviour {
         //  simulationDurationMinutes.onValidateInput += delegate (string input, int charIndex, char addedChar) { return SimulationDurationChangeValue(input, charIndex, addedChar); };
         //  simulationDurationSeconds.onValidateInput += delegate (string input, int charIndex, char addedChar) { return SimulationDurationChangeValue(input, charIndex, addedChar); };
         simulationDurationMinutes.onValueChanged.AddListener(enableSubmitButton);
-
-            vitalName.onValidateInput += delegate (string input, int charIndex, char addedChar) { return VitalNameChangeValue(input, charIndex, addedChar); };
+        simulationDurationSeconds.onValueChanged.AddListener(enableSubmitButton);
+        vitalName.onValidateInput += delegate (string input, int charIndex, char addedChar) { return VitalNameChangeValue(input, charIndex, addedChar); };
     }
 
     // dynamic check of duration instigated from the start function within this class
@@ -98,6 +98,7 @@ public class SimulationSetup : MonoBehaviour {
     }
 
     public void SubmitDuration() {
+        int newDuration = 0;
 
         int minutes = 0;
         int seconds = 0;
@@ -106,17 +107,17 @@ public class SimulationSetup : MonoBehaviour {
                 Error.instance.errorPanel.GetComponentInChildren<Text>().text = "Minutes cannot exceed 60.";
                 Error.instance.errorPanel.gameObject.SetActive(true);
                 Error.instance.errorPanel.GetComponentInChildren<Button>().onClick.AddListener(SelectMinutesDuration);
-            } else if (minutes < 0) {
+            }
+            else if (minutes < 0) {
                 Error.instance.errorPanel.GetComponentInChildren<Text>().text = "Minutes cannot be less than 0.";
                 Error.instance.errorPanel.gameObject.SetActive(true);
                 Error.instance.errorPanel.GetComponentInChildren<Button>().onClick.AddListener(SelectMinutesDuration);
             }
             else {
-                durationSubmit.interactable = false;
-                duration += minutes * 60;
+                newDuration += minutes * 60;
             }
         }
-       
+
         if (int.TryParse(simulationDurationSeconds.text, out seconds)) {
             if (seconds > 60) {
                 Error.instance.errorPanel.GetComponentInChildren<Text>().text = "Seconds cannot exceed 60.";
@@ -134,9 +135,17 @@ public class SimulationSetup : MonoBehaviour {
                 Error.instance.errorPanel.GetComponentInChildren<Button>().onClick.AddListener(SelectMinutesDuration);
             }
             else {
-                durationSubmit.interactable = false;
-                duration += seconds;
+                newDuration += seconds;
             }
+        }
+
+        if (duration != newDuration && duration != -1) {
+            Error.instance.errorPanel.GetComponentInChildren<Text>().text = "This action with overwrite existing graphs. Are you sure?";
+            Error.instance.errorPanel.gameObject.SetActive(true);
+        }
+        else {
+            duration = newDuration;
+            durationSubmit.interactable = false;
         }
     }
 
@@ -253,8 +262,16 @@ public class SimulationSetup : MonoBehaviour {
                 List<Value> vitalData = condition.timeline[0].vitalValues;
                 for (int i = 0; i < vitalData.Count; i++) {
                     Vital vital = vitals.vitalList[vitalData[i].vitalID];
+                    simulationDurationMinutes.text = ((condition.timeline.Count - 1) / 60).ToString();
+                    simulationDurationSeconds.text = ((condition.timeline.Count - 1) % 60).ToString();
+                    SubmitDuration();
                     graph = tabs.GenerateTab(vital.name);
                     graph.GenerateGraph(0, condition.timeline.Count - 1, "Duration", (int)Math.Ceiling(vital.min), (int)Math.Ceiling(vital.max), vital.units);
+                    Transform vitalChosen = vitalsChosen.transform.FindChild(vital.name);
+                    Toggle toggle = vitalChosen.GetComponent<Toggle>();
+                    toggle.onValueChanged.RemoveAllListeners();
+                    toggle.isOn = true;
+                    toggle.onValueChanged.AddListener((bool value) => loadChosenVital(value, vitalChosen.transform.GetSiblingIndex(), vital.name));
                     if (i != 0) {
                         graph.transform.gameObject.SetActive(false);
                     }
