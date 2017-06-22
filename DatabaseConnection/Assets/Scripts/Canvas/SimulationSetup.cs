@@ -260,14 +260,13 @@ public class SimulationSetup : MonoBehaviour {
 
                 Destroy(graphObject);
 
-
                 graph = tabs.GenerateTab(vitalName);
                 graph.GenerateGraph(0, duration, "Duration", vitalMin, vitalMax, vitalUnits);
-
 
                 toggle.onValueChanged.RemoveAllListeners();
                 toggle.isOn = true;
                 toggle.onValueChanged.AddListener((bool value) => loadChosenVital(value, i, vitalName));
+
                 if (i != 0) {
                     graph.transform.gameObject.SetActive(false);
                 }
@@ -294,16 +293,7 @@ public class SimulationSetup : MonoBehaviour {
                     graph.AddThresholdPointUpper(duration, graph.pointsUpperThreshold[0].value);
                 }
             }
-
-
         }
-
-
-        //for (int i = graphs.transform.childCount - 1; i > 1; i--) {
-        //    print("Destroying " + graphs.transform.GetChild(i).gameObject.name);
-        //   DestroyImmediate(graphs.transform.GetChild(i).gameObject);
-        //}
-
     }
 
     public void SetInformPanelToFalse() {
@@ -321,9 +311,12 @@ public class SimulationSetup : MonoBehaviour {
 
     public void LoadCondition(int index) {
         if (duration != -1) {
+
+            Debug.Break();
             SubmitDuration();
+            ChangeActiveGraphDurations();
         }
-        ChangeActiveGraphDurations();
+        print(duration);
         if (presets.options[index].text != "None") {
             Debug.Log("Finding condition: " + presets.options[index].text);
             Condition condition = ExportManager.instance.Load("Conditions/" + presets.options[index].text) as Condition;
@@ -338,7 +331,7 @@ public class SimulationSetup : MonoBehaviour {
                     Vital vital = vitals.vitalList[vitalData[i].vitalID];
                     simulationDurationMinutes.text = ((condition.timeline.Count - 1) / 60).ToString();
                     simulationDurationSeconds.text = ((condition.timeline.Count - 1) % 60).ToString();
-                    // SubmitDuration();
+                    duration = condition.timeline.Count - 1;
                     graph = tabs.GenerateTab(vital.name);
                     graph.GenerateGraph(0, condition.timeline.Count - 1, "Duration", (int)Math.Ceiling(vital.min), (int)Math.Ceiling(vital.max), vital.units);
                     Transform vitalChosen = vitalsChosen.transform.FindChild(vital.name);
@@ -370,22 +363,6 @@ public class SimulationSetup : MonoBehaviour {
             }
         }
     }
-
-    //int GetDuration() {
-    //     duration = -1;
-    //    if (simulationDurationMinutes.text != "") {
-    //        duration = int.Parse(simulationDurationMinutes.text) * 60;
-    //    }
-    //    else {
-    //        Error.instance.errorPanel.GetComponentInChildren<Text>().text = "Please set the duration of the simulation before selecting adding vitals.";
-    //        Error.instance.errorPanel.gameObject.SetActive(true);
-    //        Error.instance.errorPanel.GetComponentInChildren<Button>().onClick.AddListener(SelectMinutesDuration);
-    //    }
-    //    if (simulationDurationSeconds.text != "") {
-    //        duration += int.Parse(simulationDurationSeconds.text);
-    //    }
-    //    return duration;
-    //}
 
     public void SelectMaxVitalValue() {
         Error.instance.informPanel.SetActive(false);
@@ -485,6 +462,16 @@ public class SimulationSetup : MonoBehaviour {
                     graph.AddPoint(0, halfValue);
                     graph.AddPoint(duration, halfValue);
                 }
+                if (graph.pointsUpperThreshold.Count == 0) {
+                    int quaterValue = (int)Math.Ceiling(((vitals.vitalList[index].max - vitals.vitalList[index].min) / 4 ) + vitals.vitalList[index].min);
+                    graph.AddThresholdPointUpper(0, quaterValue);
+                    graph.AddThresholdPointUpper(duration, quaterValue);
+                }
+                if (graph.pointsLowerThreshold.Count == 0) {
+                    int threeQuaterValue = (int)Math.Ceiling((((vitals.vitalList[index].max - vitals.vitalList[index].min) / 4) * 3) + vitals.vitalList[index].min);
+                    graph.AddThresholdPointLower(0, threeQuaterValue);
+                    graph.AddThresholdPointLower(duration, threeQuaterValue);
+                }
                 graph.gameObject.SetActive(false);
                 tabs.SwitchTab();
             }
@@ -492,10 +479,10 @@ public class SimulationSetup : MonoBehaviour {
                 // Overwrite existing vital
                 vitalTrans.gameObject.SetActive(true);
                 Transform vitalTab = inactiveTabs.transform.FindChild(vitalName);
-                if (vitalTab == null) {
+               // if (vitalTab == null) {
                     // Error.instance.PrintError("Could not find inactiveTabs child : " + vitalName);
-                    print("Could not find inactiveTabs child : " + vitalName);
-                }
+                   // print("Could not find inactiveTabs child : " + vitalName);
+                //}
                 vitalTab.SetParent(tabs.transform);
                 vitalTab.gameObject.SetActive(true);
                 tabs.SwitchTab();

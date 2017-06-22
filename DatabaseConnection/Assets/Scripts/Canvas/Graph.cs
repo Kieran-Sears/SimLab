@@ -52,7 +52,7 @@ public class Graph : MonoBehaviour {
 
     #region Private Variables
     // private float scrollWheel = 1;
-    private float newScrollWheel;
+    // private float newScrollWheel;
     private Vector2 localpoint;
     private RectTransform graphContentRectTrans;
     private LineRenderer pointLine;
@@ -82,6 +82,8 @@ public class Graph : MonoBehaviour {
     #endregion
 
     #region Unity Methods
+
+
     private void LateUpdate() {
 
         #region if cursor over graph
@@ -267,7 +269,6 @@ public class Graph : MonoBehaviour {
             xScale /= 60;
             print(xScale);
         }
-
         for (int i = 0; i <= xScale; i++) {
             GameObject dashMarker = Instantiate(xDashMarkerPrefab, xAxis.transform);
             dashMarker.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
@@ -489,7 +490,7 @@ public class Graph : MonoBehaviour {
         thresholdLineLower.SetPosition(pointsLowerThreshold.IndexOfValue(slider), pos);
     }
 
-    private static Vector3[] MakeSmoothCurve(Vector3[] arrayToCurve, float smoothness) {
+    private Vector3[] MakeSmoothCurve(Vector3[] arrayToCurve, float smoothness) {
         List<Vector3> pointy;
         List<Vector3> curvedPoints;
         int pointsLength = 0;
