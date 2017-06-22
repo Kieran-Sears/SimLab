@@ -828,9 +828,9 @@ public class Graph : MonoBehaviour {
                 coordinateY.text = "";
                 DrawLinkedPointLines();
             } else {
-                Error.instance.errorPanel.GetComponentInChildren<Text>().text = "Ensure coordinates are within range limits";
-                Error.instance.errorPanel.gameObject.SetActive(true);
-                Error.instance.errorPanel.GetComponentInChildren<Button>().onClick.AddListener(SelectCoordinateXValue);
+                Error.instance.informMessageText.text = "Ensure coordinates are within range limits";
+                Error.instance.informPanel.SetActive(true);
+                Error.instance.informOkButton.onClick.AddListener(SelectCoordinateXValue);
             }
         }
     }
@@ -838,14 +838,9 @@ public class Graph : MonoBehaviour {
     public void SelectCoordinateXValue() {
         coordinateX.Select();
         coordinateX.ActivateInputField();
-        Error.instance.errorPanel.GetComponentInChildren<Button>().onClick.RemoveAllListeners();
+        Error.instance.informOkButton.onClick.RemoveAllListeners();
     }
 
-    public KeyValuePair<int, int> GetValueForPoint(int index) {
-        print("Do reverse of AddPoint(xValue, yValue) in Graph class");
-
-        return new KeyValuePair<int, int>(0, 0);
-    }
     #endregion
 
 

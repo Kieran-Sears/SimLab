@@ -10,7 +10,7 @@ public class TabManager : MonoBehaviour {
     public GameObject containerPrefab;
     public Graph activeGraph;
 
-    private Dictionary<Toggle, Graph> tabGraphs = new Dictionary<Toggle, Graph>();
+    public Dictionary<Toggle, Graph> tabGraphs = new Dictionary<Toggle, Graph>();
 
     public void SwitchTab() {
         foreach (Graph item in tabGraphs.Values) {

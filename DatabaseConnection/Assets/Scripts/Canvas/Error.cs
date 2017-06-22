@@ -6,9 +6,21 @@ public class Error : MonoBehaviour {
 
     public static Error instance { get; private set; }
 
-    public GameObject errorPanel;
-    public GameObject errorInputPanel;
-    public GameObject lastFocusedObject;
+    public GameObject informPanel;
+   // public GameObject inputPanel;
+    public GameObject boolPanel;
+
+    public Text informMessageText;
+    public Button informOkButton;
+
+    //public Text inputMessageText;
+    //public InputField inputMinutes;
+    //public InputField inputPanelSeconds;
+    //public Button inputOkButton;
+
+    public Text boolMessageText;
+    public Button boolYesButton;
+    public Button boolNoButton;
 
     private void Awake() {
         if (instance) {
