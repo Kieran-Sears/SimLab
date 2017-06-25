@@ -61,37 +61,95 @@ public class Graph : MonoBehaviour {
 
     private float mouseHold;
     private float mouseHoverOverHandleTime;
-    private RaycastHit[] cursorRaycastHits;
     private bool leftMouseButtonIsDown;
     private Transform sliderHandleTransform;
-    private bool cursorIsOverGraph;
-    private Vector3 cursorRaycastHitPosition;
     private Vector3 newPos;
     private float previousFrameTime;
     private int counter = 0;
-    private bool activateCoordinateSystem;
-
-
-    #region point dragging variables
-   private Slider currentlySelectedSlider;
+    private Slider currentlySelectedSlider;
     private int indexOfSliderMinipulated;
-    private float originalSliderTime;
-   private float newSliderTime;
-#endregion
-
+    private float newSliderTime;
+    private float timeForCoordinateSystemToAppear = 3;
+    private bool allowChangingPosition;
     #endregion
 
     #region Unity Methods
 
-
     private void LateUpdate() {
 
-        #region if cursor over graph
+        // check for if cursor is over graph area
         if (graphViewport != null && graphViewport.GetComponent<CusorSensor>().mouseOver) {
-            cursorRaycastHits = Physics.RaycastAll(Camera.main.ScreenPointToRay(Input.mousePosition), 800);
 
+            // if left mouse click held record time it is held for
             if (Input.GetMouseButton(0)) {
-                mouseHold += UnityEngine.Time.deltaTime;
+                mouseHold += Time.deltaTime;
+            }
+
+            // find the object the cursor is over
+            RaycastHit hit1;
+            if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit1, 800)) {
+                string tag = hit1.collider.tag;
+
+                // if over coordinate system ensure coordinate system remains active
+                if (tag == "CoordinateSystem") {
+                    mouseHoverOverHandleTime += Time.deltaTime;
+                    if (mouseHoverOverHandleTime > 3) {
+                        coordinateSystem.SetActive(true);
+                        coordinateSystem.transform.localPosition = Vector3.zero;
+                        coordinateSystem.transform.localScale = new Vector3(0.5f, 0.5f, 1);
+                        coordinateSystem.transform.position = sliderHandleTransform.position + new Vector3(0.1f, 0.1f, -50);
+                    }
+                }
+
+                // if over graph check for a mouse up to place a new point else deactivate coordinate system
+                else if (tag == "Graph") {
+                    if (Input.GetMouseButtonUp(0) && mouseHold < 0.3) {
+                        AddPoint(Camera.main.WorldToScreenPoint(hit1.point));
+                    }
+                    mouseHoverOverHandleTime = 0;
+                    coordinateSystem.SetActive(false);
+                }
+
+                // if over handle 
+                else if (tag == "Handle") {
+                    sliderHandleTransform = hit1.transform;
+                    currentlySelectedSlider = sliderHandleTransform.parent.parent.GetComponent<Slider>();
+                    indexOfSliderMinipulated = sortedGraphPointsList.IndexOfValue(currentlySelectedSlider);
+
+                    if (indexOfSliderMinipulated == -1 || graph == null) {
+                        return;
+                    }
+
+                    // if isn't the first or last point in the graph -> setup the coordinate system to trigger after time threshold
+                    if (indexOfSliderMinipulated != 0 || indexOfSliderMinipulated != sortedGraphPointsList.Count - 1) {
+                        mouseHoverOverHandleTime += Time.deltaTime;
+                        if (mouseHoverOverHandleTime > timeForCoordinateSystemToAppear) {
+                            coordinateSystem.SetActive(true);
+                            coordinateSystem.transform.localPosition = Vector3.zero;
+                            coordinateSystem.transform.localScale = new Vector3(0.5f, 0.5f, 1);
+                            coordinateSystem.transform.position = sliderHandleTransform.position + new Vector3(0.1f, 0.1f, -50);
+                        }
+                    }
+
+                    // the mouse has been clicked reset the time limit required to spawn the coordinate system and setup the point to be dragged
+                    if (Input.GetMouseButtonDown(0)) {
+                        mouseHoverOverHandleTime = 0;
+                        leftMouseButtonIsDown = true;
+                    }
+
+                    // if right click detected and not first or last graph point then delete point
+                    if (Input.GetMouseButtonUp(1)) {
+                        if (indexOfSliderMinipulated == -1 || indexOfSliderMinipulated == 0 || indexOfSliderMinipulated == sortedGraphPointsList.Count - 1) return;
+                        sortedGraphPointsList.RemoveAt(indexOfSliderMinipulated);
+                        Destroy(currentlySelectedSlider.gameObject);
+                        DrawLinkedPointLines();
+                    }
+
+                }
+            }
+            else {
+                // no raycast hit detected
+                return;
             }
 
             #region scrolling
@@ -107,118 +165,44 @@ public class Graph : MonoBehaviour {
             //}
             #endregion
 
-            #region determining cursor position
-            //cycle through cursor raycast
-            for (int i = cursorRaycastHits.Length - 1; i >= 0; i--) {
-                // get posititon to add the point
-                cursorRaycastHitPosition = cursorRaycastHits[i].point;
-                // if cursor is over the graph
-                if (cursorRaycastHits[i].collider.tag == "Graph") {
-                    cursorIsOverGraph = true;
-                    // if cursor is over handle
-                } else if (cursorRaycastHits[i].collider.tag == "Handle") {
-                    sliderHandleTransform = cursorRaycastHits[i].transform;
-                    int inde = sortedGraphPointsList.IndexOfValue(cursorRaycastHits[i].transform.parent.parent.GetComponent<Slider>());
-                    if (inde != 0 || inde != sortedGraphPointsList.Count - 1) {
-                        activateCoordinateSystem = true;
-                        mouseHoverOverHandleTime += UnityEngine.Time.deltaTime;
-                    }
-                    // and the mouse has been clicked
-                    if (Input.GetMouseButtonDown(0)) {
-                        leftMouseButtonIsDown = true;
-                        // get the point the cursor is over
-                        sliderHandleTransform = cursorRaycastHits[i].transform;
-                        currentlySelectedSlider = cursorRaycastHits[i].transform.parent.parent.GetComponent<Slider>();
-                        // reset the time limit required to spawn the coordinate system
-                        mouseHoverOverHandleTime = 0;
-                    }
-                } else if (cursorRaycastHits[i].collider.tag == "CoordinateSystem") {
-                    activateCoordinateSystem = true;
-                    mouseHoverOverHandleTime += UnityEngine.Time.deltaTime;
-                    cursorIsOverGraph = false;
-                    leftMouseButtonIsDown = false;
-                }
-            }
-            #endregion
-
             #region point dragging
             if (leftMouseButtonIsDown) {
-               // currentlySelectedSlider = sliderHandleTransform.parent.parent.GetComponent<Slider>();
-                if (sortedGraphPointsList.IndexOfValue(currentlySelectedSlider) == -1) return;
-                indexOfSliderMinipulated = sortedGraphPointsList.IndexOfValue(currentlySelectedSlider);
-                originalSliderTime = sortedGraphPointsList.Keys[indexOfSliderMinipulated];
-                if (indexOfSliderMinipulated == -1 || indexOfSliderMinipulated == 0 || indexOfSliderMinipulated == sortedGraphPointsList.Count - 1) {
+                // if the first or last point in the graph allow only movement of sliders value
+                if (indexOfSliderMinipulated == 0 || indexOfSliderMinipulated == sortedGraphPointsList.Count - 1) {
+                    allowChangingPosition = false;
                     newPos = currentlySelectedSlider.transform.position;
-                } else {
+                }
+                // if not the first or last point allow dragging in x direction as well as slider value (y direction)
+                else {
+                    allowChangingPosition = true;
                     newPos = new Vector3(Camera.main.ScreenToWorldPoint(Input.mousePosition).x, currentlySelectedSlider.transform.position.y, currentlySelectedSlider.transform.position.z);
                 }
-                if (graph == null) return;
+                // record the new time for the slider based on its x axis position
                 newSliderTime = (currentlySelectedSlider.transform.localPosition.x + (graph.GetComponent<RectTransform>().rect.width / 2)) / (graph.GetComponent<RectTransform>().rect.width / xScale);
+                // if the user isnt just holding the handle still
                 if (newSliderTime != previousFrameTime) {
-                    if (indexOfSliderMinipulated != -1 && !sortedGraphPointsList.ContainsKey(newSliderTime)) {
-                        if (indexOfSliderMinipulated - 1 >= 0 && indexOfSliderMinipulated + 1 < sortedGraphPointsList.Count) {
-                            if (newSliderTime > sortedGraphPointsList.Keys[indexOfSliderMinipulated + 1] || newSliderTime < sortedGraphPointsList.Keys[indexOfSliderMinipulated - 1]) {
-                                sortedGraphPointsList.RemoveAt(indexOfSliderMinipulated);
-                                sortedGraphPointsList.Add(newSliderTime, currentlySelectedSlider);
-                                print("newSliderTime: " + graphViewport + " Slider value: " + currentlySelectedSlider.value);
-                                foreach (KeyValuePair<float, Slider> item in sortedGraphPointsList) {
-                                    print("Index: " + sortedGraphPointsList.IndexOfKey(item.Key) + " key: " + item.Key + " Value: " + item.Value.value);
-                                }
-                            }
-                        }
+                    // ensure there isn't overwriting of existing points and if it isn't an end point slider
+                    if (!sortedGraphPointsList.ContainsKey(newSliderTime) && allowChangingPosition) {
+                            sortedGraphPointsList.RemoveAt(indexOfSliderMinipulated);
+                            sortedGraphPointsList.Add(newSliderTime, currentlySelectedSlider);
+                            indexOfSliderMinipulated = sortedGraphPointsList.IndexOfKey(newSliderTime);
                     }
                     previousFrameTime = newSliderTime;
                 }
                 currentlySelectedSlider.transform.position = newPos;
                 DrawLinkedPointLines();
                 DrawThresholds();
-
             }
             #endregion
-
-            #region Coordinate System
-            if (activateCoordinateSystem) {
-                if (mouseHoverOverHandleTime > 3) {
-                    coordinateSystem.SetActive(true);
-                    coordinateSystem.transform.localPosition = Vector3.zero;
-                    coordinateSystem.transform.localScale = new Vector3(0.5f, 0.5f, 1);
-                    coordinateSystem.transform.position = sliderHandleTransform.position + new Vector3(0.1f, 0.1f, 1);
-                    activateCoordinateSystem = false;
-                }
-            } else {
-                coordinateSystem.SetActive(false);
-                mouseHoverOverHandleTime = 0;
-            }
-            #endregion
-
-            #region delete point
-            if (Input.GetMouseButtonUp(1)) {
-                foreach (RaycastHit hit in cursorRaycastHits) {
-                    if (hit.collider.tag == "Handle") {
-                        Slider slider = hit.transform.parent.parent.GetComponent<Slider>();
-                        int index = sortedGraphPointsList.IndexOfValue(slider);
-                        if (index == -1 || index == 0 || index == sortedGraphPointsList.Count - 1) return;
-                        sortedGraphPointsList.RemoveAt(sortedGraphPointsList.IndexOfValue(slider));
-                        Destroy(slider.gameObject);
-                        DrawLinkedPointLines();
-                    }
-                }
-            }
-            #endregion
-
         }
-        #endregion
 
-        #region even if cursor is not over graph
-        // Add point to graph
+        // extra check incase user releases mouse click outside of graph area after beginning within graph area
         if (Input.GetMouseButtonUp(0)) {
             leftMouseButtonIsDown = false;
-            if (mouseHold < 0.3 && cursorIsOverGraph && mouseHoverOverHandleTime < 1) {
-                AddPoint(Camera.main.WorldToScreenPoint(cursorRaycastHitPosition));
-            }
             mouseHold = 0;
+            mouseHoverOverHandleTime = 0;
+
         }
-        #endregion
 
     }
 
@@ -267,7 +251,6 @@ public class Graph : MonoBehaviour {
         if (xScale > 300) {
             xAxisLabel.GetComponent<Text>().text = "Duration (Minutes)";
             xScale /= 60;
-            print(xScale);
         }
         for (int i = 0; i <= xScale; i++) {
             GameObject dashMarker = Instantiate(xDashMarkerPrefab, xAxis.transform);
@@ -311,7 +294,7 @@ public class Graph : MonoBehaviour {
             thresholdLineLower.startWidth = 0.1f;
             thresholdLineLower.endWidth = 0.1f;
         }
-
+        thresholdLineLower.numPositions = pointsLowerThreshold.Count;
         counter = 0;
         foreach (KeyValuePair<float, Slider> item in pointsLowerThreshold) {
             thresholdLineLower.SetPosition(counter, Camera.main.WorldToScreenPoint(item.Value.handleRect.transform.position) - Camera.main.WorldToScreenPoint(graphContent.transform.position));
@@ -332,7 +315,7 @@ public class Graph : MonoBehaviour {
             thresholdLineUpper.startWidth = 0.1f;
             thresholdLineUpper.endWidth = 0.1f;
         }
-
+        thresholdLineUpper.numPositions = pointsUpperThreshold.Count;
         counter = 0;
         foreach (KeyValuePair<float, Slider> item in pointsUpperThreshold) {
             thresholdLineUpper.SetPosition(counter, Camera.main.WorldToScreenPoint(item.Value.handleRect.transform.position) - Camera.main.WorldToScreenPoint(graphContent.transform.position));
@@ -407,33 +390,39 @@ public class Graph : MonoBehaviour {
                 if (i % (20) == 0) {
                     xAxis.transform.GetChild(i).gameObject.SetActive(true);
                     grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
-                } else {
+                }
+                else {
                     xAxis.transform.GetChild(i).gameObject.SetActive(false);
                     grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = false;
                 }
             }
-        } else if (xScale >= 60) {
+        }
+        else if (xScale >= 60) {
             for (int i = 0; i < xScale; i++) {
                 if (i % (10) == 0) {
                     xAxis.transform.GetChild(i).gameObject.SetActive(true);
                     grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
-                } else {
+                }
+                else {
                     xAxis.transform.GetChild(i).gameObject.SetActive(false);
                     grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = false;
                 }
             }
 
-        } else if (xScale >= 30) {
+        }
+        else if (xScale >= 30) {
             for (int i = 0; i < xScale; i++) {
                 if (i % (2) == 0) {
                     xAxis.transform.GetChild(i).gameObject.SetActive(true);
                     grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
-                } else {
+                }
+                else {
                     xAxis.transform.GetChild(i).gameObject.SetActive(false);
                     grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = false;
                 }
             }
-        } else {
+        }
+        else {
             for (int i = 0; i < xScale; i++) {
                 xAxis.transform.GetChild(i).gameObject.SetActive(true);
                 grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
@@ -458,7 +447,8 @@ public class Graph : MonoBehaviour {
             if (i % 10 == diff) {
                 yAxis.transform.GetChild(i).gameObject.SetActive(true);
                 grid.transform.GetChild(xScale + i + 1).GetComponent<LineRenderer>().enabled = true;
-            } else {
+            }
+            else {
                 yAxis.transform.GetChild(i).gameObject.SetActive(false);
                 grid.transform.GetChild(xScale + i + 1).GetComponent<LineRenderer>().enabled = false;
             }
@@ -539,13 +529,15 @@ public class Graph : MonoBehaviour {
         Vector3[] arrayToCurve = new Vector3[sortedGraphPointsList.Count];
 
         counter = 0;
-
+        float previous = -1;
         foreach (KeyValuePair<float, Slider> item in sortedGraphPointsList) {
+            if (item.Key < previous) { print("Alert");  }
+            previous = item.Key;
             arrayToCurve[counter] = Camera.main.WorldToScreenPoint(item.Value.handleRect.transform.position) - Camera.main.WorldToScreenPoint(graphContent.transform.position);
             counter++;
         }
 
-        MakeSmoothCurve(arrayToCurve, 30);
+       // MakeSmoothCurve(arrayToCurve, 30);
         if (pointLine == null) {
             if (graph == null) return;
             LineWriter = Instantiate(lineRendererPrefab, graphContent.transform);
@@ -665,7 +657,7 @@ public class Graph : MonoBehaviour {
 
         LayoutXScale();
         LayoutYScale();
-     
+
         xAxisScrollRect.horizontalNormalizedPosition = 0;
         xAxisScrollRect.scrollSensitivity = 0;
         yAxisScrollRect.verticalNormalizedPosition = 0;
@@ -819,7 +811,7 @@ public class Graph : MonoBehaviour {
         float.TryParse(coordinateY.text, out y);
         if (coordinateX.text.Length != 0 && coordinateY.text.Length != 0) {
             if ((x > xStart && x < xEnd) && (y > yStart && y < yEnd)) {
-                activateCoordinateSystem = false;
+                //   activateCoordinateSystem = false;
                 mouseHoverOverHandleTime = 0;
                 coordinateSystem.SetActive(false);
                 sortedGraphPointsList.RemoveAt(sortedGraphPointsList.IndexOfValue(sliderHandleTransform.parent.parent.GetComponent<Slider>()));
@@ -828,7 +820,8 @@ public class Graph : MonoBehaviour {
                 coordinateX.text = "";
                 coordinateY.text = "";
                 DrawLinkedPointLines();
-            } else {
+            }
+            else {
                 Error.instance.informMessageText.text = "Ensure coordinates are within range limits";
                 Error.instance.informPanel.SetActive(true);
                 Error.instance.informOkButton.onClick.AddListener(SelectCoordinateXValue);

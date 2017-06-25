@@ -70,31 +70,10 @@ public class SimulationSetup : MonoBehaviour {
         PopulateVitals();
         PopulateDrugs();
         PopulateEquipment();
-        // dynamic check for user input for the duration of simulation
-        //  simulationDurationMinutes.onValidateInput += delegate (string input, int charIndex, char addedChar) { return SimulationDurationChangeValue(input, charIndex, addedChar); };
-        //  simulationDurationSeconds.onValidateInput += delegate (string input, int charIndex, char addedChar) { return SimulationDurationChangeValue(input, charIndex, addedChar); };
         simulationDurationMinutes.onValueChanged.AddListener(enableSubmitButton);
         simulationDurationSeconds.onValueChanged.AddListener(enableSubmitButton);
         vitalName.onValidateInput += delegate (string input, int charIndex, char addedChar) { return VitalNameChangeValue(input, charIndex, addedChar); };
     }
-
-    // dynamic check of duration instigated from the start function within this class
-    //public char SimulationDurationChangeValue(string input, int charIndex, char character) {
-    //    if (charIndex > 1) {
-    //        return '\0';
-    //    }
-    //    int v;
-    //    if (int.TryParse(input + character.ToString(), out v)) {
-    //        if (charIndex <= 1 && v > 60) {
-    //            Error.instance.PrintError("Number cannot exceed 60");
-    //            return '\0';
-    //        }
-    //    } else {
-    //        Error.instance.PrintError("Enter numerical values only.");
-    //        return '\0';
-    //    }
-    //    return character;
-    //}
 
     public void enableSubmitButton(string input) {
         durationSubmit.interactable = true;
@@ -143,10 +122,10 @@ public class SimulationSetup : MonoBehaviour {
         }
 
         if (duration != newDuration && duration != -1 && replaceExistingGraphs == false) {
-            Error.instance.boolMessageText.text = "This action with overwrite existing graphs. Are you sure?";
+            Error.instance.boolMessageText.text = "This action may overwrite data on already active graphs. Are you sure?";
             Error.instance.boolPanel.SetActive(true);
-            Error.instance.boolYesButton.onClick.AddListener(ChangeActiveGraphDurations);
-            Error.instance.boolNoButton.onClick.AddListener(ResetDurationBack);
+            Error.instance.boolRightButton.onClick.AddListener(ChangeActiveGraphDurations);
+            Error.instance.boolLeftButton.onClick.AddListener(ResetDurationBack);
         }
         else {
             duration = newDuration;
@@ -239,23 +218,34 @@ public class SimulationSetup : MonoBehaviour {
     }
 
     void ChangeActiveGraphDurations() {
+
         replaceExistingGraphs = true;
+
         SubmitDuration();
+
         for (int i = 0; i < vitalsChosen.transform.childCount; i++) {
+
             Toggle toggle = vitalsChosen.transform.GetChild(i).GetComponent<Toggle>();
+
             if (toggle.isOn) {
+
                 string vitalName = toggle.gameObject.name;
+
                 tabs.GetComponent<TabManager>().tabGraphs.Remove(toggle);
                 tabs.GetComponent<ToggleGroup>().UnregisterToggle(toggle);
+
                 Destroy(tabs.transform.FindChild(vitalName).gameObject);
+
                 GameObject graphObject = graphs.transform.FindChild(vitalName).gameObject;
                 Graph graph = graphs.transform.FindChild(vitalName).GetComponent<Graph>();
 
                 SortedList<float, Slider> sortedGraphPointsList = graph.sortedGraphPointsList;
                 SortedList<float, Slider> pointsUpperThreshold = graph.pointsUpperThreshold;
                 SortedList<float, Slider> pointsLowerThreshold = graph.pointsLowerThreshold;
+
                 int vitalMin = graph.yStart;
                 int vitalMax = graph.yEnd;
+
                 string vitalUnits = graph.yAxisLabel.GetComponent<Text>().text;
 
                 Destroy(graphObject);
@@ -276,19 +266,23 @@ public class SimulationSetup : MonoBehaviour {
                         graph.AddPoint(item.Key, item.Value.value);
                     }
                 }
+
                 foreach (KeyValuePair<float, Slider> item in pointsUpperThreshold) {
                     if (item.Key < duration) {
                         graph.AddThresholdPointUpper(item.Key, item.Value.value);
                     }
                 }
+
                 foreach (KeyValuePair<float, Slider> item in pointsLowerThreshold) {
                     if (item.Key < duration) {
                         graph.AddThresholdPointLower(item.Key, item.Value.value);
                     }
                 }
+
                 if (!graph.pointsLowerThreshold.ContainsKey(duration)) {
                     graph.AddThresholdPointLower(duration, graph.pointsLowerThreshold[0].value);
                 }
+
                 if (!graph.pointsUpperThreshold.ContainsKey(duration)) {
                     graph.AddThresholdPointUpper(duration, graph.pointsUpperThreshold[0].value);
                 }
@@ -303,20 +297,32 @@ public class SimulationSetup : MonoBehaviour {
 
     public void ResetDurationBack() {
         Error.instance.boolPanel.SetActive(false);
-        Error.instance.boolYesButton.onClick.RemoveAllListeners();
-        Error.instance.boolNoButton.onClick.RemoveAllListeners();
+        Error.instance.boolRightButton.onClick.RemoveAllListeners();
+        Error.instance.boolLeftButton.onClick.RemoveAllListeners();
         simulationDurationMinutes.text = (duration / 60).ToString();
         simulationDurationSeconds.text = (duration % 60).ToString();
     }
 
-    public void LoadCondition(int index) {
-        if (duration != -1) {
+    public void CancelAddingPrefab() {
+        Error.instance.boolPanel.SetActive(false);
+        Error.instance.boolDropdown.gameObject.SetActive(false);
+        Error.instance.boolLeftButton.onClick.RemoveAllListeners();
+        Error.instance.boolRightButton.onClick.RemoveAllListeners();
+    }
 
-            Debug.Break();
-            SubmitDuration();
-            ChangeActiveGraphDurations();
+    public void OverwriteDurationWithPreset() {
+        if (Error.instance.boolDropdown.itemText.text != ("Current (" + simulationDurationMinutes.text + ":" + simulationDurationSeconds.text + ")")) {
+            replaceExistingGraphs = true;
+            LoadCondition(presets.value);
         }
-        print(duration);
+        else {
+            // overwrite
+            int tempDuration = duration;
+            LoadCondition(presets.value);
+        }
+    }
+
+    public void LoadCondition(int index) {
         if (presets.options[index].text != "None") {
             Debug.Log("Finding condition: " + presets.options[index].text);
             Condition condition = ExportManager.instance.Load("Conditions/" + presets.options[index].text) as Condition;
@@ -326,38 +332,70 @@ public class SimulationSetup : MonoBehaviour {
                 Error.instance.informOkButton.onClick.AddListener(SetInformPanelToFalse);
             }
             else {
-                List<Value> vitalData = condition.timeline[0].vitalValues;
-                for (int i = 0; i < vitalData.Count; i++) {
-                    Vital vital = vitals.vitalList[vitalData[i].vitalID];
-                    simulationDurationMinutes.text = ((condition.timeline.Count - 1) / 60).ToString();
-                    simulationDurationSeconds.text = ((condition.timeline.Count - 1) % 60).ToString();
-                    duration = condition.timeline.Count - 1;
+                // if a duration already exists prompt the user on how they want to overwrite the duration with the preset with different duration
+                if (duration != -1 && replaceExistingGraphs == false) {
+                    Error.instance.boolPanel.SetActive(true);
+                    Error.instance.boolDropdown.gameObject.SetActive(true);
+                    Error.instance.boolMessageText.text = "The duration of the preset " + condition.name + " is not equal to the existing duration. Which duration would you prefer to keep?";
+                    Error.instance.boolLeftButton.onClick.AddListener(CancelAddingPrefab);
+                    Error.instance.boolRightButton.onClick.AddListener(OverwriteDurationWithPreset);
+                    Error.instance.boolDropdown.ClearOptions();
+                    Error.instance.boolDropdown.captionText.text = "Select...";
+                    List<Dropdown.OptionData> options = new List<Dropdown.OptionData>();
+                    Dropdown.OptionData data = new Dropdown.OptionData();
+
+                    data.text = condition.name + " (" + (condition.duration / 60).ToString() + ":" + (condition.duration % 60).ToString() + ")";
+
+
+                    options.Add(data);
+                    data = new Dropdown.OptionData();
+                    data.text = "Current (" + simulationDurationMinutes.text + ":" + simulationDurationSeconds.text + ")";
+                    options.Add(data);
+                    Error.instance.boolDropdown.AddOptions(options);
+                    return;
+                }
+                else {
+
+                    simulationDurationMinutes.text = (condition.duration / 60).ToString();
+                    simulationDurationSeconds.text = (condition.duration % 60).ToString();
+                    duration = condition.duration;
+                    replaceExistingGraphs = false;
+                }
+
+                bool firstInList = true;
+                foreach (VitalData vitalData in condition.vitalsData) {
+                    Vital vital = vitalData.vital;
+
                     graph = tabs.GenerateTab(vital.name);
-                    graph.GenerateGraph(0, condition.timeline.Count - 1, "Duration", (int)Math.Ceiling(vital.min), (int)Math.Ceiling(vital.max), vital.units);
+                    graph.GenerateGraph(0, duration, "Duration", (int)Math.Ceiling(vital.min), (int)Math.Ceiling(vital.max), vital.units);
+
+                    // TODO prompt user to see if they want vitals in the preset they dont have
+
+                    // Add the listener to the vitals list toggles so graphs can be selected / deselected at will
                     Transform vitalChosen = vitalsChosen.transform.FindChild(vital.name);
                     Toggle toggle = vitalChosen.GetComponent<Toggle>();
                     toggle.onValueChanged.RemoveAllListeners();
                     toggle.isOn = true;
                     toggle.onValueChanged.AddListener((bool value) => loadChosenVital(value, vitalChosen.transform.GetSiblingIndex(), vital.name));
-                    if (i != 0) {
-                        graph.transform.gameObject.SetActive(false);
+
+                    // populate the graph with its values
+                    foreach (Value value in vitalData.timeline.vitalValues) {
+                        graph.AddPoint(value.second, value.value);
                     }
-                }
+                    foreach (Value value in vitalData.timeline.upperThresholdValues) {
+                        graph.AddThresholdPointUpper(value.second, value.value);
+                    }
+                    foreach (Value value in vitalData.timeline.lowerThresholdValues) {
+                        graph.AddThresholdPointLower(value.second, value.value);
+                    }
 
-                for (int i = 0; i < condition.timeline.Count; i++) {
-                    Time time = condition.timeline[i];
-                    foreach (Value data in time.vitalValues) {
-                        Vital vital = vitals.vitalList[data.vitalID];
-                        Graph graph = graphs.transform.FindChild(vital.name).GetComponent<Graph>();
-                        graph.AddPoint(i, data.value);
-
-                        if (data.upperThreshold != -1) {
-                            graph.AddThresholdPointUpper(i, data.upperThreshold);
-                        }
-
-                        if (data.lowerThreshold != -1) {
-                            graph.AddThresholdPointLower(i, data.lowerThreshold);
-                        }
+                    // ensure that the first vital added automatically appears for the user to view
+                    if (firstInList) {
+                        graph.transform.gameObject.SetActive(true);
+                        firstInList = false;
+                    }
+                    else {
+                        graph.transform.gameObject.SetActive(false);
                     }
                 }
             }
@@ -372,22 +410,28 @@ public class SimulationSetup : MonoBehaviour {
     }
 
     public void AddVital() {
+
         if (float.Parse(vitalMax.text) <= float.Parse(vitalMin.text)) {
             Error.instance.informMessageText.text = "Max value is less or equal to min value for vital";
             Error.instance.informPanel.SetActive(true);
             Error.instance.informOkButton.onClick.AddListener(SelectMaxVitalValue);
             return;
         }
+
         Transform vitalTrans = graphs.transform.FindChild(vitalName.text);
+
         if (vitalTrans != null) {
-            Destroy(vitalTrans);
+            Destroy(vitalTrans.gameObject);
         }
+
         int vitalIndex = -1;
+
         for (int i = 0; i < vitals.vitalList.Count; i++) {
             if (vitals.vitalList[i].name == vitalName.text) {
                 vitalIndex = i;
             }
         }
+
         if (vitalIndex != -1) {
             vitals.vitalList.RemoveAt(vitalIndex);
             Destroy(vitalsChosen.transform.FindChild(vitalName.text).gameObject);
@@ -400,18 +444,24 @@ public class SimulationSetup : MonoBehaviour {
         vital.units = vitalUnit.text;
         vital.max = float.Parse(vitalMax.text);
         vital.min = float.Parse(vitalMin.text);
+
         newVitalPanel.SetActive(false);
+
         GameObject toggleObject = Instantiate(togglePrefab);
         toggleObject.transform.SetParent(vitalsChosen.transform);
         toggleObject.transform.SetAsFirstSibling();
         toggleObject.transform.localScale = Vector3.one;
         toggleObject.transform.localPosition = Vector3.zero;
         toggleObject.transform.GetChild(1).GetComponent<Text>().text = vital.name;
+
         Toggle toggle = toggleObject.GetComponent<Toggle>();
         toggle.name = vital.name;
         toggle.onValueChanged.AddListener((bool value) => loadChosenVital(value, toggleObject.transform.GetSiblingIndex(), vital.name));
+
         vitals.vitalList.Insert(0, vital);
+
         loadChosenVital(true, 0, vital.name);
+
         // add checking here for is duplicate exists. If so then overwrite the existing vital
     }
 
@@ -446,8 +496,11 @@ public class SimulationSetup : MonoBehaviour {
     public void loadChosenVital(bool chosen, int index, string vitalName) {
         tabs.transform.GetComponent<ToggleGroup>().SetAllTogglesOff();
         if (chosen) {
+
             Transform vitalTrans = graphs.transform.FindChild(vitalName);
-            if (vitalTrans == null || vitalName == "") {
+            Transform vitalTab = inactiveTabs.transform.FindChild(vitalName);
+
+            if (vitalTrans == null || vitalTab == null) {
                 if (duration == -1) {
                     Error.instance.informMessageText.text = "Please set the duration of the simulation before adding vitals.";
                     Error.instance.informPanel.SetActive(true);
@@ -463,7 +516,7 @@ public class SimulationSetup : MonoBehaviour {
                     graph.AddPoint(duration, halfValue);
                 }
                 if (graph.pointsUpperThreshold.Count == 0) {
-                    int quaterValue = (int)Math.Ceiling(((vitals.vitalList[index].max - vitals.vitalList[index].min) / 4 ) + vitals.vitalList[index].min);
+                    int quaterValue = (int)Math.Ceiling(((vitals.vitalList[index].max - vitals.vitalList[index].min) / 4) + vitals.vitalList[index].min);
                     graph.AddThresholdPointUpper(0, quaterValue);
                     graph.AddThresholdPointUpper(duration, quaterValue);
                 }
@@ -476,13 +529,7 @@ public class SimulationSetup : MonoBehaviour {
                 tabs.SwitchTab();
             }
             else {
-                // Overwrite existing vital
                 vitalTrans.gameObject.SetActive(true);
-                Transform vitalTab = inactiveTabs.transform.FindChild(vitalName);
-               // if (vitalTab == null) {
-                    // Error.instance.PrintError("Could not find inactiveTabs child : " + vitalName);
-                   // print("Could not find inactiveTabs child : " + vitalName);
-                //}
                 vitalTab.SetParent(tabs.transform);
                 vitalTab.gameObject.SetActive(true);
                 tabs.SwitchTab();
@@ -504,5 +551,14 @@ public class SimulationSetup : MonoBehaviour {
 
     public void NewDrugPanelToggleActive() {
         newDrugPanel.SetActive(!newDrugPanel.activeInHierarchy);
+    }
+
+    public Vital GetVital(string vitalName) {
+        foreach (Vital vital in vitals.vitalList) {
+            if (vital.name == vitalName) {
+                return vital;
+            }
+        }
+        return null;
     }
 }

@@ -2,7 +2,7 @@
 using System.IO;
 using System.Xml.Serialization;
 using System.Collections.Generic;
-
+using System.Xml;
 
 
 
@@ -69,8 +69,12 @@ public class ExportManager : MonoBehaviour {
 
 
 
-    public void SaveCondition(Condition condition) {
-  
+    public void SaveCondition(Condition condition, string path) {
+        print("saving condition in: " + path);
+        var serializer = new XmlSerializer(typeof(Condition));
+        var stream = new FileStream(path, FileMode.Create);
+        serializer.Serialize(stream, condition);
+        stream.Close();
 
     }
 

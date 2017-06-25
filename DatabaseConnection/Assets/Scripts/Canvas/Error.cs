@@ -19,8 +19,9 @@ public class Error : MonoBehaviour {
     //public Button inputOkButton;
 
     public Text boolMessageText;
-    public Button boolYesButton;
-    public Button boolNoButton;
+    public Button boolRightButton;
+    public Button boolLeftButton;
+    public Dropdown boolDropdown;
 
     private void Awake() {
         if (instance) {

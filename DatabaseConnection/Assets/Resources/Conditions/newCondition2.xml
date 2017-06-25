@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<Condition xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Duration="60">
+  <VitalsData>
+    <VitalData>
+      <Vital name="breathingRate">
+        <NodeID>0</NodeID>
+        <Units>bpm</Units>
+        <Min>0</Min>
+        <Max>100</Max>
+      </Vital>
+      <TimeLine>
+        <VitalValues>
+          <Value second="0">
+            <Value>50</Value>
+          </Value>
+          <Value second="16.8685551">
+            <Value>33.49264</Value>
+          </Value>
+          <Value second="28.2123013">
+            <Value>9.69954</Value>
+          </Value>
+          <Value second="47.993557">
+            <Value>3.837476</Value>
+          </Value>
+          <Value second="60">
+            <Value>50</Value>
+          </Value>
+        </VitalValues>
+        <UpperThreshold>
+          <Value second="0">
+            <Value>25</Value>
+          </Value>
+          <Value second="60">
+            <Value>25</Value>
+          </Value>
+        </UpperThreshold>
+        <LowerThreshold>
+          <Value second="0">
+            <Value>75</Value>
+          </Value>
+          <Value second="60">
+            <Value>75</Value>
+          </Value>
+        </LowerThreshold>
+      </TimeLine>
+    </VitalData>
+    <VitalData>
+      <Vital name="bloodPressure">
+        <NodeID>1</NodeID>
+        <Units>mmHg</Units>
+        <Min>0</Min>
+        <Max>120</Max>
+      </Vital>
+      <TimeLine>
+        <VitalValues>
+          <Value second="0">
+            <Value>8.689655</Value>
+          </Value>
+          <Value second="7.86855841">
+            <Value>48.05324</Value>
+          </Value>
+          <Value second="16.4935551">
+            <Value>67.08772</Value>
+          </Value>
+          <Value second="60">
+            <Value>60</Value>
+          </Value>
+        </VitalValues>
+        <UpperThreshold>
+          <Value second="0">
+            <Value>30</Value>
+          </Value>
+          <Value second="60">
+            <Value>30</Value>
+          </Value>
+        </UpperThreshold>
+        <LowerThreshold>
+          <Value second="0">
+            <Value>90</Value>
+          </Value>
+          <Value second="60">
+            <Value>90</Value>
+          </Value>
+        </LowerThreshold>
+      </TimeLine>
+    </VitalData>
+    <VitalData>
+      <Vital name="heartRate">
+        <NodeID>2</NodeID>
+        <Units>bpm</Units>
+        <Min>0</Min>
+        <Max>120</Max>
+      </Vital>
+      <TimeLine>
+        <VitalValues>
+          <Value second="0">
+            <Value>60</Value>
+          </Value>
+          <Value second="8.524809">
+            <Value>79.08772</Value>
+          </Value>
+          <Value second="18.0873051">
+            <Value>42.6739349</Value>
+          </Value>
+          <Value second="23.0560532">
+            <Value>77.01877</Value>
+          </Value>
+          <Value second="30.74356">
+            <Value>46.8118553</Value>
+          </Value>
+          <Value second="36.743557">
+            <Value>77.43255</Value>
+          </Value>
+          <Value second="60">
+            <Value>60</Value>
+          </Value>
+        </VitalValues>
+        <UpperThreshold>
+          <Value second="0">
+            <Value>30</Value>
+          </Value>
+          <Value second="60">
+            <Value>30</Value>
+          </Value>
+        </UpperThreshold>
+        <LowerThreshold>
+          <Value second="0">
+            <Value>90</Value>
+          </Value>
+          <Value second="60">
+            <Value>90</Value>
+          </Value>
+        </LowerThreshold>
+      </TimeLine>
+    </VitalData>
+  </VitalsData>
+</Condition>

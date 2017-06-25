@@ -14,7 +14,9 @@ public class TabManager : MonoBehaviour {
 
     public void SwitchTab() {
         foreach (Graph item in tabGraphs.Values) {
-            item.gameObject.SetActive(false);
+            if (item != null) {
+                item.gameObject.SetActive(false);
+            }
         }
         Toggle selected = GetComponent<ToggleGroup>().ActiveToggles().FirstOrDefault();
         if (selected == null) {
