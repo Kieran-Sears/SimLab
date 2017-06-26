@@ -13,6 +13,8 @@ public class SimulationSetup : MonoBehaviour {
     public GameObject togglePrefab;
     public GameObject graphs;
 
+    public Condition condition;
+
     #region Condition
     public Dropdown presets;
     public InputField simulationDurationMinutes;
@@ -219,7 +221,10 @@ public class SimulationSetup : MonoBehaviour {
 
     void ChangeActiveGraphDurations() {
 
+
         replaceExistingGraphs = true;
+        Debug.Break();
+
 
         SubmitDuration();
 
@@ -311,14 +316,25 @@ public class SimulationSetup : MonoBehaviour {
     }
 
     public void OverwriteDurationWithPreset() {
-        if (Error.instance.boolDropdown.itemText.text != ("Current (" + simulationDurationMinutes.text + ":" + simulationDurationSeconds.text + ")")) {
+        replaceExistingGraphs = true;
+        string choice = Error.instance.boolDropdown.options[Error.instance.boolDropdown.value].text;
+        print(choice);
+
+        if (choice == ("Current (" + simulationDurationMinutes.text + ":" + simulationDurationSeconds.text + ")")) {
             replaceExistingGraphs = true;
+            // put here code to make duration = to the conditions duration
             LoadCondition(presets.value);
+
         }
         else {
-            // overwrite
-            int tempDuration = duration;
+            simulationDurationMinutes.text = (condition.duration / 60).ToString();
+            simulationDurationSeconds.text = (condition.duration % 60).ToString();
+            duration = condition.duration;
+            replaceExistingGraphs = false;
+            ChangeActiveGraphDurations();
             LoadCondition(presets.value);
+            //LoadCondition(presets.value);
+
         }
     }
 
@@ -330,10 +346,12 @@ public class SimulationSetup : MonoBehaviour {
                 Error.instance.informMessageText.text = "Condition could not be found.";
                 Error.instance.informPanel.SetActive(true);
                 Error.instance.informOkButton.onClick.AddListener(SetInformPanelToFalse);
+                return;
             }
-            else {
-                // if a duration already exists prompt the user on how they want to overwrite the duration with the preset with different duration
-                if (duration != -1 && replaceExistingGraphs == false) {
+
+            // if a duration already exists prompt the user on how they want to overwrite the duration with the preset with different duration (warning: recursive function call)
+            if (duration != -1 || replaceExistingGraphs == false) {
+              
                     Error.instance.boolPanel.SetActive(true);
                     Error.instance.boolDropdown.gameObject.SetActive(true);
                     Error.instance.boolMessageText.text = "The duration of the preset " + condition.name + " is not equal to the existing duration. Which duration would you prefer to keep?";
@@ -353,50 +371,57 @@ public class SimulationSetup : MonoBehaviour {
                     options.Add(data);
                     Error.instance.boolDropdown.AddOptions(options);
                     return;
+              
+
+
+                   // replaceExistingGraphs = false;
+
+                }
+            } else {
+
+                simulationDurationMinutes.text = (condition.duration / 60).ToString();
+                simulationDurationSeconds.text = (condition.duration % 60).ToString();
+                duration = condition.duration;
+                replaceExistingGraphs = false;
+            }
+
+            // for each vital in the condition, loop through and create the graph for it
+
+            bool firstInList = true;
+            foreach (VitalData vitalData in condition.vitalsData) {
+
+                Vital vital = vitalData.vital;
+
+                graph = tabs.GenerateTab(vital.name);
+                graph.GenerateGraph(0, duration, "Duration", (int)Math.Ceiling(vital.min), (int)Math.Ceiling(vital.max), vital.units);
+
+                // TODO prompt user to see if they want vitals in the preset they dont have
+
+                // Add the listener to the vitals list toggles so graphs can be selected / deselected at will
+                Transform vitalChosen = vitalsChosen.transform.FindChild(vital.name);
+                Toggle toggle = vitalChosen.GetComponent<Toggle>();
+                toggle.onValueChanged.RemoveAllListeners();
+                toggle.isOn = true;
+                toggle.onValueChanged.AddListener((bool value) => loadChosenVital(value, vitalChosen.transform.GetSiblingIndex(), vital.name));
+
+                // populate the graph with its values
+                foreach (Value value in vitalData.timeline.vitalValues) {
+                    graph.AddPoint(value.second, value.value);
+                }
+                foreach (Value value in vitalData.timeline.upperThresholdValues) {
+                    graph.AddThresholdPointUpper(value.second, value.value);
+                }
+                foreach (Value value in vitalData.timeline.lowerThresholdValues) {
+                    graph.AddThresholdPointLower(value.second, value.value);
+                }
+
+                // ensure that the first vital added automatically appears for the user to view
+                if (firstInList) {
+                    graph.transform.gameObject.SetActive(true);
+                    firstInList = false;
                 }
                 else {
-
-                    simulationDurationMinutes.text = (condition.duration / 60).ToString();
-                    simulationDurationSeconds.text = (condition.duration % 60).ToString();
-                    duration = condition.duration;
-                    replaceExistingGraphs = false;
-                }
-
-                bool firstInList = true;
-                foreach (VitalData vitalData in condition.vitalsData) {
-                    Vital vital = vitalData.vital;
-
-                    graph = tabs.GenerateTab(vital.name);
-                    graph.GenerateGraph(0, duration, "Duration", (int)Math.Ceiling(vital.min), (int)Math.Ceiling(vital.max), vital.units);
-
-                    // TODO prompt user to see if they want vitals in the preset they dont have
-
-                    // Add the listener to the vitals list toggles so graphs can be selected / deselected at will
-                    Transform vitalChosen = vitalsChosen.transform.FindChild(vital.name);
-                    Toggle toggle = vitalChosen.GetComponent<Toggle>();
-                    toggle.onValueChanged.RemoveAllListeners();
-                    toggle.isOn = true;
-                    toggle.onValueChanged.AddListener((bool value) => loadChosenVital(value, vitalChosen.transform.GetSiblingIndex(), vital.name));
-
-                    // populate the graph with its values
-                    foreach (Value value in vitalData.timeline.vitalValues) {
-                        graph.AddPoint(value.second, value.value);
-                    }
-                    foreach (Value value in vitalData.timeline.upperThresholdValues) {
-                        graph.AddThresholdPointUpper(value.second, value.value);
-                    }
-                    foreach (Value value in vitalData.timeline.lowerThresholdValues) {
-                        graph.AddThresholdPointLower(value.second, value.value);
-                    }
-
-                    // ensure that the first vital added automatically appears for the user to view
-                    if (firstInList) {
-                        graph.transform.gameObject.SetActive(true);
-                        firstInList = false;
-                    }
-                    else {
-                        graph.transform.gameObject.SetActive(false);
-                    }
+                    graph.transform.gameObject.SetActive(false);
                 }
             }
         }
