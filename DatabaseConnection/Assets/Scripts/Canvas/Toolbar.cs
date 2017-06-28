@@ -15,17 +15,14 @@ public class Toolbar : MonoBehaviour {
      
     }
 
-    public void disableFirstOption() {
-        FileDropdownOption[] options = file.GetComponentsInChildren<FileDropdownOption>();
-
-        foreach (FileDropdownOption option in options) {
-            print("cycling " + option.GetIndex());
-            if (option.GetIndex() == 1) {
-                print("disabling " + option.gameObject.name);
-                option.gameObject.SetActive(false);
-            }
-        }
-    }
+    //public void disableFirstOption() {
+    //    FileDropdownOption[] options = file.GetComponentsInChildren<FileDropdownOption>();
+    //    foreach (FileDropdownOption option in options) {
+    //        if (option.GetIndex() == 1) {
+    //            option.gameObject.SetActive(false);
+    //        }
+    //    }
+    //}
 
 
 

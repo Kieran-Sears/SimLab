@@ -60,7 +60,6 @@ public class Graph : MonoBehaviour {
     private LineRenderer thresholdLineUpper;
 
     private float mouseHold;
-    private float mouseHoverOverHandleTime;
     private bool leftMouseButtonIsDown;
     private Transform sliderHandleTransform;
     private Vector3 newPos;
@@ -69,7 +68,6 @@ public class Graph : MonoBehaviour {
     private Slider currentlySelectedSlider;
     private int indexOfSliderMinipulated;
     private float newSliderTime;
-    private float timeForCoordinateSystemToAppear = 3;
     private bool allowChangingPosition;
     #endregion
 
@@ -90,24 +88,18 @@ public class Graph : MonoBehaviour {
             if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit1, 800)) {
                 string tag = hit1.collider.tag;
 
-                // if over coordinate system ensure coordinate system remains active
-                if (tag == "CoordinateSystem") {
-                    mouseHoverOverHandleTime += Time.deltaTime;
-                    if (mouseHoverOverHandleTime > 3) {
-                        coordinateSystem.SetActive(true);
-                        coordinateSystem.transform.localPosition = Vector3.zero;
-                        coordinateSystem.transform.localScale = new Vector3(0.5f, 0.5f, 1);
-                        coordinateSystem.transform.position = sliderHandleTransform.position + new Vector3(0.1f, 0.1f, -50);
-                    }
-                }
-
                 // if over graph check for a mouse up to place a new point else deactivate coordinate system
-                else if (tag == "Graph") {
+                // else
+                if (tag == "Graph") {
                     if (Input.GetMouseButtonUp(0) && mouseHold < 0.3) {
-                        AddPoint(Camera.main.WorldToScreenPoint(hit1.point));
+                        if (coordinateSystem.activeSelf) {
+                            coordinateSystem.SetActive(false);
+                            sliderHandleTransform.GetComponent<Image>().color = currentlySelectedSlider.colors.normalColor;
+                        }
+                        else {
+                            AddPoint(Camera.main.WorldToScreenPoint(hit1.point));
+                        }
                     }
-                    mouseHoverOverHandleTime = 0;
-                    coordinateSystem.SetActive(false);
                 }
 
                 // if over handle 
@@ -120,20 +112,27 @@ public class Graph : MonoBehaviour {
                         return;
                     }
 
-                    // if isn't the first or last point in the graph -> setup the coordinate system to trigger after time threshold
+                    // if isn't the first or last point in the graph -> setup the coordinate system if left mouse is clicked
                     if (indexOfSliderMinipulated != 0 || indexOfSliderMinipulated != sortedGraphPointsList.Count - 1) {
-                        mouseHoverOverHandleTime += Time.deltaTime;
-                        if (mouseHoverOverHandleTime > timeForCoordinateSystemToAppear) {
-                            coordinateSystem.SetActive(true);
-                            coordinateSystem.transform.localPosition = Vector3.zero;
-                            coordinateSystem.transform.localScale = new Vector3(0.5f, 0.5f, 1);
-                            coordinateSystem.transform.position = sliderHandleTransform.position + new Vector3(0.1f, 0.1f, -50);
+
+                        if (Input.GetMouseButtonUp(0) && mouseHold < 0.3) {
+                            if (coordinateSystem.activeSelf) {
+                                coordinateSystem.SetActive(false);
+                                sliderHandleTransform.GetComponent<Image>().color = currentlySelectedSlider.colors.normalColor;
+                            }
+                            else {
+                                sliderHandleTransform.GetComponent<Image>().color = Color.red;
+                                coordinateSystem.SetActive(true);
+                                coordinateSystem.transform.localPosition = Vector3.zero;
+                                coordinateSystem.transform.localScale = new Vector3(0.5f, 0.5f, 1);
+                                coordinateSystem.transform.position = sliderHandleTransform.position + new Vector3(0.3f, 0.3f, -50);
+                            }
+                            mouseHold = 0;
                         }
                     }
 
                     // the mouse has been clicked reset the time limit required to spawn the coordinate system and setup the point to be dragged
                     if (Input.GetMouseButtonDown(0)) {
-                        mouseHoverOverHandleTime = 0;
                         leftMouseButtonIsDown = true;
                     }
 
@@ -146,6 +145,7 @@ public class Graph : MonoBehaviour {
                     }
 
                 }
+
             }
             else {
                 // no raycast hit detected
@@ -183,9 +183,9 @@ public class Graph : MonoBehaviour {
                 if (newSliderTime != previousFrameTime) {
                     // ensure there isn't overwriting of existing points and if it isn't an end point slider
                     if (!sortedGraphPointsList.ContainsKey(newSliderTime) && allowChangingPosition) {
-                            sortedGraphPointsList.RemoveAt(indexOfSliderMinipulated);
-                            sortedGraphPointsList.Add(newSliderTime, currentlySelectedSlider);
-                            indexOfSliderMinipulated = sortedGraphPointsList.IndexOfKey(newSliderTime);
+                        sortedGraphPointsList.RemoveAt(indexOfSliderMinipulated);
+                        sortedGraphPointsList.Add(newSliderTime, currentlySelectedSlider);
+                        indexOfSliderMinipulated = sortedGraphPointsList.IndexOfKey(newSliderTime);
                     }
                     previousFrameTime = newSliderTime;
                 }
@@ -200,7 +200,6 @@ public class Graph : MonoBehaviour {
         if (Input.GetMouseButtonUp(0)) {
             leftMouseButtonIsDown = false;
             mouseHold = 0;
-            mouseHoverOverHandleTime = 0;
 
         }
 
@@ -531,13 +530,13 @@ public class Graph : MonoBehaviour {
         counter = 0;
         float previous = -1;
         foreach (KeyValuePair<float, Slider> item in sortedGraphPointsList) {
-            if (item.Key < previous) { print("Alert");  }
+            if (item.Key < previous) { print("Alert"); }
             previous = item.Key;
             arrayToCurve[counter] = Camera.main.WorldToScreenPoint(item.Value.handleRect.transform.position) - Camera.main.WorldToScreenPoint(graphContent.transform.position);
             counter++;
         }
 
-       // MakeSmoothCurve(arrayToCurve, 30);
+        // MakeSmoothCurve(arrayToCurve, 30);
         if (pointLine == null) {
             if (graph == null) return;
             LineWriter = Instantiate(lineRendererPrefab, graphContent.transform);
@@ -628,7 +627,6 @@ public class Graph : MonoBehaviour {
     public void GenerateGraph(int _xStart, int _xEnd, string xLabel, int _yStart, int _yEnd, string yLabel) {
         print("generating graph " + name);
         graphContentRectTrans = graphContent.GetComponent<RectTransform>();
-        //graphContentRectTrans.sizeDelta = new Vector2(graphViewport.GetComponent<RectTransform>().rect.x * -2, graphViewport.GetComponent<RectTransform>().rect.y * -2);
         graphContentRectTrans.sizeDelta = new Vector2(xAxis.GetComponent<RectTransform>().rect.x * -2, yAxis.GetComponent<RectTransform>().rect.y * -2);
 
         graphContentRectTrans.localPosition = Vector3.zero;
@@ -689,10 +687,11 @@ public class Graph : MonoBehaviour {
         float maxValue = slider.handleRect.transform.position.y - minValue;
         float currentValue = worldPoint.y - minValue;
         float percent = (currentValue / maxValue) * 100;
-        point.transform.position = new Vector3(worldPoint.x, point.transform.position.y, 50);
+        point.transform.position = new Vector3(worldPoint.x, point.transform.position.y, 0);
         slider.value = (((slider.maxValue - slider.minValue) / 100) * percent);
         float pointTime = (slider.transform.localPosition.x + (graph.GetComponent<RectTransform>().rect.width / 2)) / (graph.GetComponent<RectTransform>().rect.width / xScale);
         HierachyPositionSearch(point);
+        point.transform.localPosition += (Vector3.back * point.transform.localPosition.z) - (Vector3.forward * 50);
         if (sortedGraphPointsList.ContainsKey(pointTime)) {
             sortedGraphPointsList.Remove(pointTime);
         }
@@ -771,7 +770,6 @@ public class Graph : MonoBehaviour {
     }
 
     public void AddThresholdPointUpper(float xValue, float yValue) {
-        //  RectTransform rectTrans = graph.GetComponent<RectTransform>();
         GameObject point = Instantiate(graphPointPrefab, thresholds.transform);
         Slider slider = point.GetComponent<Slider>();
         point.transform.localScale = Vector3.one;
@@ -788,7 +786,6 @@ public class Graph : MonoBehaviour {
     }
 
     public void AddThresholdPointLower(float xValue, float yValue) {
-        //  RectTransform rectTrans = graph.GetComponent<RectTransform>();
         GameObject point = Instantiate(graphPointPrefab, thresholds.transform);
         Slider slider = point.GetComponent<Slider>();
         point.transform.localScale = Vector3.one;
@@ -811,8 +808,6 @@ public class Graph : MonoBehaviour {
         float.TryParse(coordinateY.text, out y);
         if (coordinateX.text.Length != 0 && coordinateY.text.Length != 0) {
             if ((x > xStart && x < xEnd) && (y > yStart && y < yEnd)) {
-                //   activateCoordinateSystem = false;
-                mouseHoverOverHandleTime = 0;
                 coordinateSystem.SetActive(false);
                 sortedGraphPointsList.RemoveAt(sortedGraphPointsList.IndexOfValue(sliderHandleTransform.parent.parent.GetComponent<Slider>()));
                 Destroy(sliderHandleTransform.gameObject);
