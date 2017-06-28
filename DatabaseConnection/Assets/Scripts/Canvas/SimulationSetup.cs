@@ -56,6 +56,7 @@ public class SimulationSetup : MonoBehaviour {
     private Graph graph;
 
     private bool replaceExistingGraphs;
+    private bool someBool;
 
     private void Awake() {
         if (instance) {
@@ -220,13 +221,17 @@ public class SimulationSetup : MonoBehaviour {
     }
 
     void ChangeActiveGraphDurations() {
-
+        Error.instance.boolPanel.SetActive(false);
+        Error.instance.boolDropdown.gameObject.SetActive(false);
+        Error.instance.boolLeftButton.onClick.RemoveAllListeners();
+        Error.instance.boolRightButton.onClick.RemoveAllListeners();
+        Error.instance.boolLeftButton.GetComponentInChildren<Text>().text = "no";
 
         replaceExistingGraphs = true;
-        Debug.Break();
 
-
-        SubmitDuration();
+        if (!someBool) {
+            SubmitDuration();
+        }
 
         for (int i = 0; i < vitalsChosen.transform.childCount; i++) {
 
@@ -322,6 +327,7 @@ public class SimulationSetup : MonoBehaviour {
 
         if (choice == ("Current (" + simulationDurationMinutes.text + ":" + simulationDurationSeconds.text + ")")) {
             replaceExistingGraphs = true;
+
             // put here code to make duration = to the conditions duration
             LoadCondition(presets.value);
 
@@ -331,7 +337,9 @@ public class SimulationSetup : MonoBehaviour {
             simulationDurationSeconds.text = (condition.duration % 60).ToString();
             duration = condition.duration;
             replaceExistingGraphs = false;
+            someBool = true;
             ChangeActiveGraphDurations();
+            someBool = false;
             LoadCondition(presets.value);
             //LoadCondition(presets.value);
 
@@ -339,9 +347,10 @@ public class SimulationSetup : MonoBehaviour {
     }
 
     public void LoadCondition(int index) {
+        print("Duration " + duration);
         if (presets.options[index].text != "None") {
             Debug.Log("Finding condition: " + presets.options[index].text);
-            Condition condition = ExportManager.instance.Load("Conditions/" + presets.options[index].text) as Condition;
+            condition = ExportManager.instance.Load("Conditions/" + presets.options[index].text) as Condition;
             if (condition == null) {
                 Error.instance.informMessageText.text = "Condition could not be found.";
                 Error.instance.informPanel.SetActive(true);
@@ -350,46 +359,44 @@ public class SimulationSetup : MonoBehaviour {
             }
 
             // if a duration already exists prompt the user on how they want to overwrite the duration with the preset with different duration (warning: recursive function call)
-            if (duration != -1 || replaceExistingGraphs == false) {
-              
-                    Error.instance.boolPanel.SetActive(true);
-                    Error.instance.boolDropdown.gameObject.SetActive(true);
-                    Error.instance.boolMessageText.text = "The duration of the preset " + condition.name + " is not equal to the existing duration. Which duration would you prefer to keep?";
-                    Error.instance.boolLeftButton.onClick.AddListener(CancelAddingPrefab);
-                    Error.instance.boolRightButton.onClick.AddListener(OverwriteDurationWithPreset);
-                    Error.instance.boolDropdown.ClearOptions();
-                    Error.instance.boolDropdown.captionText.text = "Select...";
-                    List<Dropdown.OptionData> options = new List<Dropdown.OptionData>();
-                    Dropdown.OptionData data = new Dropdown.OptionData();
+            if (duration != -1 && replaceExistingGraphs == false) {
 
-                    data.text = condition.name + " (" + (condition.duration / 60).ToString() + ":" + (condition.duration % 60).ToString() + ")";
+                Error.instance.boolPanel.SetActive(true);
+                Error.instance.boolDropdown.gameObject.SetActive(true);
+                Error.instance.boolMessageText.text = "The duration of the preset " + condition.name + " is not equal to the existing duration. Which duration would you prefer to keep?";
+                Error.instance.boolLeftButton.onClick.AddListener(CancelAddingPrefab);
+                Error.instance.boolRightButton.onClick.AddListener(OverwriteDurationWithPreset);
+                Error.instance.boolDropdown.ClearOptions();
+                Error.instance.boolDropdown.captionText.text = "Select...";
+                Error.instance.boolLeftButton.GetComponentInChildren<Text>().text = "Cancel";
+                List<Dropdown.OptionData> options = new List<Dropdown.OptionData>();
+                Dropdown.OptionData data = new Dropdown.OptionData();
 
-
-                    options.Add(data);
-                    data = new Dropdown.OptionData();
-                    data.text = "Current (" + simulationDurationMinutes.text + ":" + simulationDurationSeconds.text + ")";
-                    options.Add(data);
-                    Error.instance.boolDropdown.AddOptions(options);
-                    return;
-              
+                data.text = condition.name + " (" + (condition.duration / 60).ToString() + ":" + (condition.duration % 60).ToString() + ")";
 
 
-                   // replaceExistingGraphs = false;
-
-                }
-            } else {
+                options.Add(data);
+                data = new Dropdown.OptionData();
+                data.text = "Current (" + simulationDurationMinutes.text + ":" + simulationDurationSeconds.text + ")";
+                options.Add(data);
+                Error.instance.boolDropdown.AddOptions(options);
+                return;
+            }
+            else {
 
                 simulationDurationMinutes.text = (condition.duration / 60).ToString();
                 simulationDurationSeconds.text = (condition.duration % 60).ToString();
                 duration = condition.duration;
                 replaceExistingGraphs = false;
             }
+        }
+        
 
-            // for each vital in the condition, loop through and create the graph for it
+        // for each vital in the condition, loop through and create the graph for it
 
-            bool firstInList = true;
-            foreach (VitalData vitalData in condition.vitalsData) {
-
+        bool firstInList = true;
+        foreach (VitalData vitalData in condition.vitalsData) {
+            if (!graphs.transform.FindChild(vitalData.vital.name)) {
                 Vital vital = vitalData.vital;
 
                 graph = tabs.GenerateTab(vital.name);
@@ -426,6 +433,7 @@ public class SimulationSetup : MonoBehaviour {
             }
         }
     }
+
 
     public void SelectMaxVitalValue() {
         Error.instance.informPanel.SetActive(false);
