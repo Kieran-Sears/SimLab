@@ -1,10 +1,35 @@
 fileFormatVersion: 2
 guid: 4773ff5ef9d25514493c6697982f8152
-timeCreated: 1491941770
+timeCreated: 1499092910
 licenseType: Pro
 MonoImporter:
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - graph: {instanceID: 0}
+  - grid: {instanceID: 0}
+  - thresholds: {instanceID: 0}
+  - xAxis: {instanceID: 0}
+  - yAxis: {instanceID: 0}
+  - graphContent: {instanceID: 0}
+  - xAxisContent: {instanceID: 0}
+  - yAxisContent: {instanceID: 0}
+  - xAxisLabel: {instanceID: 0}
+  - yAxisLabel: {instanceID: 0}
+  - graphViewport: {instanceID: 0}
+  - xAxisViewport: {instanceID: 0}
+  - yAxisViewport: {instanceID: 0}
+  - GraphScrollRect: {instanceID: 0}
+  - xAxisScrollRect: {instanceID: 0}
+  - yAxisScrollRect: {instanceID: 0}
+  - xDashMarkerPrefab: {instanceID: 0}
+  - yDashMarkerPrefab: {instanceID: 0}
+  - graphPointPrefab: {instanceID: 0}
+  - lineRendererPrefab: {instanceID: 0}
+  - coordinateSystem: {instanceID: 0}
+  - coordinateX: {instanceID: 0}
+  - coordinateY: {instanceID: 0}
+  - lineThresholdMaterial: {fileID: 2100000, guid: 8a939f8524b894b429933e73f373566b,
+      type: 2}
   executionOrder: 0
   icon: {fileID: 5132851093641282708, guid: 0000000000000000d000000000000000, type: 0}
   userData: 

@@ -33,9 +33,11 @@ public class Graph : MonoBehaviour {
     public GameObject yDashMarkerPrefab;
     public GameObject graphPointPrefab;
     public GameObject lineRendererPrefab;
+    public GameObject lineRendererThresholdPrefab;
     public GameObject coordinateSystem;
     public InputField coordinateX;
     public InputField coordinateY;
+   
 
     public SortedList<float, Slider> sortedGraphPointsList = new SortedList<float, Slider>();
     public SortedList<float, Slider> pointsUpperThreshold = new SortedList<float, Slider>();
@@ -126,6 +128,8 @@ public class Graph : MonoBehaviour {
                                 coordinateSystem.transform.localPosition = Vector3.zero;
                                 coordinateSystem.transform.localScale = new Vector3(0.5f, 0.5f, 1);
                                 coordinateSystem.transform.position = sliderHandleTransform.position + new Vector3(0.3f, 0.3f, -50);
+                                coordinateX.text = sortedGraphPointsList.Keys[sortedGraphPointsList.IndexOfValue(currentlySelectedSlider)].ToString();
+                                coordinateY.text = currentlySelectedSlider.value.ToString();
                             }
                             mouseHold = 0;
                         }
@@ -282,7 +286,7 @@ public class Graph : MonoBehaviour {
         GameObject lowerLineWriter;
         if (thresholdLineLower == null) {
             if (graph == null) return;
-            lowerLineWriter = Instantiate(lineRendererPrefab, graphContent.transform);
+            lowerLineWriter = Instantiate(lineRendererThresholdPrefab, graphContent.transform);
             lowerLineWriter.transform.localScale = Vector3.one;
             lowerLineWriter.transform.localPosition = Vector3.zero;
             lowerLineWriter.name = "LowerThreshold";
@@ -303,7 +307,7 @@ public class Graph : MonoBehaviour {
 
         if (thresholdLineUpper == null) {
             if (graph == null) return;
-            upperLineWriter = Instantiate(lineRendererPrefab, graphContent.transform);
+            upperLineWriter = Instantiate(lineRendererThresholdPrefab, graphContent.transform);
             upperLineWriter.transform.localScale = Vector3.one;
             upperLineWriter.transform.localPosition = Vector3.zero;
             upperLineWriter.name = "UpperThreshold";
@@ -569,24 +573,24 @@ public class Graph : MonoBehaviour {
         }
 
         MakeSmoothCurve(arrayToCurve, 30);
-        if (pointLine == null) {
+        if (thresholdLineUpper == null) {
             if (graph == null) return;
-            LineWriter = Instantiate(lineRendererPrefab, graphContent.transform);
+            LineWriter = Instantiate(lineRendererThresholdPrefab, graphContent.transform);
             LineWriter.transform.localScale = Vector3.one;
             LineWriter.transform.localPosition = Vector3.zero;
 
-            pointLine = LineWriter.GetComponent<LineRenderer>();
-            pointLine.startColor = Color.red;
-            pointLine.endColor = Color.red;
-            pointLine.startWidth = 0.1f;
-            pointLine.endWidth = 0.1f;
+            thresholdLineUpper = LineWriter.GetComponent<LineRenderer>();
+            thresholdLineUpper.startColor = Color.red;
+            thresholdLineUpper.endColor = Color.red;
+            thresholdLineUpper.startWidth = 0.1f;
+            thresholdLineUpper.endWidth = 0.1f;
         }
 
-        pointLine.transform.SetAsLastSibling();
-        pointLine.numPositions = sortedGraphPointsList.Count;
+        thresholdLineUpper.transform.SetAsLastSibling();
+        thresholdLineUpper.numPositions = sortedGraphPointsList.Count;
 
         for (int i = 0; i < sortedGraphPointsList.Count; i++) {
-            pointLine.SetPosition(i, arrayToCurve[i]);
+            thresholdLineUpper.SetPosition(i, arrayToCurve[i]);
         }
     }
 
@@ -601,24 +605,24 @@ public class Graph : MonoBehaviour {
         }
 
         MakeSmoothCurve(arrayToCurve, 30);
-        if (pointLine == null) {
+        if (thresholdLineLower == null) {
             if (graph == null) return;
-            LineWriter = Instantiate(lineRendererPrefab, graphContent.transform);
+            LineWriter = Instantiate(lineRendererThresholdPrefab, graphContent.transform);
             LineWriter.transform.localScale = Vector3.one;
             LineWriter.transform.localPosition = Vector3.zero;
 
-            pointLine = LineWriter.GetComponent<LineRenderer>();
-            pointLine.startColor = Color.red;
-            pointLine.endColor = Color.red;
-            pointLine.startWidth = 0.1f;
-            pointLine.endWidth = 0.1f;
+            thresholdLineLower = LineWriter.GetComponent<LineRenderer>();
+            thresholdLineLower.startColor = Color.red;
+            thresholdLineLower.endColor = Color.red;
+            thresholdLineLower.startWidth = 0.1f;
+            thresholdLineLower.endWidth = 0.1f;
         }
 
-        pointLine.transform.SetAsLastSibling();
-        pointLine.numPositions = sortedGraphPointsList.Count;
+        thresholdLineLower.transform.SetAsLastSibling();
+        thresholdLineLower.numPositions = sortedGraphPointsList.Count;
 
         for (int i = 0; i < sortedGraphPointsList.Count; i++) {
-            pointLine.SetPosition(counter, arrayToCurve[i]);
+            thresholdLineLower.SetPosition(counter, arrayToCurve[i]);
         }
     }
     #endregion
