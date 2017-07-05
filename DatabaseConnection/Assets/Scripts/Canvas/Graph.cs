@@ -37,7 +37,7 @@ public class Graph : MonoBehaviour {
     public GameObject coordinateSystem;
     public InputField coordinateX;
     public InputField coordinateY;
-   
+
 
     public SortedList<float, Slider> sortedGraphPointsList = new SortedList<float, Slider>();
     public SortedList<float, Slider> pointsUpperThreshold = new SortedList<float, Slider>();
@@ -71,11 +71,36 @@ public class Graph : MonoBehaviour {
     private int indexOfSliderMinipulated;
     private float newSliderTime;
     private bool allowChangingPosition;
+    private float tempXCoordinate;
+    private float tempYCoordinate;
     #endregion
 
     #region Unity Methods
 
     private void LateUpdate() {
+
+        if (coordinateSystem != null && coordinateSystem.activeSelf && Input.GetKeyDown(KeyCode.Return)) {
+            float x = float.Parse(coordinateX.text);
+            float y = float.Parse(coordinateY.text);
+            if ((x > xStart && x < xEnd) && (y > yStart && y < yEnd)) {
+                if (sortedGraphPointsList.ContainsKey(x)) {
+                    Destroy(sortedGraphPointsList[x].gameObject);
+                    sortedGraphPointsList.Remove(x);
+                }
+                coordinateSystem.SetActive(false);
+                sortedGraphPointsList.RemoveAt(sortedGraphPointsList.IndexOfValue(sliderHandleTransform.parent.parent.GetComponent<Slider>()));
+                Destroy(sliderHandleTransform.gameObject);
+                AddPoint(x, y);
+                coordinateX.text = "";
+                coordinateY.text = "";
+                DrawLinkedPointLines();
+            }
+            else {
+                Error.instance.informMessageText.text = "Ensure coordinates are within range limits";
+                Error.instance.informPanel.SetActive(true);
+                Error.instance.informOkButton.onClick.AddListener(SelectCoordinateXValue);
+            }
+        }
 
         // check for if cursor is over graph area
         if (graphViewport != null && graphViewport.GetComponent<CusorSensor>().mouseOver) {
@@ -130,6 +155,8 @@ public class Graph : MonoBehaviour {
                                 coordinateSystem.transform.position = sliderHandleTransform.position + new Vector3(0.3f, 0.3f, -50);
                                 coordinateX.text = sortedGraphPointsList.Keys[sortedGraphPointsList.IndexOfValue(currentlySelectedSlider)].ToString();
                                 coordinateY.text = currentlySelectedSlider.value.ToString();
+                                tempXCoordinate = sortedGraphPointsList.Keys[sortedGraphPointsList.IndexOfValue(currentlySelectedSlider)];
+                                tempYCoordinate = currentlySelectedSlider.value;
                             }
                             mouseHold = 0;
                         }
@@ -631,7 +658,8 @@ public class Graph : MonoBehaviour {
     public void GenerateGraph(int _xStart, int _xEnd, string xLabel, int _yStart, int _yEnd, string yLabel) {
         print("generating graph " + name);
         graphContentRectTrans = graphContent.GetComponent<RectTransform>();
-        graphContentRectTrans.sizeDelta = new Vector2(xAxis.GetComponent<RectTransform>().rect.x * -2, yAxis.GetComponent<RectTransform>().rect.y * -2);
+        graphContentRectTrans.sizeDelta = new Vector2(graphViewport.GetComponent<RectTransform>().rect.width - 20, graphViewport.GetComponent<RectTransform>().rect.height - 20);
+
 
         graphContentRectTrans.localPosition = Vector3.zero;
         graph.GetComponent<BoxCollider>().size = new Vector2(graphContentRectTrans.rect.width, graphContentRectTrans.rect.height);
@@ -803,29 +831,6 @@ public class Graph : MonoBehaviour {
         pointsLowerThreshold.Add(xValue, slider);
         slider.onValueChanged.AddListener(ChangeLowerThresholdLineWithSlider);
         DrawThresholds();
-    }
-
-    public void SetCoordinateValue() {
-        float x = -1;
-        float y = -1;
-        float.TryParse(coordinateX.text, out x);
-        float.TryParse(coordinateY.text, out y);
-        if (coordinateX.text.Length != 0 && coordinateY.text.Length != 0) {
-            if ((x > xStart && x < xEnd) && (y > yStart && y < yEnd)) {
-                coordinateSystem.SetActive(false);
-                sortedGraphPointsList.RemoveAt(sortedGraphPointsList.IndexOfValue(sliderHandleTransform.parent.parent.GetComponent<Slider>()));
-                Destroy(sliderHandleTransform.gameObject);
-                AddPoint(x, y);
-                coordinateX.text = "";
-                coordinateY.text = "";
-                DrawLinkedPointLines();
-            }
-            else {
-                Error.instance.informMessageText.text = "Ensure coordinates are within range limits";
-                Error.instance.informPanel.SetActive(true);
-                Error.instance.informOkButton.onClick.AddListener(SelectCoordinateXValue);
-            }
-        }
     }
 
     public void SelectCoordinateXValue() {
