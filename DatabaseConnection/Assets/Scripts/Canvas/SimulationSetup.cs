@@ -261,7 +261,7 @@ public class SimulationSetup : MonoBehaviour {
                 Destroy(graphObject);
 
                 graph = tabs.GenerateTab(vitalName);
-                graph.GenerateGraph(0, duration, "Duration", vitalMin, vitalMax, vitalUnits);
+                graph.GenerateGraph(0, duration, vitalMin, vitalMax, vitalUnits);
 
                 toggle.onValueChanged.RemoveAllListeners();
                 toggle.isOn = true;
@@ -276,6 +276,7 @@ public class SimulationSetup : MonoBehaviour {
                         graph.AddPoint(item.Key, item.Value.value);
                     }
                 }
+                graph.AddPoint(duration, ((vitalMax - vitalMin) / 2));
 
                 foreach (KeyValuePair<float, Slider> item in pointsUpperThreshold) {
                     if (item.Key < duration) {
@@ -296,6 +297,7 @@ public class SimulationSetup : MonoBehaviour {
                 if (!graph.pointsUpperThreshold.ContainsKey(duration)) {
                     graph.AddThresholdPointUpper(duration, graph.pointsUpperThreshold[0].value);
                 }
+
             }
         }
     }
@@ -330,7 +332,9 @@ public class SimulationSetup : MonoBehaviour {
 
             // put here code to make duration = to the conditions duration
             LoadCondition(presets.value);
-
+           // duration = 
+            //ChangeActiveGraphDurations();
+            print("IF STRING 1");
         }
         else {
             simulationDurationMinutes.text = (condition.duration / 60).ToString();
@@ -342,7 +346,7 @@ public class SimulationSetup : MonoBehaviour {
             someBool = false;
             LoadCondition(presets.value);
             //LoadCondition(presets.value);
-
+            print("IF STRING 2");
         }
     }
 
@@ -400,7 +404,7 @@ public class SimulationSetup : MonoBehaviour {
                 Vital vital = vitalData.vital;
 
                 graph = tabs.GenerateTab(vital.name);
-                graph.GenerateGraph(0, duration, "Duration", (int)Math.Ceiling(vital.min), (int)Math.Ceiling(vital.max), vital.units);
+                graph.GenerateGraph(0, duration, (int)Math.Ceiling(vital.min), (int)Math.Ceiling(vital.max), vital.units);
 
                 // TODO prompt user to see if they want vitals in the preset they dont have
 
@@ -542,7 +546,7 @@ public class SimulationSetup : MonoBehaviour {
                     return;
                 }
                 graph = tabs.GenerateTab(vitals.vitalList[index].name);
-                graph.GenerateGraph(0, duration, "Duration (Seconds)", (int)Math.Ceiling(vitals.vitalList[index].min), (int)Math.Ceiling(vitals.vitalList[index].max), vitals.vitalList[index].units);
+                graph.GenerateGraph(0, duration, (int)Math.Ceiling(vitals.vitalList[index].min), (int)Math.Ceiling(vitals.vitalList[index].max), vitals.vitalList[index].units);
                 if (graph.sortedGraphPointsList.Count == 0) {
                     int halfValue = (int)Math.Ceiling(((vitals.vitalList[index].max - vitals.vitalList[index].min) / 2) + vitals.vitalList[index].min);
                     graph.AddPoint(0, halfValue);

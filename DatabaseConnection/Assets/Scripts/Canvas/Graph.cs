@@ -8,9 +8,6 @@ using System.Collections.Generic;
 
 public class Graph : MonoBehaviour {
 
-
-
-
     #region Public Variables
     public GameObject graph;
     public GameObject grid;
@@ -64,6 +61,7 @@ public class Graph : MonoBehaviour {
     private float mouseHold;
     private bool leftMouseButtonIsDown;
     private Transform sliderHandleTransform;
+    private Transform previousSliderHandleTransform;
     private Vector3 newPos;
     private float previousFrameTime;
     private int counter = 0;
@@ -131,6 +129,7 @@ public class Graph : MonoBehaviour {
 
                 // if over handle 
                 else if (tag == "Handle") {
+                 
                     sliderHandleTransform = hit1.transform;
                     currentlySelectedSlider = sliderHandleTransform.parent.parent.GetComponent<Slider>();
                     indexOfSliderMinipulated = sortedGraphPointsList.IndexOfValue(currentlySelectedSlider);
@@ -148,11 +147,16 @@ public class Graph : MonoBehaviour {
                                 sliderHandleTransform.GetComponent<Image>().color = currentlySelectedSlider.colors.normalColor;
                             }
                             else {
+                                if (previousSliderHandleTransform != null) {
+                                    previousSliderHandleTransform.GetComponent<Image>().color = currentlySelectedSlider.colors.normalColor;
+                                }
+                                previousSliderHandleTransform = sliderHandleTransform;
                                 sliderHandleTransform.GetComponent<Image>().color = Color.red;
                                 coordinateSystem.SetActive(true);
                                 coordinateSystem.transform.localPosition = Vector3.zero;
                                 coordinateSystem.transform.localScale = new Vector3(0.5f, 0.5f, 1);
-                                coordinateSystem.transform.position = sliderHandleTransform.position + new Vector3(0.3f, 0.3f, -50);
+                                coordinateSystem.transform.position = sliderHandleTransform.position + new Vector3(0.3f, 0.3f, 0);
+                                coordinateSystem.transform.localPosition = new Vector3(coordinateSystem.transform.localPosition.x, coordinateSystem.transform.localPosition.y, 0);
                                 coordinateX.text = sortedGraphPointsList.Keys[sortedGraphPointsList.IndexOfValue(currentlySelectedSlider)].ToString();
                                 coordinateY.text = currentlySelectedSlider.value.ToString();
                                 tempXCoordinate = sortedGraphPointsList.Keys[sortedGraphPointsList.IndexOfValue(currentlySelectedSlider)];
@@ -278,17 +282,28 @@ public class Graph : MonoBehaviour {
     }
 
     private void InitialiseXScale() {
-        if (xScale > 300) {
-            xAxisLabel.GetComponent<Text>().text = "Duration (Minutes)";
-            xScale /= 60;
-        }
+        //if (xScale > 300) {
+        //    xAxisLabel.GetComponent<Text>().text = "Duration (Minutes)";
+        //    xScale /= 60;
+        //}
         for (int i = 0; i <= xScale; i++) {
             GameObject dashMarker = Instantiate(xDashMarkerPrefab, xAxis.transform);
             dashMarker.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
             dashMarker.transform.localPosition = Vector3.zero;
-            dashMarker.transform.localPosition += new Vector3((-graphContentRectTrans.rect.width / 2), 0, 1);
-            dashMarker.transform.localPosition += new Vector3((((graphContentRectTrans.rect.width) / xScale) * i), 0, 1);
-            dashMarker.GetComponent<Text>().text = i.ToString();
+            dashMarker.transform.localPosition += new Vector3((-graphContentRectTrans.rect.width / 2), 0, 0);
+            dashMarker.transform.localPosition += new Vector3((((graphContentRectTrans.rect.width) / xScale) * i), 0, 0);
+            // duration numbering format 1
+            // dashMarker.GetComponent<Text>().text = ((i / 60)).ToString() + ":" + ((i % 60)).ToString();
+            // dashMarker.transform.localScale = Vector3.one / (xScale / 30);
+            // duration numbering format 2
+            if (i % 60 == 0) {
+                dashMarker.GetComponent<Text>().text = ((i / 60)).ToString();
+            }
+            else {
+                dashMarker.GetComponent<Text>().text = ((i % 60)).ToString();
+                dashMarker.transform.localScale = Vector3.one / 2f;
+
+            }
         }
     }
 
@@ -300,8 +315,8 @@ public class Graph : MonoBehaviour {
             dashMarker = Instantiate(yDashMarkerPrefab, yAxis.transform);
             dashMarker.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
             dashMarker.transform.localPosition = Vector3.zero;
-            dashMarker.transform.localPosition += new Vector3(0, (-graphContentRectTrans.rect.height / 2), 1);
-            dashMarker.transform.localPosition += new Vector3(0, (((graphContentRectTrans.rect.height) / yScale) * (i - yStart)), 1);
+            dashMarker.transform.localPosition += new Vector3(0, (-graphContentRectTrans.rect.height / 2), 0);
+            dashMarker.transform.localPosition += new Vector3(0, (((graphContentRectTrans.rect.height) / yScale) * (i - yStart)), 0);
             text = dashMarker.GetComponent<Text>();
             text.text = (i).ToString();
             text.fontSize = 1;
@@ -412,17 +427,34 @@ public class Graph : MonoBehaviour {
     }
 
     private void LayoutXScale() {
-        xAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(graphContentRectTrans.rect.width, xAxisContent.GetComponent<RectTransform>().sizeDelta.y);
 
-
-        if (xScale >= 180) {
+        // 480
+        if (xScale >= 720) {
             for (int i = 0; i < xScale; i++) {
-                if (i % (20) == 0) {
+                if (i % (60) == 0) {
                     xAxis.transform.GetChild(i).gameObject.SetActive(true);
+                    xAxis.transform.GetChild(i).localScale = Vector3.one / 2;
                     grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
+
                 }
                 else {
                     xAxis.transform.GetChild(i).gameObject.SetActive(false);
+                    xAxis.transform.GetChild(i).localScale = Vector3.one;
+                    grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = false;
+                }
+            }
+        }
+        else if (xScale >= 180) {
+            for (int i = 0; i < xScale; i++) {
+                if (i % (30) == 0) {
+                    xAxis.transform.GetChild(i).gameObject.SetActive(true);
+                    xAxis.transform.GetChild(i).localScale = Vector3.one / 2;
+                    grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
+
+                }
+                else {
+                    xAxis.transform.GetChild(i).gameObject.SetActive(false);
+                    xAxis.transform.GetChild(i).localScale = Vector3.one;
                     grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = false;
                 }
             }
@@ -431,10 +463,12 @@ public class Graph : MonoBehaviour {
             for (int i = 0; i < xScale; i++) {
                 if (i % (10) == 0) {
                     xAxis.transform.GetChild(i).gameObject.SetActive(true);
+                    xAxis.transform.GetChild(i).localScale = Vector3.one / 2;
                     grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
                 }
                 else {
                     xAxis.transform.GetChild(i).gameObject.SetActive(false);
+                    xAxis.transform.GetChild(i).localScale = Vector3.one;
                     grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = false;
                 }
             }
@@ -444,10 +478,12 @@ public class Graph : MonoBehaviour {
             for (int i = 0; i < xScale; i++) {
                 if (i % (2) == 0) {
                     xAxis.transform.GetChild(i).gameObject.SetActive(true);
+                    xAxis.transform.GetChild(i).localScale = Vector3.one / 2;
                     grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
                 }
                 else {
                     xAxis.transform.GetChild(i).gameObject.SetActive(false);
+                    xAxis.transform.GetChild(i).localScale = Vector3.one;
                     grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = false;
                 }
             }
@@ -465,7 +501,7 @@ public class Graph : MonoBehaviour {
     }
 
     private void LayoutYScale() {
-        yAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(yAxisContent.GetComponent<RectTransform>().sizeDelta.x, graphContentRectTrans.rect.height);
+        // yAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(yAxisContent.GetComponent<RectTransform>().sizeDelta.x, graphContentRectTrans.rect.height);
         int diff = 0;
 
 
@@ -655,21 +691,30 @@ public class Graph : MonoBehaviour {
     #endregion
 
     #region Public Methods
-    public void GenerateGraph(int _xStart, int _xEnd, string xLabel, int _yStart, int _yEnd, string yLabel) {
+    public void GenerateGraph(int _xStart, int _xEnd, int _yStart, int _yEnd, string yLabel) {
+
+        Rect viewportRect = graphViewport.GetComponent<RectTransform>().rect;
+
         print("generating graph " + name);
+
         graphContentRectTrans = graphContent.GetComponent<RectTransform>();
-        graphContentRectTrans.sizeDelta = new Vector2(graphViewport.GetComponent<RectTransform>().rect.width - 20, graphViewport.GetComponent<RectTransform>().rect.height - 20);
-
-
+        graphContentRectTrans.sizeDelta = new Vector2(viewportRect.width - 20, viewportRect.height - 20);
         graphContentRectTrans.localPosition = Vector3.zero;
-        graph.GetComponent<BoxCollider>().size = new Vector2(graphContentRectTrans.rect.width, graphContentRectTrans.rect.height);
-        coordinateSystem.GetComponent<BoxCollider>().size = new Vector3(coordinateSystem.GetComponent<RectTransform>().rect.width * 2, coordinateSystem.GetComponent<RectTransform>().rect.height * 2, 1);
+
+        xAxisScrollRect.horizontalScrollbarSpacing = 0;
+        xAxisScrollRect.verticalScrollbarSpacing = 0;
+
+        xAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(viewportRect.width - 20, xAxisContent.GetComponent<RectTransform>().sizeDelta.y);
+        yAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(yAxisContent.GetComponent<RectTransform>().sizeDelta.x, viewportRect.height - 20);
+
+        graph.GetComponent<BoxCollider>().size = new Vector2(viewportRect.width - 20, viewportRect.height - 20);
+        coordinateSystem.GetComponent<BoxCollider>().size = new Vector3(coordinateSystem.GetComponent<RectTransform>().rect.width * 1.5f, coordinateSystem.GetComponent<RectTransform>().rect.height * 1.5f, 1);
 
         yAxisLabel.transform.localPosition += Vector3.left * 50;
         xAxisLabel.transform.localPosition += Vector3.down * 50;
 
         yAxisLabel.GetComponent<Text>().text = yLabel;
-        xAxisLabel.GetComponent<Text>().text = xLabel;
+        xAxisLabel.GetComponent<Text>().text = "Duration (Minutes : Seconds)";
 
         xStart = _xStart;
         xEnd = _xEnd;
@@ -693,15 +738,15 @@ public class Graph : MonoBehaviour {
         yAxisScrollRect.verticalNormalizedPosition = 0;
         yAxisScrollRect.scrollSensitivity = 0;
         GraphScrollRect.scrollSensitivity = 0;
-        GraphScrollRect.onValueChanged.AddListener(ListenerMethod);
+        // GraphScrollRect.onValueChanged.AddListener(ListenerMethod);
         GraphScrollRect.normalizedPosition = new Vector2(0, 0);
 
     }
-
-    public void ListenerMethod(Vector2 value) {
-        xAxisScrollRect.normalizedPosition = GraphScrollRect.normalizedPosition;
-        yAxisScrollRect.normalizedPosition = GraphScrollRect.normalizedPosition;
-    }
+    // for dragging of the content within the viewport of the scrollRect, to ensure axis follow where the graph is dragged
+    //public void ListenerMethod(Vector2 value) {
+    //    xAxisScrollRect.normalizedPosition = GraphScrollRect.normalizedPosition;
+    //    yAxisScrollRect.normalizedPosition = GraphScrollRect.normalizedPosition;
+    //}
 
     public void AddPoint(Vector3 screenPoint) {
         Vector3 worldPoint = Camera.main.ScreenToWorldPoint(screenPoint);
