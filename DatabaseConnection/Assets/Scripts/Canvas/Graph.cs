@@ -71,6 +71,7 @@ public class Graph : MonoBehaviour {
     private bool allowChangingPosition;
     private float tempXCoordinate;
     private float tempYCoordinate;
+    private bool placeHandleBack;
     #endregion
 
     #region Unity Methods
@@ -141,7 +142,10 @@ public class Graph : MonoBehaviour {
                     // if isn't the first or last point in the graph -> setup the coordinate system if left mouse is clicked
                     if (indexOfSliderMinipulated != 0 || indexOfSliderMinipulated != sortedGraphPointsList.Count - 1) {
 
-                        if (Input.GetMouseButtonUp(0) && mouseHold < 0.3) {
+                        if (Input.GetMouseButtonUp(0) && mouseHold < 0.5) {
+                            if (previousSliderHandleTransform != null) {
+                                previousSliderHandleTransform.GetComponent<Image>().color = currentlySelectedSlider.colors.normalColor;
+                            }
                             if (coordinateSystem.activeSelf) {
                                 coordinateSystem.SetActive(false);
                                 sliderHandleTransform.GetComponent<Image>().color = currentlySelectedSlider.colors.normalColor;
@@ -157,8 +161,8 @@ public class Graph : MonoBehaviour {
                                 coordinateSystem.transform.localScale = new Vector3(0.5f, 0.5f, 1);
                                 coordinateSystem.transform.position = sliderHandleTransform.position + new Vector3(0.3f, 0.3f, 0);
                                 coordinateSystem.transform.localPosition = new Vector3(coordinateSystem.transform.localPosition.x, coordinateSystem.transform.localPosition.y, 0);
-                                coordinateX.text = sortedGraphPointsList.Keys[sortedGraphPointsList.IndexOfValue(currentlySelectedSlider)].ToString();
-                                coordinateY.text = currentlySelectedSlider.value.ToString();
+                                coordinateX.text = Mathf.CeilToInt(sortedGraphPointsList.Keys[sortedGraphPointsList.IndexOfValue(currentlySelectedSlider)]).ToString();
+                                coordinateY.text = Mathf.CeilToInt(currentlySelectedSlider.value).ToString();
                                 tempXCoordinate = sortedGraphPointsList.Keys[sortedGraphPointsList.IndexOfValue(currentlySelectedSlider)];
                                 tempYCoordinate = currentlySelectedSlider.value;
                             }
@@ -214,25 +218,45 @@ public class Graph : MonoBehaviour {
                 }
                 // record the new time for the slider based on its x axis position
                 newSliderTime = (currentlySelectedSlider.transform.localPosition.x + (graph.GetComponent<RectTransform>().rect.width / 2)) / (graph.GetComponent<RectTransform>().rect.width / xScale);
-                // if the user isnt just holding the handle still
-                if (newSliderTime != previousFrameTime) {
-                    // ensure there isn't overwriting of existing points and if it isn't an end point slider
-                    if (!sortedGraphPointsList.ContainsKey(newSliderTime) && allowChangingPosition) {
-                        sortedGraphPointsList.RemoveAt(indexOfSliderMinipulated);
-                        sortedGraphPointsList.Add(newSliderTime, currentlySelectedSlider);
-                        indexOfSliderMinipulated = sortedGraphPointsList.IndexOfKey(newSliderTime);
-                    }
-                    previousFrameTime = newSliderTime;
+                if ((newSliderTime <= 0) || newSliderTime >= duration) {
+                    print("Crossover duration extremes detected");
+                    placeHandleBack = true;
                 }
-                currentlySelectedSlider.transform.position = newPos;
-                DrawLinkedPointLines();
-                DrawThresholds();
+                else {
+                    placeHandleBack = false;
+                    // if the user isnt just holding the handle still
+                    if (newSliderTime != previousFrameTime) {
+                        // ensure there isn't overwriting of existing points and if it isn't an end point slider
+                        if (!sortedGraphPointsList.ContainsKey(newSliderTime) && allowChangingPosition) {
+                            sortedGraphPointsList.RemoveAt(indexOfSliderMinipulated);
+                            sortedGraphPointsList.Add(newSliderTime, currentlySelectedSlider);
+                            indexOfSliderMinipulated = sortedGraphPointsList.IndexOfKey(newSliderTime);
+                        }
+
+                        previousFrameTime = newSliderTime;
+                    }
+                    currentlySelectedSlider.transform.position = newPos;
+                    DrawLinkedPointLines();
+                    DrawThresholds();
+                }
             }
             #endregion
         }
 
         // extra check incase user releases mouse click outside of graph area after beginning within graph area
         if (Input.GetMouseButtonUp(0)) {
+            if (placeHandleBack) {
+                currentlySelectedSlider.transform.localPosition = new Vector3(0, currentlySelectedSlider.transform.localPosition.y, currentlySelectedSlider.transform.localPosition.z);
+                newSliderTime = (currentlySelectedSlider.transform.localPosition.x + (graph.GetComponent<RectTransform>().rect.width / 2)) / (graph.GetComponent<RectTransform>().rect.width / xScale);
+                if (!sortedGraphPointsList.ContainsKey(newSliderTime) && allowChangingPosition) {
+                    sortedGraphPointsList.RemoveAt(indexOfSliderMinipulated);
+                    sortedGraphPointsList.Add(newSliderTime, currentlySelectedSlider);
+                    indexOfSliderMinipulated = sortedGraphPointsList.IndexOfKey(newSliderTime);
+                }
+
+                previousFrameTime = newSliderTime;
+                DrawLinkedPointLines();
+            }
             leftMouseButtonIsDown = false;
             mouseHold = 0;
 

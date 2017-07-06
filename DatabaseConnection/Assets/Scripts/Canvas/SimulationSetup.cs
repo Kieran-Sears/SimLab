@@ -332,8 +332,9 @@ public class SimulationSetup : MonoBehaviour {
 
             // put here code to make duration = to the conditions duration
             LoadCondition(presets.value);
-           // duration = 
-            //ChangeActiveGraphDurations();
+
+            duration = (int.Parse(simulationDurationMinutes.text) * 60) + int.Parse(simulationDurationSeconds.text);
+            ChangeActiveGraphDurations();
             print("IF STRING 1");
         }
         else {
