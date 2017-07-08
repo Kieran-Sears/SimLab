@@ -8,6 +8,8 @@ using System.Collections.Generic;
 public class TabManager : MonoBehaviour {
     public GameObject tabPrefab;
     public GameObject containerPrefab;
+    public GameObject activeTabs;
+    public GameObject inactiveTabs;
     public Graph activeGraph;
 
     public Dictionary<Toggle, Graph> tabGraphs = new Dictionary<Toggle, Graph>();
@@ -50,17 +52,3 @@ public class TabManager : MonoBehaviour {
 
 
 }
-
-// code for changing camelCase formatting to regular with capitol first letters
-//StringBuilder builder = new StringBuilder();
-//char[] letters = vitalName.ToCharArray();
-//for (int i = 0; i < letters.Length; i++) {
-//    if (i == 0) {
-//        letters[i] = Char.ToUpper(letters[i]);
-//    }
-//    if (Char.IsUpper(letters[i]) && builder.Length > 0) {
-//        builder.Append(' ');
-//    }
-//    builder.Append(letters[i]);
-//}
-//tab.transform.GetComponentInChildren<Text>().text = builder.ToString();

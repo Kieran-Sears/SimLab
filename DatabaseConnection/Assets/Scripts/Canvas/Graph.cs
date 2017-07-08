@@ -218,7 +218,7 @@ public class Graph : MonoBehaviour {
                 }
                 // record the new time for the slider based on its x axis position
                 newSliderTime = (currentlySelectedSlider.transform.localPosition.x + (graph.GetComponent<RectTransform>().rect.width / 2)) / (graph.GetComponent<RectTransform>().rect.width / xScale);
-                if ((newSliderTime <= 0) || newSliderTime >= duration) {
+                if (((newSliderTime <= 0) || newSliderTime >= duration) && !(indexOfSliderMinipulated == 0 || indexOfSliderMinipulated == sortedGraphPointsList.Count - 1)) {
                     print("Crossover duration extremes detected");
                     placeHandleBack = true;
                 }

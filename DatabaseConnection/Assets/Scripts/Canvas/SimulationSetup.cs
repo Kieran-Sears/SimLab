@@ -50,10 +50,10 @@ public class SimulationSetup : MonoBehaviour {
     public GameObject inactiveTabs;
     #endregion
 
-    private Drugs drugs;
-    private Vitals vitals;
-    private Equipment equipment;
-    private Graph graph;
+    public Drugs drugs;
+    public Vitals vitals;
+    public Equipment equipment;
+    public Graph graph;
 
     private bool replaceExistingGraphs;
     private bool someBool;
@@ -194,7 +194,7 @@ public class SimulationSetup : MonoBehaviour {
 
     void PopulateDrugs() {
         drugs = ExportManager.instance.Load("drugs") as Drugs;
-        foreach (Drug item in drugs.drugList) {
+        foreach (Drug item in drugs.drugs) {
             GameObject toggleObject = Instantiate(togglePrefab);
             toggleObject.transform.SetParent(drugsChosen.transform);
             toggleObject.transform.localScale = Vector3.one;
@@ -439,7 +439,6 @@ public class SimulationSetup : MonoBehaviour {
         }
     }
 
-
     public void SelectMaxVitalValue() {
         Error.instance.informPanel.SetActive(false);
         vitalMax.Select();
@@ -503,34 +502,6 @@ public class SimulationSetup : MonoBehaviour {
         // add checking here for is duplicate exists. If so then overwrite the existing vital
     }
 
-    public void AddDrug() {
-        Drug drug = new Drug();
-        //drug.nodeID = ; //TODO assign ID based on Id's already present
-        drug.name = drugName.text;
-        drug.units = drugUnit.text;
-        drug.max = float.Parse(drugMax.text);
-        drug.min = float.Parse(drugMin.text);
-        drug.duration = float.Parse(drugDuration.text);
-
-        for (int i = 0; i < drugVitalsAffected.transform.childCount; i++) {
-            drug.vitals.Add(drugVitalsAffected.transform.GetChild(i).name);
-        }
-
-        for (int i = 0; i < drugAdministrations.transform.childCount; i++) {
-            drug.administrations.Add(drugAdministrations.transform.GetChild(i).name);
-        }
-
-        newDrugPanel.SetActive(false);
-
-        GameObject toggleObject = Instantiate(togglePrefab);
-        toggleObject.transform.SetParent(drugsChosen.transform);
-        toggleObject.transform.localScale = Vector3.one;
-        toggleObject.transform.localPosition = Vector3.zero;
-        toggleObject.transform.GetChild(1).GetComponent<Text>().text = drug.name;
-        Toggle toggle = toggleObject.GetComponent<Toggle>();
-        toggle.name = drug.name;
-    }
-
     public void loadChosenVital(bool chosen, int index, string vitalName) {
         tabs.transform.GetComponent<ToggleGroup>().SetAllTogglesOff();
         if (chosen) {
@@ -589,6 +560,7 @@ public class SimulationSetup : MonoBehaviour {
 
     public void NewDrugPanelToggleActive() {
         newDrugPanel.SetActive(!newDrugPanel.activeInHierarchy);
+        tabs.GetComponent<ToggleGroup>().SetAllTogglesOff();
     }
 
     public Vital GetVital(string vitalName) {

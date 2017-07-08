@@ -6,15 +6,11 @@ using System.Collections.Generic;
 [XmlRoot("Drugs")]
 [Serializable]
 public class Drugs {
-    [XmlArray("DrugsList")]
+    [XmlArray("DrugList")]
     [XmlArrayItem("Drug")]
-    public List<Drug> drugList = new List<Drug>();
-
-
+    public List<Drug> drugs = new List<Drug>();
 }
 
-
-[XmlRoot("frame")]
 [Serializable]
 public class Drug {
 
@@ -23,6 +19,18 @@ public class Drug {
 
     [XmlElement("NodeID")]
     public int nodeID { get; set; }
+
+    [XmlArray("Administrations")]
+    [XmlArrayItem("Administration")]
+    public List<Administration> administrations = new List<Administration>();
+}
+
+
+[XmlRoot("Administration")]
+[Serializable]
+public class Administration {
+    [XmlElement("Name")]
+    public string name { get; set; }
 
     [XmlElement("Units")]
     public string units { get; set; }
@@ -36,12 +44,9 @@ public class Drug {
     [XmlElement("Duration")]
     public float duration { get; set; }
 
-    [XmlArray("Vitals")]
-    [XmlArrayItem("Vital")]
-    public List<string> vitals = new List<string>();
-
-    [XmlArray("Administrations")]
-    [XmlArrayItem("Administration")]
-    public List<string> administrations = new List<string>();
+    // list of vital timelines
+    [XmlArray("VitalsData")]
+    [XmlArrayItem("VitalData")]
+    public List<VitalData> vitalsData = new List<VitalData>();
 
 }

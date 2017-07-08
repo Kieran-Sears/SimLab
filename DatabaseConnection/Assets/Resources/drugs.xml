@@ -1,25 +1,69 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Drugs>
-	<DrugsList>
-		<Drug name="adrenaline">
-			<NodeID>1</NodeID>
-			<Units>
-			<Unit>2.25g/100mL</Unit>
-			<Unit>2.25mg/mL</Unit>
-			<Unit>
-			ml of a 2.25% solution 
-			in 2.0 ml normal saline
-			</Unit>
-			</Units>
-			<Min>0.10</Min>
-			<Max>1.00</Max>
-			<Duration>300</Duration>
-			<Vitals> 
-			<Vital>heartRate</Vital> 
-			</Vitals>
-			<Administrations>
-		     <Administration>Intravenous</Administration>
-	 		</Administrations>
-		</Drug>
-	</DrugsList>
+  <DrugList>
+    <Drug name="adrenaline">
+      <NodeID>1</NodeID>
+      <Administrations>
+        <Administration>
+          <Name>Oral</Name>
+          <Units>
+            <Unit>2.25g/100mL</Unit>
+            <Unit>2.25mg/mL</Unit>
+            <Unit>
+              ml of a 2.25% solution
+              in 2.0 ml normal saline
+            </Unit>
+          </Units>
+          <Min>0.10</Min>
+          <Max>1.00</Max>
+          <Duration>100</Duration>
+          <VitalsData>
+            <VitalData>
+              <Vital name="breathingRate">
+                <NodeID>0</NodeID>
+                <Units>bpm</Units>
+                <Min>0</Min>
+                <Max>100</Max>
+              </Vital>
+              <TimeLine>
+                <VitalValues>
+                  <Value second="0">
+                    <Value>50</Value>
+                  </Value>
+                  <Value second="16.8685551">
+                    <Value>33.49264</Value>
+                  </Value>
+                  <Value second="28.2123013">
+                    <Value>9.69954</Value>
+                  </Value>
+                  <Value second="47.993557">
+                    <Value>3.837476</Value>
+                  </Value>
+                  <Value second="60">
+                    <Value>50</Value>
+                  </Value>
+                </VitalValues>
+                <UpperThreshold>
+                  <Value second="0">
+                    <Value>25</Value>
+                  </Value>
+                  <Value second="60">
+                    <Value>25</Value>
+                  </Value>
+                </UpperThreshold>
+                <LowerThreshold>
+                  <Value second="0">
+                    <Value>75</Value>
+                  </Value>
+                  <Value second="60">
+                    <Value>75</Value>
+                  </Value>
+                </LowerThreshold>
+              </TimeLine>
+            </VitalData>
+          </VitalsData>
+        </Administration>
+      </Administrations>
+    </Drug>
+  </DrugList>
 </Drugs>
