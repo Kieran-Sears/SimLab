@@ -84,6 +84,7 @@
     <Compile Include="Assets\Scripts\Canvas\Graph.cs" />
     <Compile Include="Assets\Scripts\Canvas\KeyboardCoordinate.cs" />
     <Compile Include="Assets\Scripts\Canvas\NoScrollRect.cs" />
+    <Compile Include="Assets\Scripts\Canvas\RightClickMenu.cs" />
     <Compile Include="Assets\Scripts\Canvas\Save.cs" />
     <Compile Include="Assets\Scripts\Canvas\SimulationSetup.cs" />
     <Compile Include="Assets\Scripts\Canvas\Toolbar.cs" />

@@ -1,5 +1,4 @@
 ﻿using System;
-using UnityEngine.Events;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,6 +8,7 @@ public class AdminSetup : MonoBehaviour {
     public TabManager tabManager;
     public GameObject togglePrefab;
     [Space(10)]
+    public InputField units;
     public InputField drugMin;
     public InputField drugMax;
     public InputField drugDurationMinutes;
@@ -19,13 +19,13 @@ public class AdminSetup : MonoBehaviour {
     private Graph graph;
     private int duration = -1;
     private bool replaceExistingGraphs;
-   // private bool someBool;
+    // private bool someBool; // cant recall what this is for
 
     public void Start() {
         PopulateVitals();
     }
 
-    void PopulateVitals() { 
+    void PopulateVitals() {
         foreach (Vital vital in SimulationSetup.instance.vitals.vitalList) {
             GameObject toggleObject = Instantiate(togglePrefab);
             toggleObject.transform.SetParent(vitalsChosen.transform);
@@ -217,16 +217,6 @@ public class AdminSetup : MonoBehaviour {
                     graph.AddPoint(0, halfValue);
                     graph.AddPoint(duration, halfValue);
                 }
-                if (graph.pointsUpperThreshold.Count == 0) {
-                    int quaterValue = (int)Math.Ceiling(((SimulationSetup.instance.vitals.vitalList[index].max - SimulationSetup.instance.vitals.vitalList[index].min) / 4) + SimulationSetup.instance.vitals.vitalList[index].min);
-                    graph.AddThresholdPointUpper(0, quaterValue);
-                    graph.AddThresholdPointUpper(duration, quaterValue);
-                }
-                if (graph.pointsLowerThreshold.Count == 0) {
-                    int threeQuaterValue = (int)Math.Ceiling((((SimulationSetup.instance.vitals.vitalList[index].max - SimulationSetup.instance.vitals.vitalList[index].min) / 4) * 3) + SimulationSetup.instance.vitals.vitalList[index].min);
-                    graph.AddThresholdPointLower(0, threeQuaterValue);
-                    graph.AddThresholdPointLower(duration, threeQuaterValue);
-                }
                 graph.gameObject.SetActive(false);
                 tabManager.SwitchTab();
             }
@@ -247,7 +237,89 @@ public class AdminSetup : MonoBehaviour {
         }
     }
 
-    public void GetAdministration() {
+    public Administration GetAdministration() {
 
+        if (drugMax.text.Length == 0 || drugMin.text.Length == 0) {
+            Error.instance.informMessageText.text = "Enter max and min dose values for "+ gameObject.name +".";
+            Error.instance.informOkButton.onClick.AddListener(Error.instance.DeactivateErrorInformPanel);
+            Error.instance.informPanel.SetActive(true);
+            return null;
+        }
+
+        if (units.text.Length == 0) {
+            Error.instance.informMessageText.text = "Enter units for " + gameObject.name + ".";
+            Error.instance.informOkButton.onClick.AddListener(Error.instance.DeactivateErrorInformPanel);
+            Error.instance.informPanel.SetActive(true);
+            return null;
+        }
+
+        if (duration == -1) {
+            Error.instance.informMessageText.text = "Enter a duration for " + gameObject.name + ".";
+            Error.instance.informOkButton.onClick.AddListener(Error.instance.DeactivateErrorInformPanel);
+            Error.instance.informPanel.SetActive(true);
+            return null;
+        }
+
+        Administration administration = new Administration();
+        administration.duration = duration;
+
+        VitalData vitalData;
+        TimeLine timeLine;
+        List<Value> values;
+        Value value;
+
+        for (int j = 0; j < vitalsChosen.transform.childCount; j++) {
+
+            Toggle toggle = vitalsChosen.transform.GetChild(j).GetComponent<Toggle>();
+
+            if (toggle.isOn) {
+
+                string vitalName = toggle.gameObject.name;
+
+                GameObject graphObject = tabManager.contentArea.transform.FindChild(vitalName).gameObject;
+                Graph graph = tabManager.contentArea.transform.FindChild(vitalName).GetComponent<Graph>();
+
+                timeLine = new TimeLine();
+
+                values = new List<Value>();
+                foreach (KeyValuePair<float, Slider> item in graph.sortedGraphPointsList) {
+                    value = new Value();
+                    value.second = item.Key;
+                    value.value = item.Value.value;
+                    values.Add(value);
+                }
+                timeLine.vitalValues = values;
+
+                values = new List<Value>();
+                foreach (KeyValuePair<float, Slider> item in graph.pointsUpperThreshold) {
+                    value = new Value();
+                    value.second = item.Key;
+                    value.value = item.Value.value;
+                    values.Add(value);
+                }
+                timeLine.upperThresholdValues = values;
+
+                values = new List<Value>();
+                foreach (KeyValuePair<float, Slider> item in graph.pointsLowerThreshold) {
+                    value = new Value();
+                    value.second = item.Key;
+                    value.value = item.Value.value;
+                    values.Add(value);
+                }
+                timeLine.lowerThresholdValues = values;
+
+                vitalData = new VitalData();
+                vitalData.vital = SimulationSetup.instance.GetVital(vitalName);
+                vitalData.timeline = timeLine;
+
+                administration.vitalsData.Add(vitalData);
+            }
+        }
+        administration.duration = duration;
+        administration.max = float.Parse(drugMax.text);
+        administration.min = float.Parse(drugMin.text);
+        administration.units = units.text;
+        administration.name = name;
+        return administration;
     }
 }

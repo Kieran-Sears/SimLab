@@ -69,8 +69,8 @@ public class Graph : MonoBehaviour {
     private int indexOfSliderMinipulated;
     private float newSliderTime;
     private bool allowChangingPosition;
-    private float tempXCoordinate;
-    private float tempYCoordinate;
+   // private float tempXCoordinate;
+   // private float tempYCoordinate;
     private bool placeHandleBack;
     #endregion
 
@@ -163,8 +163,8 @@ public class Graph : MonoBehaviour {
                                 coordinateSystem.transform.localPosition = new Vector3(coordinateSystem.transform.localPosition.x, coordinateSystem.transform.localPosition.y, 0);
                                 coordinateX.text = Mathf.CeilToInt(sortedGraphPointsList.Keys[sortedGraphPointsList.IndexOfValue(currentlySelectedSlider)]).ToString();
                                 coordinateY.text = Mathf.CeilToInt(currentlySelectedSlider.value).ToString();
-                                tempXCoordinate = sortedGraphPointsList.Keys[sortedGraphPointsList.IndexOfValue(currentlySelectedSlider)];
-                                tempYCoordinate = currentlySelectedSlider.value;
+                               // tempXCoordinate = sortedGraphPointsList.Keys[sortedGraphPointsList.IndexOfValue(currentlySelectedSlider)];
+                               // tempYCoordinate = currentlySelectedSlider.value;
                             }
                             mouseHold = 0;
                         }
@@ -177,10 +177,13 @@ public class Graph : MonoBehaviour {
 
                     // if right click detected and not first or last graph point then delete point
                     if (Input.GetMouseButtonUp(1)) {
-                        if (indexOfSliderMinipulated == -1 || indexOfSliderMinipulated == 0 || indexOfSliderMinipulated == sortedGraphPointsList.Count - 1) return;
-                        sortedGraphPointsList.RemoveAt(indexOfSliderMinipulated);
-                        Destroy(currentlySelectedSlider.gameObject);
-                        DrawLinkedPointLines();
+
+                           RightClickMenu.instance.SetMenuPosition(Input.mousePosition);
+                        //RightClickMenu.instance.SetMenuPosition(Input.mousePosition);
+                        //if (indexOfSliderMinipulated == -1 || indexOfSliderMinipulated == 0 || indexOfSliderMinipulated == sortedGraphPointsList.Count - 1) return;
+                        //sortedGraphPointsList.RemoveAt(indexOfSliderMinipulated);
+                        //Destroy(currentlySelectedSlider.gameObject);
+                        //DrawLinkedPointLines();
                     }
 
                 }

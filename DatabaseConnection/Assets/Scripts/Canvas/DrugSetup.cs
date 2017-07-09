@@ -1,20 +1,20 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.UI;
 
 public class DrugSetup : MonoBehaviour {
 
     public TabManager tabManager;
     public GameObject togglePrefab;
+    public InputField drugName;
     public GameObject administrationsChosen;
-
-    private AdminSetup administrationSetup;
 
     public void Start() {
         PopulateAdministrations();
     }
 
     void PopulateAdministrations() {
-      Drugs drugs = ExportManager.instance.Load("drugs") as Drugs;
+        Drugs drugs = ExportManager.instance.Load("drugs") as Drugs;
         foreach (Drug drug in drugs.drugs) {
             print("Exploring drug " + drug.name + " for administrations");
             foreach (Administration admin in drug.administrations) {
@@ -36,9 +36,7 @@ public class DrugSetup : MonoBehaviour {
     }
 
     public void LoadChosenAdministration(bool chosen, int index, string administrationName) {
-        print(tabManager);
-        print(tabManager.activeTabs);
-        print(tabManager.activeTabs.GetComponent<ToggleGroup>());
+        AdminSetup administrationSetup;
         tabManager.activeTabs.GetComponent<ToggleGroup>().SetAllTogglesOff();
         if (chosen) {
             Transform vitalTrans = tabManager.transform.FindChild(administrationName);
@@ -66,13 +64,38 @@ public class DrugSetup : MonoBehaviour {
     }
 
     public void AddNewDrug() {
-        for (int i = 0; i < tabManager.contentArea.transform.childCount; i++) {
-            tabManager.contentArea.transform.GetChild(i);
-            Administration administration = new Administration();
-            administration.duration = 
 
+        if (drugName.text.Length == 0) {
+            Error.instance.informMessageText.text = "Enter a name for the drug.";
+            Error.instance.informOkButton.onClick.AddListener(Error.instance.DeactivateErrorInformPanel);
+            Error.instance.informPanel.SetActive(true);
+            return;
         }
+
         Drug drug = new Drug();
-        drug.administrations.Add
+        List<Administration> administrations = new List<Administration>();
+
+        for (int i = 0; i < tabManager.contentArea.transform.childCount; i++) {
+            AdminSetup admin = tabManager.contentArea.transform.GetChild(i).GetComponent<AdminSetup>();
+            Administration administration = admin.GetAdministration();
+            if (administration == null) {
+                return;
+            }
+            else {
+                administrations.Add(admin.GetAdministration());
+            }
+        }
+        drug.administrations = administrations;
+        drug.name = drugName.text;
+        SimulationSetup.instance.drugs.drugs.Add(drug);
+
+        GameObject toggleObject = Instantiate(togglePrefab);
+        toggleObject.transform.SetParent(SimulationSetup.instance.drugsChosen.transform);
+        toggleObject.transform.localScale = Vector3.one;
+        toggleObject.transform.localPosition = Vector3.zero;
+        toggleObject.transform.GetChild(1).GetComponent<Text>().text = drug.name;
+        Toggle toggle = toggleObject.GetComponent<Toggle>();
+        toggle.name = drug.name;
+        SimulationSetup.instance.NewDrugPanelToggleActive();
     }
 }
