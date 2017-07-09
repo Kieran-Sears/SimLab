@@ -716,30 +716,30 @@ public class Graph : MonoBehaviour {
 
     #region Public Methods
     public void GenerateGraph(int _xStart, int _xEnd, int _yStart, int _yEnd, string yLabel) {
-
-        Rect viewportRect = graphViewport.GetComponent<RectTransform>().rect;
-
         print("generating graph " + name);
-
+        // using the scrollview viewport as the basis for the graphs size
+        Rect viewportRect = graphViewport.GetComponent<RectTransform>().rect;
+        // "-20" is for padding so that there is no clipping at the edges of the graph for graphlines or numbers
         graphContentRectTrans = graphContent.GetComponent<RectTransform>();
         graphContentRectTrans.sizeDelta = new Vector2(viewportRect.width - 20, viewportRect.height - 20);
         graphContentRectTrans.localPosition = Vector3.zero;
 
-        xAxisScrollRect.horizontalScrollbarSpacing = 0;
-        xAxisScrollRect.verticalScrollbarSpacing = 0;
-
+        // resizing both axis to account for any changes in the new size
         xAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(viewportRect.width - 20, xAxisContent.GetComponent<RectTransform>().sizeDelta.y);
         yAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(yAxisContent.GetComponent<RectTransform>().sizeDelta.x, viewportRect.height - 20);
 
+        // adjusting the collider which will detect mouseover for the graph in the Update function
         graph.GetComponent<BoxCollider>().size = new Vector2(viewportRect.width - 20, viewportRect.height - 20);
         coordinateSystem.GetComponent<BoxCollider>().size = new Vector3(coordinateSystem.GetComponent<RectTransform>().rect.width * 1.5f, coordinateSystem.GetComponent<RectTransform>().rect.height * 1.5f, 1);
 
+        // adjusting the placement of the axis labels
         yAxisLabel.transform.localPosition += Vector3.left * 50;
         xAxisLabel.transform.localPosition += Vector3.down * 50;
-
+        // as well as label text
         yAxisLabel.GetComponent<Text>().text = yLabel;
         xAxisLabel.GetComponent<Text>().text = "Duration (Minutes : Seconds)";
 
+        // record of initial values based on time (x) against units (y)
         xStart = _xStart;
         xEnd = _xEnd;
         yStart = _yStart;
@@ -747,25 +747,38 @@ public class Graph : MonoBehaviour {
         xScale = _xEnd - _xStart;
         yScale = _yEnd - _yStart;
 
+        // duration set to difference, slightly redundant but in place in case the simulation were 
+        // ever to start from anything other than 0
         duration = xScale;
 
+        // placement of all axis markers
         InitialiseXScale();
         InitialiseYScale();
 
+        // creation of gridlines in seporate gameobject which shares the same size and position properties as the
+        // gameobject which will hold the vital values via points along the graph.
         DrawGrid();
 
+        // set all axis markers to inactive other than the ones which make sense to show
+        // based on the size and scale of the graph
         LayoutXScale();
         LayoutYScale();
 
+        // this ensures there are no descrepencies between the axis scrollareas and the main
+        // graph area scroll rect
         xAxisScrollRect.horizontalNormalizedPosition = 0;
         xAxisScrollRect.scrollSensitivity = 0;
         yAxisScrollRect.verticalNormalizedPosition = 0;
         yAxisScrollRect.scrollSensitivity = 0;
         GraphScrollRect.scrollSensitivity = 0;
-        // GraphScrollRect.onValueChanged.AddListener(ListenerMethod);
         GraphScrollRect.normalizedPosition = new Vector2(0, 0);
 
+        // functionality which allows the axis markers and the graph movement to remain syncronised
+        // (providing the sizes of each are the exact same)
+        // GraphScrollRect.onValueChanged.AddListener(ListenerMethod);
+
     }
+
     // for dragging of the content within the viewport of the scrollRect, to ensure axis follow where the graph is dragged
     //public void ListenerMethod(Vector2 value) {
     //    xAxisScrollRect.normalizedPosition = GraphScrollRect.normalizedPosition;

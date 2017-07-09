@@ -8,11 +8,8 @@ public class SimulationSetup : MonoBehaviour {
 
     public static SimulationSetup instance { get; private set; }
 
-    public TabManager tabs;
-    public GameObject tableEntryPrefab;
+    public TabManager tabManager;
     public GameObject togglePrefab;
-    public GameObject graphs;
-
     public Condition condition;
 
     #region Condition
@@ -44,10 +41,6 @@ public class SimulationSetup : MonoBehaviour {
     public InputField drugDuration;
     public GameObject drugVitalsAffected;
     public GameObject drugAdministrations;
-    #endregion
-
-    #region Bins
-    public GameObject inactiveTabs;
     #endregion
 
     public Drugs drugs;
@@ -241,13 +234,13 @@ public class SimulationSetup : MonoBehaviour {
 
                 string vitalName = toggle.gameObject.name;
 
-                tabs.GetComponent<TabManager>().tabGraphs.Remove(toggle);
-                tabs.GetComponent<ToggleGroup>().UnregisterToggle(toggle);
+                tabManager.GetComponent<TabManager>().tabGraphs.Remove(toggle);
+                tabManager.GetComponent<ToggleGroup>().UnregisterToggle(toggle);
 
-                Destroy(tabs.transform.FindChild(vitalName).gameObject);
+                Destroy(tabManager.transform.FindChild(vitalName).gameObject);
 
-                GameObject graphObject = graphs.transform.FindChild(vitalName).gameObject;
-                Graph graph = graphs.transform.FindChild(vitalName).GetComponent<Graph>();
+                GameObject graphObject = tabManager.transform.FindChild(vitalName).gameObject;
+                Graph graph = tabManager.transform.FindChild(vitalName).GetComponent<Graph>();
 
                 SortedList<float, Slider> sortedGraphPointsList = graph.sortedGraphPointsList;
                 SortedList<float, Slider> pointsUpperThreshold = graph.pointsUpperThreshold;
@@ -260,7 +253,7 @@ public class SimulationSetup : MonoBehaviour {
 
                 Destroy(graphObject);
 
-                graph = tabs.GenerateTab(vitalName);
+                graph = tabManager.GenerateTab(vitalName).GetComponent<Graph>();
                 graph.GenerateGraph(0, duration, vitalMin, vitalMax, vitalUnits);
 
                 toggle.onValueChanged.RemoveAllListeners();
@@ -401,10 +394,10 @@ public class SimulationSetup : MonoBehaviour {
 
         bool firstInList = true;
         foreach (VitalData vitalData in condition.vitalsData) {
-            if (!graphs.transform.FindChild(vitalData.vital.name)) {
+            if (!tabManager.transform.FindChild(vitalData.vital.name)) {
                 Vital vital = vitalData.vital;
 
-                graph = tabs.GenerateTab(vital.name);
+                graph = tabManager.GenerateTab(vital.name).GetComponent<Graph>();
                 graph.GenerateGraph(0, duration, (int)Math.Ceiling(vital.min), (int)Math.Ceiling(vital.max), vital.units);
 
                 // TODO prompt user to see if they want vitals in the preset they dont have
@@ -455,7 +448,7 @@ public class SimulationSetup : MonoBehaviour {
             return;
         }
 
-        Transform vitalTrans = graphs.transform.FindChild(vitalName.text);
+        Transform vitalTrans = tabManager.transform.FindChild(vitalName.text);
 
         if (vitalTrans != null) {
             Destroy(vitalTrans.gameObject);
@@ -503,11 +496,11 @@ public class SimulationSetup : MonoBehaviour {
     }
 
     public void loadChosenVital(bool chosen, int index, string vitalName) {
-        tabs.transform.GetComponent<ToggleGroup>().SetAllTogglesOff();
+        tabManager.activeTabs.transform.GetComponent<ToggleGroup>().SetAllTogglesOff();
         if (chosen) {
 
-            Transform vitalTrans = graphs.transform.FindChild(vitalName);
-            Transform vitalTab = inactiveTabs.transform.FindChild(vitalName);
+            Transform vitalTrans = tabManager.transform.FindChild(vitalName);
+            Transform vitalTab = tabManager.inactiveTabs.transform.FindChild(vitalName);
 
             if (vitalTrans == null || vitalTab == null) {
                 if (duration == -1) {
@@ -517,7 +510,7 @@ public class SimulationSetup : MonoBehaviour {
                     vitalsChosen.transform.GetChild(index).GetComponent<Toggle>().isOn = false;
                     return;
                 }
-                graph = tabs.GenerateTab(vitals.vitalList[index].name);
+                graph = tabManager.GenerateTab(vitals.vitalList[index].name).GetComponent<Graph>();
                 graph.GenerateGraph(0, duration, (int)Math.Ceiling(vitals.vitalList[index].min), (int)Math.Ceiling(vitals.vitalList[index].max), vitals.vitalList[index].units);
                 if (graph.sortedGraphPointsList.Count == 0) {
                     int halfValue = (int)Math.Ceiling(((vitals.vitalList[index].max - vitals.vitalList[index].min) / 2) + vitals.vitalList[index].min);
@@ -535,21 +528,21 @@ public class SimulationSetup : MonoBehaviour {
                     graph.AddThresholdPointLower(duration, threeQuaterValue);
                 }
                 graph.gameObject.SetActive(false);
-                tabs.SwitchTab();
+                tabManager.SwitchTab();
             }
             else {
                 vitalTrans.gameObject.SetActive(true);
-                vitalTab.SetParent(tabs.transform);
+                vitalTab.SetParent(tabManager.transform);
                 vitalTab.gameObject.SetActive(true);
-                tabs.SwitchTab();
+                tabManager.SwitchTab();
             }
         }
         else {
-            Transform tab = tabs.transform.FindChild(vitalName);
+            Transform tab = tabManager.transform.FindChild(vitalName);
             if (tab != null) {
                 tab.gameObject.SetActive(false);
-                tab.SetParent(inactiveTabs.transform);
-                graphs.transform.FindChild(vitalName).gameObject.SetActive(false);
+                tab.SetParent(tabManager.inactiveTabs.transform);
+                tabManager.transform.FindChild(vitalName).gameObject.SetActive(false);
             }
         }
     }
@@ -560,7 +553,7 @@ public class SimulationSetup : MonoBehaviour {
 
     public void NewDrugPanelToggleActive() {
         newDrugPanel.SetActive(!newDrugPanel.activeInHierarchy);
-        tabs.GetComponent<ToggleGroup>().SetAllTogglesOff();
+        tabManager.activeTabs.GetComponent<ToggleGroup>().SetAllTogglesOff();
     }
 
     public Vital GetVital(string vitalName) {

@@ -75,9 +75,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\AdminSetup.cs" />
-    <Compile Include="Assets\DrugSetup.cs" />
+    <Compile Include="Assets\Scripts\Canvas\AdminSetup.cs" />
     <Compile Include="Assets\Scripts\Canvas\CusorSensor.cs" />
+    <Compile Include="Assets\Scripts\Canvas\DrugSetup.cs" />
     <Compile Include="Assets\Scripts\Canvas\Error.cs" />
     <Compile Include="Assets\Scripts\Canvas\ErrorInput.cs" />
     <Compile Include="Assets\Scripts\Canvas\FileDropdownOption.cs" />
@@ -98,7 +98,6 @@
     <Compile Include="Assets\Scripts\System\Equipment.cs" />
     <Compile Include="Assets\Scripts\System\Vitals.cs" />
     <Compile Include="Assets\Scripts\System\VitalsDatum.cs" />
-    <Compile Include="Assets\TabController.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Resources\Conditions\newCondition2.xml" />

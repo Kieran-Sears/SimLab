@@ -43,8 +43,8 @@ public class Save : MonoBehaviour {
 
                 string vitalName = toggle.gameObject.name;
 
-                GameObject graphObject = SimulationSetup.instance.graphs.transform.FindChild(vitalName).gameObject;
-                Graph graph = SimulationSetup.instance.graphs.transform.FindChild(vitalName).GetComponent<Graph>();
+                GameObject graphObject = SimulationSetup.instance.tabManager.transform.FindChild(vitalName).gameObject;
+                Graph graph = SimulationSetup.instance.tabManager.transform.FindChild(vitalName).GetComponent<Graph>();
 
                 timeline = new TimeLine();
 

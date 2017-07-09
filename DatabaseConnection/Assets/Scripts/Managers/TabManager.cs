@@ -1,51 +1,50 @@
-﻿using System;
-using System.Text;
-using System.Linq;
+﻿using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 
 public class TabManager : MonoBehaviour {
     public GameObject tabPrefab;
-    public GameObject containerPrefab;
+    public GameObject componentPrefab;
     public GameObject activeTabs;
     public GameObject inactiveTabs;
-    public Graph activeGraph;
+    public GameObject contentArea;
+    public GameObject activeComponent;
 
-    public Dictionary<Toggle, Graph> tabGraphs = new Dictionary<Toggle, Graph>();
+    public Dictionary<Toggle, GameObject> tabGraphs = new Dictionary<Toggle, GameObject>();
 
     public void SwitchTab() {
-        foreach (Graph item in tabGraphs.Values) {
+        foreach (GameObject item in tabGraphs.Values) {
             if (item != null) {
-                item.gameObject.SetActive(false);
+                item.SetActive(false);
             }
         }
-        Toggle selected = GetComponent<ToggleGroup>().ActiveToggles().FirstOrDefault();
+        Toggle selected = activeTabs.GetComponent<ToggleGroup>().ActiveToggles().FirstOrDefault();
         if (selected == null) {
             print("no tags selected to switch to! \n\nLine 22, TabManager");
             return;
         } 
-        activeGraph = tabGraphs[selected];
-        activeGraph.gameObject.SetActive(true);
+        activeComponent = tabGraphs[selected];
+        activeComponent.SetActive(true);
     }
 
-    public Graph GenerateTab(string vitalName) {
-        GameObject tab = Instantiate(tabPrefab, transform);
+    public GameObject GenerateTab(string vitalName) {
+        GameObject tab = Instantiate(tabPrefab, activeTabs.transform);
         tab.transform.localScale = Vector3.one;
         tab.transform.localPosition = Vector3.one;
         tab.gameObject.name = vitalName;
         tab.transform.GetComponentInChildren<Text>().text = vitalName;
-        GameObject graph = Instantiate(containerPrefab) as GameObject;
-        graph.name = vitalName;
-        RectTransform graphTrans = graph.GetComponent<RectTransform>();
-        graphTrans.SetParent(transform.parent);
-        graphTrans.sizeDelta = transform.parent.GetComponent<RectTransform>().sizeDelta;
-        graphTrans.position = transform.parent.transform.position;
-        graphTrans.localScale = Vector3.one;
+        GameObject component = Instantiate(componentPrefab) as GameObject;
+        component.name = vitalName;
+        RectTransform componentTrans = component.GetComponent<RectTransform>();
+        componentTrans.SetParent(contentArea.transform);
+        componentTrans.sizeDelta = transform.GetComponent<RectTransform>().sizeDelta;
+        componentTrans.position = transform.transform.position;
+        componentTrans.localScale = Vector3.one;
         Toggle toggle = tab.GetComponent<Toggle>();
-        tabGraphs.Add(toggle, graph.GetComponent<Graph>());
+        tabGraphs.Add(toggle, component);
         toggle.onValueChanged.AddListener((bool toggled) => { SwitchTab(); });
-        toggle.group = GetComponent<ToggleGroup>();
+        toggle.group = activeTabs.GetComponent<ToggleGroup>();
         toggle.isOn = false;
         return tabGraphs[toggle];
     }
