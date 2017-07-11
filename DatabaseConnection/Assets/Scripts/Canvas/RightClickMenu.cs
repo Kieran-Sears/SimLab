@@ -1,12 +1,13 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
+
 
 public class RightClickMenu : MonoBehaviour {
 
     public static RightClickMenu instance { get; private set; }
 
     public GameObject child;
+    public GameObject button;
+
 
     private void Start() {
         if (instance) {
@@ -27,7 +28,13 @@ public class RightClickMenu : MonoBehaviour {
         transform.localPosition = new Vector3(transform.localPosition.x, transform.localPosition.y, - 900);
     }
 
-    public void PopulateOptions() {
+  
 
-    }
+
+
+
+
+
+
+
 }

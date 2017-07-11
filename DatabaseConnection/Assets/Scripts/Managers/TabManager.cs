@@ -39,7 +39,7 @@ public class TabManager : MonoBehaviour {
         RectTransform componentTrans = component.GetComponent<RectTransform>();
         componentTrans.SetParent(contentArea.transform);
         componentTrans.sizeDelta = transform.GetComponent<RectTransform>().sizeDelta;
-        componentTrans.position = transform.transform.position;
+        componentTrans.position = contentArea.transform.position;
         componentTrans.localScale = Vector3.one;
         Toggle toggle = tab.GetComponent<Toggle>();
         tabGraphs.Add(toggle, component);

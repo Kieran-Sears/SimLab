@@ -235,12 +235,12 @@ public class SimulationSetup : MonoBehaviour {
                 string vitalName = toggle.gameObject.name;
 
                 tabManager.GetComponent<TabManager>().tabGraphs.Remove(toggle);
-                tabManager.GetComponent<ToggleGroup>().UnregisterToggle(toggle);
+                tabManager.activeTabs.GetComponent<ToggleGroup>().UnregisterToggle(toggle); // TODO Activetabs 
 
-                Destroy(tabManager.transform.FindChild(vitalName).gameObject);
+                Destroy(tabManager.activeTabs.transform.FindChild(vitalName).gameObject);
 
-                GameObject graphObject = tabManager.transform.FindChild(vitalName).gameObject;
-                Graph graph = tabManager.transform.FindChild(vitalName).GetComponent<Graph>();
+                GameObject graphObject = tabManager.contentArea.transform.FindChild(vitalName).gameObject;
+                Graph graph = tabManager.contentArea.transform.FindChild(vitalName).GetComponent<Graph>();
 
                 SortedList<float, Slider> sortedGraphPointsList = graph.sortedGraphPointsList;
                 SortedList<float, Slider> pointsUpperThreshold = graph.pointsUpperThreshold;
@@ -251,10 +251,12 @@ public class SimulationSetup : MonoBehaviour {
 
                 string vitalUnits = graph.yAxisLabel.GetComponent<Text>().text;
 
-                Destroy(graphObject);
+               // Destroy(graphObject);
 
                 graph = tabManager.GenerateTab(vitalName).GetComponent<Graph>();
                 graph.GenerateGraph(0, duration, vitalMin, vitalMax, vitalUnits);
+
+                // place here listener for graph right click menu
 
                 toggle.onValueChanged.RemoveAllListeners();
                 toggle.isOn = true;
@@ -400,6 +402,8 @@ public class SimulationSetup : MonoBehaviour {
                 graph = tabManager.GenerateTab(vital.name).GetComponent<Graph>();
                 graph.GenerateGraph(0, duration, (int)Math.Ceiling(vital.min), (int)Math.Ceiling(vital.max), vital.units);
 
+                // TODO place here listener for graph right click menu
+
                 // TODO prompt user to see if they want vitals in the preset they dont have
 
                 // Add the listener to the vitals list toggles so graphs can be selected / deselected at will
@@ -512,6 +516,9 @@ public class SimulationSetup : MonoBehaviour {
                 }
                 graph = tabManager.GenerateTab(vitals.vitalList[index].name).GetComponent<Graph>();
                 graph.GenerateGraph(0, duration, (int)Math.Ceiling(vitals.vitalList[index].min), (int)Math.Ceiling(vitals.vitalList[index].max), vitals.vitalList[index].units);
+
+                // TODO place here listener for graph right click menu
+
                 if (graph.sortedGraphPointsList.Count == 0) {
                     int halfValue = (int)Math.Ceiling(((vitals.vitalList[index].max - vitals.vitalList[index].min) / 2) + vitals.vitalList[index].min);
                     graph.AddPoint(0, halfValue);

@@ -12,8 +12,8 @@ public class DatabaseManager : MonoBehaviour {
 
     public GameObject viewTableTextArea;
 
-    public Button viewTableButton;
-    public Button insertValuesButton;
+    public ButtonScript viewTableButton;
+    public ButtonScript insertValuesButton;
 
     // Input fields MUST be named identically to vital name
     public InputField breathingRate;

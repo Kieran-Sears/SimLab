@@ -69,8 +69,8 @@ public class Graph : MonoBehaviour {
     private int indexOfSliderMinipulated;
     private float newSliderTime;
     private bool allowChangingPosition;
-   // private float tempXCoordinate;
-   // private float tempYCoordinate;
+    // private float tempXCoordinate;
+    // private float tempYCoordinate;
     private bool placeHandleBack;
     #endregion
 
@@ -130,7 +130,7 @@ public class Graph : MonoBehaviour {
 
                 // if over handle 
                 else if (tag == "Handle") {
-                 
+
                     sliderHandleTransform = hit1.transform;
                     currentlySelectedSlider = sliderHandleTransform.parent.parent.GetComponent<Slider>();
                     indexOfSliderMinipulated = sortedGraphPointsList.IndexOfValue(currentlySelectedSlider);
@@ -163,8 +163,8 @@ public class Graph : MonoBehaviour {
                                 coordinateSystem.transform.localPosition = new Vector3(coordinateSystem.transform.localPosition.x, coordinateSystem.transform.localPosition.y, 0);
                                 coordinateX.text = Mathf.CeilToInt(sortedGraphPointsList.Keys[sortedGraphPointsList.IndexOfValue(currentlySelectedSlider)]).ToString();
                                 coordinateY.text = Mathf.CeilToInt(currentlySelectedSlider.value).ToString();
-                               // tempXCoordinate = sortedGraphPointsList.Keys[sortedGraphPointsList.IndexOfValue(currentlySelectedSlider)];
-                               // tempYCoordinate = currentlySelectedSlider.value;
+                                // tempXCoordinate = sortedGraphPointsList.Keys[sortedGraphPointsList.IndexOfValue(currentlySelectedSlider)];
+                                // tempYCoordinate = currentlySelectedSlider.value;
                             }
                             mouseHold = 0;
                         }
@@ -177,13 +177,10 @@ public class Graph : MonoBehaviour {
 
                     // if right click detected and not first or last graph point then delete point
                     if (Input.GetMouseButtonUp(1)) {
-
-                           RightClickMenu.instance.SetMenuPosition(Input.mousePosition);
-                        //RightClickMenu.instance.SetMenuPosition(Input.mousePosition);
-                        //if (indexOfSliderMinipulated == -1 || indexOfSliderMinipulated == 0 || indexOfSliderMinipulated == sortedGraphPointsList.Count - 1) return;
-                        //sortedGraphPointsList.RemoveAt(indexOfSliderMinipulated);
-                        //Destroy(currentlySelectedSlider.gameObject);
-                        //DrawLinkedPointLines();
+                        if (indexOfSliderMinipulated == -1 || indexOfSliderMinipulated == 0 || indexOfSliderMinipulated == sortedGraphPointsList.Count - 1) return;
+                        sortedGraphPointsList.RemoveAt(indexOfSliderMinipulated);
+                        Destroy(currentlySelectedSlider.gameObject);
+                        DrawLinkedPointLines();
                     }
 
                 }
@@ -328,7 +325,7 @@ public class Graph : MonoBehaviour {
             }
             else {
                 dashMarker.GetComponent<Text>().text = ((i % 60)).ToString();
-                dashMarker.transform.localScale = Vector3.one / 2f;
+                dashMarker.transform.localScale = Vector3.one / 3f;
 
             }
         }
@@ -454,73 +451,35 @@ public class Graph : MonoBehaviour {
     }
 
     private void LayoutXScale() {
-
-        // 480
-        if (xScale >= 720) {
-            for (int i = 0; i < xScale; i++) {
-                if (i % (60) == 0) {
-                    xAxis.transform.GetChild(i).gameObject.SetActive(true);
-                    xAxis.transform.GetChild(i).localScale = Vector3.one / 2;
-                    grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
-
-                }
-                else {
-                    xAxis.transform.GetChild(i).gameObject.SetActive(false);
-                    xAxis.transform.GetChild(i).localScale = Vector3.one;
-                    grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = false;
-                }
+       float currentIncrement = -1;
+        float[] increments = { 1, 2, 10, 30, 60, 120, 300, 600, 1800, 3600, 7200};
+        // go through each increment number one by one
+        for (int i = 0; i < increments.Length; i++) {
+           float numberOfIncrements = xScale / increments[i];
+            // if xscale / current increment is > 6 && < 12
+            if (numberOfIncrements >= 6 && numberOfIncrements <= 18) {
+                currentIncrement = increments[i];
+                i = increments.Length;
             }
         }
-        else if (xScale >= 180) {
+        if (currentIncrement != -1) {
             for (int i = 0; i < xScale; i++) {
-                if (i % (30) == 0) {
+                if (i % (currentIncrement) == 0) {
                     xAxis.transform.GetChild(i).gameObject.SetActive(true);
-                    xAxis.transform.GetChild(i).localScale = Vector3.one / 2;
                     grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
 
                 }
                 else {
                     xAxis.transform.GetChild(i).gameObject.SetActive(false);
-                    xAxis.transform.GetChild(i).localScale = Vector3.one;
-                    grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = false;
-                }
-            }
-        }
-        else if (xScale >= 60) {
-            for (int i = 0; i < xScale; i++) {
-                if (i % (10) == 0) {
-                    xAxis.transform.GetChild(i).gameObject.SetActive(true);
-                    xAxis.transform.GetChild(i).localScale = Vector3.one / 2;
-                    grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
-                }
-                else {
-                    xAxis.transform.GetChild(i).gameObject.SetActive(false);
-                    xAxis.transform.GetChild(i).localScale = Vector3.one;
-                    grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = false;
-                }
-            }
-
-        }
-        else if (xScale >= 30) {
-            for (int i = 0; i < xScale; i++) {
-                if (i % (2) == 0) {
-                    xAxis.transform.GetChild(i).gameObject.SetActive(true);
-                    xAxis.transform.GetChild(i).localScale = Vector3.one / 2;
-                    grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
-                }
-                else {
-                    xAxis.transform.GetChild(i).gameObject.SetActive(false);
-                    xAxis.transform.GetChild(i).localScale = Vector3.one;
                     grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = false;
                 }
             }
         }
         else {
-            for (int i = 0; i < xScale; i++) {
-                xAxis.transform.GetChild(i).gameObject.SetActive(true);
-                grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
-            }
+            print("issue with increment algorithm");
         }
+
+     
         xAxis.transform.GetChild(0).gameObject.SetActive(true);
         grid.transform.GetChild(0).GetComponent<LineRenderer>().enabled = true;
         xAxis.transform.GetChild(xScale).gameObject.SetActive(true);
