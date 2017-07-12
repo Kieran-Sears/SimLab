@@ -4,25 +4,42 @@ using UnityEngine;
 
 public class LerpFromView : MonoBehaviour {
 
-    float startTime;
+
+
+    public delegate void OnEnd();
+    public static OnEnd onEnd;
+
     public float speed = 10;
     public Transform arrowIcon;
     public Transform startPos;
     public Transform endPos;
     public Transform frame;
+    public Transform background;
 
-    float distanceStartEnd;
-    float journeyFraction;
-    float currentDuration;
+    private float startTime;
+    private Vector3 originalRotation;
+
+    private float distanceStartEnd;
+    private float journeyFraction;
+    private float currentDuration;
+    private float framePercentSize;
 
     bool moveIn = false;
     bool moveOut = false;
 
     public void Start() {
-        arrowIcon.rotation = Quaternion.Euler(0, 0, 180);
+        originalRotation = arrowIcon.eulerAngles;
         frame.position = startPos.position;
         startTime = Time.time;
         distanceStartEnd = Vector3.Distance(startPos.position, endPos.position);
+        framePercentSize = frame.GetComponent<RectTransform>().rect.width / GetComponent<RectTransform>().rect.width;
+        background.GetComponent<RectTransform>().sizeDelta -= new Vector2(GetComponent<RectTransform>().rect.width * framePercentSize, 0);
+        if (name == "Left Lerp Panel") {
+            background.position += new Vector3(distanceStartEnd / 2, 0, 0);
+        }
+        if (name == "Right Lerp Panel") {
+            background.position -= new Vector3(distanceStartEnd / 2, 0, 0);
+        }
     }
 
     void Update() {
@@ -32,8 +49,19 @@ public class LerpFromView : MonoBehaviour {
         if (moveIn) {
             frame.position = Vector3.Lerp(endPos.position, startPos.position, journeyFraction);
             if (frame.position == startPos.position) {
-                arrowIcon.rotation = Quaternion.Euler(0, 0, 180);
-                print("moved in");    
+                if (name == "Left Lerp Panel") {
+                    background.GetComponent<RectTransform>().sizeDelta -= new Vector2(GetComponent<RectTransform>().rect.width * framePercentSize, 0);
+                    background.position += new Vector3(distanceStartEnd / 2, 0, 0);
+                }
+                if (name == "Right Lerp Panel") {
+                    background.GetComponent<RectTransform>().sizeDelta -= new Vector2(GetComponent<RectTransform>().rect.width * framePercentSize, 0);
+                    background.position -= new Vector3(distanceStartEnd / 2, 0, 0);
+                }
+                arrowIcon.eulerAngles = originalRotation;
+                if (onEnd != null) {
+                    onEnd();
+                }
+                print("moved in");
                 moveIn = false;
             }
         }
@@ -41,6 +69,18 @@ public class LerpFromView : MonoBehaviour {
         if (moveOut) {
             frame.position = Vector3.Lerp(startPos.position, endPos.position, journeyFraction);
             if (frame.position == endPos.position) {
+                if (name == "Left Lerp Panel") {
+                    background.GetComponent<RectTransform>().sizeDelta += new Vector2(GetComponent<RectTransform>().rect.width * framePercentSize, 0);
+                    background.position -= new Vector3(distanceStartEnd / 2, 0, 0);
+                }
+                if (name == "Right Lerp Panel") {
+                    background.GetComponent<RectTransform>().sizeDelta += new Vector2(GetComponent<RectTransform>().rect.width * framePercentSize, 0);
+                    background.position += new Vector3(distanceStartEnd / 2, 0, 0);
+                }
+                arrowIcon.eulerAngles = new Vector3(0, 0, originalRotation.z + 180);
+                if (onEnd != null) {
+                    onEnd();
+                }
                 print("moved out");
                 moveOut = false;
             }
@@ -50,13 +90,12 @@ public class LerpFromView : MonoBehaviour {
     public void ToggleHide() {
         startTime = Time.time;
         if (frame.position == startPos.position) {
-            arrowIcon.rotation = Quaternion.Euler(0, 0, 0);
             moveOut = true;
         }
         if (frame.position == endPos.position) {
             moveIn = true;
         }
-       
+
     }
 
 

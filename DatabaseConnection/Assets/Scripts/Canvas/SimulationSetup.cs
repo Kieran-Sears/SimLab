@@ -17,6 +17,8 @@ public class SimulationSetup : MonoBehaviour {
     public InputField simulationDurationMinutes;
     public InputField simulationDurationSeconds;
     public Button durationSubmit;
+    public Button newVitalButton;
+    public Button newDrugButton;
     public int duration = -1;
     public GameObject vitalsChosen;
     public GameObject drugsChosen;
@@ -503,9 +505,10 @@ public class SimulationSetup : MonoBehaviour {
         tabManager.activeTabs.transform.GetComponent<ToggleGroup>().SetAllTogglesOff();
         if (chosen) {
 
-            Transform vitalTrans = tabManager.transform.FindChild(vitalName);
-            Transform vitalTab = tabManager.inactiveTabs.transform.FindChild(vitalName);
+            Transform vitalTrans = tabManager.contentArea.transform.FindChild(vitalName);
+            Transform vitalTab = tabManager.activeTabs.transform.FindChild(vitalName);
 
+          
             if (vitalTrans == null || vitalTab == null) {
                 if (duration == -1) {
                     Error.instance.informMessageText.text = "Please set the duration of the simulation before adding vitals.";
@@ -539,28 +542,48 @@ public class SimulationSetup : MonoBehaviour {
             }
             else {
                 vitalTrans.gameObject.SetActive(true);
-                vitalTab.SetParent(tabManager.transform);
+                vitalTab.SetParent(tabManager.activeTabs.transform);
                 vitalTab.gameObject.SetActive(true);
+
                 tabManager.SwitchTab();
             }
         }
         else {
-            Transform tab = tabManager.transform.FindChild(vitalName);
+            Transform tab = tabManager.activeTabs.transform.FindChild(vitalName);
             if (tab != null) {
                 tab.gameObject.SetActive(false);
                 tab.SetParent(tabManager.inactiveTabs.transform);
-                tabManager.transform.FindChild(vitalName).gameObject.SetActive(false);
+                if (tabManager.activeTabs.transform.childCount > 0) {
+                    tabManager.activeTabs.transform.GetChild(0).GetComponent<Toggle>().isOn = true;
+                }
+               // tabManager.SwitchTab();
+             //   tabManager.transform.FindChild(vitalName).gameObject.SetActive(false);
             }
         }
     }
 
     public void NewVitalPanelToggleActive() {
-        newVitalPanel.SetActive(!newVitalPanel.activeInHierarchy);
+        bool selected = !newVitalPanel.activeInHierarchy;
+        newVitalPanel.SetActive(selected);
+        newDrugButton.interactable = !newDrugButton.interactable;
+        if (selected) {
+            newVitalButton.GetComponent<Image>().color = newVitalButton.colors.pressedColor;
+        }
+        else {
+            newVitalButton.GetComponent<Image>().color = newVitalButton.colors.normalColor;
+        }
     }
 
     public void NewDrugPanelToggleActive() {
-        newDrugPanel.SetActive(!newDrugPanel.activeInHierarchy);
-        tabManager.activeTabs.GetComponent<ToggleGroup>().SetAllTogglesOff();
+        bool selected = !newDrugPanel.activeInHierarchy;
+        newDrugPanel.SetActive(selected);
+        newVitalButton.interactable = !newVitalButton.interactable;
+        if (selected) {
+            newDrugButton.GetComponent<Image>().color = newVitalButton.colors.pressedColor;
+        }
+        else {
+            newDrugButton.GetComponent<Image>().color = newVitalButton.colors.normalColor;
+        }
     }
 
     public Vital GetVital(string vitalName) {

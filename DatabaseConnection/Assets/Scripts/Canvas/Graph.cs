@@ -69,8 +69,6 @@ public class Graph : MonoBehaviour {
     private int indexOfSliderMinipulated;
     private float newSliderTime;
     private bool allowChangingPosition;
-    // private float tempXCoordinate;
-    // private float tempYCoordinate;
     private bool placeHandleBack;
     #endregion
 
@@ -161,10 +159,11 @@ public class Graph : MonoBehaviour {
                                 coordinateSystem.transform.localScale = new Vector3(0.5f, 0.5f, 1);
                                 coordinateSystem.transform.position = sliderHandleTransform.position + new Vector3(0.3f, 0.3f, 0);
                                 coordinateSystem.transform.localPosition = new Vector3(coordinateSystem.transform.localPosition.x, coordinateSystem.transform.localPosition.y, 0);
-                                coordinateX.text = Mathf.CeilToInt(sortedGraphPointsList.Keys[sortedGraphPointsList.IndexOfValue(currentlySelectedSlider)]).ToString();
+                                string minutes = (Mathf.CeilToInt(sortedGraphPointsList.Keys[sortedGraphPointsList.IndexOfValue(currentlySelectedSlider)]) / 60).ToString();
+                                string Seconds = (Mathf.CeilToInt(sortedGraphPointsList.Keys[sortedGraphPointsList.IndexOfValue(currentlySelectedSlider)]) % 60).ToString();
+
+                                coordinateX.text = minutes + ":" + Seconds;
                                 coordinateY.text = Mathf.CeilToInt(currentlySelectedSlider.value).ToString();
-                                // tempXCoordinate = sortedGraphPointsList.Keys[sortedGraphPointsList.IndexOfValue(currentlySelectedSlider)];
-                                // tempYCoordinate = currentlySelectedSlider.value;
                             }
                             mouseHold = 0;
                         }
@@ -267,10 +266,70 @@ public class Graph : MonoBehaviour {
     public void OnEnable() {
         DrawLinkedPointLines();
         DrawThresholds();
+        // LerpFromView.onEnd += DrawGrid;
+        LerpFromView.onEnd += ResizeGraph;
     }
     #endregion
 
     #region Private Methods
+
+
+    private void ResizeGraph() {
+        if (graphViewport != null) {
+            Transform dashMarker;
+            LineRenderer lineRenderer;
+            Rect viewportRect = graphViewport.GetComponent<RectTransform>().rect;
+            Vector2 sizeMarkup = new Vector2(graphContentRectTrans.sizeDelta.x / (viewportRect.width - 20), graphContentRectTrans.sizeDelta.y / (viewportRect.height - 20));
+
+            // content resize
+            graphContentRectTrans.sizeDelta = new Vector2(viewportRect.width - 20, viewportRect.height - 20);
+            Vector2 size = new Vector2(graphContentRectTrans.rect.width, graphContentRectTrans.rect.height);
+            // grid resize
+            for (int i = 0; i < grid.transform.childCount; i++) {
+                dashMarker = grid.transform.GetChild(i);
+                lineRenderer = dashMarker.GetComponent<LineRenderer>();
+                if (i <= xScale) {
+                    lineRenderer.SetPosition(0, new Vector3((((size.x / xScale) * i) - (size.x / 2)), (-size.y / 2), 20));
+                    lineRenderer.SetPosition(1, new Vector3((((size.x / xScale) * i) - (size.x / 2)), (size.y / 2), 20));
+                }
+                else {
+                    lineRenderer.SetPosition(0, new Vector3((-size.x / 2), (((size.y / yScale) * (i - (xScale + 1))) - (size.y / 2)), 20));
+                    lineRenderer.SetPosition(1, new Vector3((size.x / 2), (((size.y / yScale) * (i - (xScale + 1))) - (size.y / 2)), 20));
+                }
+            }
+            // axis resize
+            xAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(viewportRect.width - 20, xAxisContent.GetComponent<RectTransform>().sizeDelta.y);
+            yAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(yAxisContent.GetComponent<RectTransform>().sizeDelta.x, viewportRect.height - 20);
+
+            for (int i = 0; i < xAxis.transform.childCount; i++) {
+                dashMarker = xAxis.transform.GetChild(i);
+                dashMarker.transform.localPosition = Vector3.zero;
+                dashMarker.transform.localPosition += new Vector3((-graphContentRectTrans.rect.width / 2), 0, 0);
+                dashMarker.transform.localPosition += new Vector3((((graphContentRectTrans.rect.width) / xScale) * i), 0, 0);
+            }
+            for (int i = 0; i < yAxis.transform.childCount; i++) {
+                dashMarker = yAxis.transform.GetChild(i);
+                dashMarker.transform.localPosition = Vector3.zero;
+                dashMarker.transform.localPosition += new Vector3(0, (-graphContentRectTrans.rect.height / 2), 0);
+                dashMarker.transform.localPosition += new Vector3(0, (((graphContentRectTrans.rect.height) / yScale) * (i - yStart)), 0);
+            }
+            yAxisScrollRect.verticalNormalizedPosition = 0;
+            xAxisScrollRect.horizontalNormalizedPosition = 0;
+
+            // replacing of points
+            for (int i = 0; i < graph.transform.childCount; i++) {
+                Transform sliderObject = graph.transform.GetChild(i);
+                sliderObject.localPosition = new Vector3(sliderObject.localPosition.x / sizeMarkup.x, sliderObject.localPosition.y / sizeMarkup.y, -20);
+            }
+            for (int i = 0; i < thresholds.transform.childCount; i++) {
+                Transform sliderObject = thresholds.transform.GetChild(i);
+                sliderObject.localPosition = new Vector3(sliderObject.localPosition.x / sizeMarkup.x, sliderObject.localPosition.y / sizeMarkup.y, -10);
+            }
+            DrawLinkedPointLines();
+           // DrawLinkedPointLinesLowerThreshold();
+           // DrawLinkedPointLineUpperThreshold();
+        }
+    }
 
     private void DrawGrid() {
         Vector2 size = new Vector2(graphContentRectTrans.rect.width, graphContentRectTrans.rect.height);
@@ -451,11 +510,11 @@ public class Graph : MonoBehaviour {
     }
 
     private void LayoutXScale() {
-       float currentIncrement = -1;
-        float[] increments = { 1, 2, 10, 30, 60, 120, 300, 600, 1800, 3600, 7200};
+        float currentIncrement = -1;
+        float[] increments = { 1, 2, 10, 30, 60, 120, 300, 600, 1800, 3600, 7200 };
         // go through each increment number one by one
         for (int i = 0; i < increments.Length; i++) {
-           float numberOfIncrements = xScale / increments[i];
+            float numberOfIncrements = xScale / increments[i];
             // if xscale / current increment is > 6 && < 12
             if (numberOfIncrements >= 6 && numberOfIncrements <= 18) {
                 currentIncrement = increments[i];
@@ -479,7 +538,7 @@ public class Graph : MonoBehaviour {
             print("issue with increment algorithm");
         }
 
-     
+
         xAxis.transform.GetChild(0).gameObject.SetActive(true);
         grid.transform.GetChild(0).GetComponent<LineRenderer>().enabled = true;
         xAxis.transform.GetChild(xScale).gameObject.SetActive(true);
@@ -679,6 +738,7 @@ public class Graph : MonoBehaviour {
     #region Public Methods
     public void GenerateGraph(int _xStart, int _xEnd, int _yStart, int _yEnd, string yLabel) {
         print("generating graph " + name);
+        GetComponent<RectTransform>().sizeDelta = transform.parent.GetComponent<RectTransform>().sizeDelta;
         // using the scrollview viewport as the basis for the graphs size
         Rect viewportRect = graphViewport.GetComponent<RectTransform>().rect;
         // "-20" is for padding so that there is no clipping at the edges of the graph for graphlines or numbers
@@ -695,8 +755,8 @@ public class Graph : MonoBehaviour {
         coordinateSystem.GetComponent<BoxCollider>().size = new Vector3(coordinateSystem.GetComponent<RectTransform>().rect.width * 1.5f, coordinateSystem.GetComponent<RectTransform>().rect.height * 1.5f, 1);
 
         // adjusting the placement of the axis labels
-        yAxisLabel.transform.localPosition += Vector3.left * 50;
-        xAxisLabel.transform.localPosition += Vector3.down * 50;
+        yAxisLabel.transform.localPosition += Vector3.left * yAxis.GetComponent<RectTransform>().rect.width / 3;
+        xAxisLabel.transform.localPosition += Vector3.down * xAxis.GetComponent<RectTransform>().rect.height / 3;
         // as well as label text
         yAxisLabel.GetComponent<Text>().text = yLabel;
         xAxisLabel.GetComponent<Text>().text = "Duration (Minutes : Seconds)";

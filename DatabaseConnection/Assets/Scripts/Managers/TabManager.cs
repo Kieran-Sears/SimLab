@@ -13,6 +13,7 @@ public class TabManager : MonoBehaviour {
 
     public Dictionary<Toggle, GameObject> tabGraphs = new Dictionary<Toggle, GameObject>();
 
+    // function which displays the graph associated with the tab selected by the user
     public void SwitchTab() {
         foreach (GameObject item in tabGraphs.Values) {
             if (item != null) {
@@ -28,6 +29,8 @@ public class TabManager : MonoBehaviour {
         activeComponent.SetActive(true);
     }
 
+    // instantiates and populates the graph prefab tabs area with any selected vitals
+    // based on their name and returns the graph that controls them
     public GameObject GenerateTab(string vitalName) {
         GameObject tab = Instantiate(tabPrefab, activeTabs.transform);
         tab.transform.localScale = Vector3.one;

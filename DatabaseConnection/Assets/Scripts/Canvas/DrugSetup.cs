@@ -8,6 +8,7 @@ public class DrugSetup : MonoBehaviour {
     public GameObject togglePrefab;
     public InputField drugName;
     public GameObject administrationsChosen;
+    public AdminSetup adminSetup;
 
     public void Start() {
         PopulateAdministrations();
@@ -36,31 +37,31 @@ public class DrugSetup : MonoBehaviour {
     }
 
     public void LoadChosenAdministration(bool chosen, int index, string administrationName) {
-        AdminSetup administrationSetup;
-        tabManager.activeTabs.GetComponent<ToggleGroup>().SetAllTogglesOff();
-        if (chosen) {
-            Transform vitalTrans = tabManager.transform.FindChild(administrationName);
-            Transform vitalTab = tabManager.inactiveTabs.transform.FindChild(administrationName);
-            if (vitalTrans == null || vitalTab == null) {
-                administrationSetup = tabManager.GenerateTab(administrationName).GetComponent<AdminSetup>();
-                administrationSetup.gameObject.SetActive(false);
-                tabManager.SwitchTab();
-            }
-            else {
-                vitalTrans.gameObject.SetActive(true);
-                vitalTab.SetParent(tabManager.transform);
-                vitalTab.gameObject.SetActive(true);
-                tabManager.SwitchTab();
-            }
-        }
-        else {
-            Transform tab = tabManager.transform.FindChild(administrationName);
-            if (tab != null) {
-                tab.gameObject.SetActive(false);
-                tab.SetParent(tabManager.inactiveTabs.transform);
-                tabManager.transform.FindChild(administrationName).gameObject.SetActive(false);
-            }
-        }
+      //  AdminSetup administrationSetup;
+        //tabManager.activeTabs.GetComponent<ToggleGroup>().SetAllTogglesOff();
+        //if (chosen) {
+        //    Transform vitalTrans = tabManager.transform.FindChild(administrationName);
+        //    Transform vitalTab = tabManager.inactiveTabs.transform.FindChild(administrationName);
+        //    if (vitalTrans == null || vitalTab == null) {
+             //   administrationSetup = tabManager.GenerateTab(administrationName).GetComponent<AdminSetup>();
+        //        administrationSetup.gameObject.SetActive(false);
+        //        tabManager.SwitchTab();
+        //    }
+        //    else {
+        //        vitalTrans.gameObject.SetActive(true);
+        //        vitalTab.SetParent(tabManager.transform);
+        //        vitalTab.gameObject.SetActive(true);
+        //        tabManager.SwitchTab();
+        //    }
+        //}
+        //else {
+        //    Transform tab = tabManager.transform.FindChild(administrationName);
+        //    if (tab != null) {
+        //        tab.gameObject.SetActive(false);
+        //        tab.SetParent(tabManager.inactiveTabs.transform);
+        //        tabManager.transform.FindChild(administrationName).gameObject.SetActive(false);
+        //    }
+        //}
     }
 
     public void AddNewDrug() {

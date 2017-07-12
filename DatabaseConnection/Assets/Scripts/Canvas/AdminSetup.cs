@@ -9,11 +9,9 @@ public class AdminSetup : MonoBehaviour {
     public GameObject togglePrefab;
     [Space(10)]
     public InputField units;
-    public InputField drugMin;
-    public InputField drugMax;
     public InputField drugDurationMinutes;
     public InputField drugDurationSeconds;
-    public Button durationSubmit;
+    public Button submitButton;
     public GameObject vitalsChosen;
 
     private Graph graph;
@@ -22,7 +20,14 @@ public class AdminSetup : MonoBehaviour {
     // private bool someBool; // cant recall what this is for
 
     public void Start() {
+        submitButton.interactable = false;
         PopulateVitals();
+    }
+
+    public void ToggleElementsActive() {
+        units.interactable = !units.interactable;
+        drugDurationMinutes.interactable = !drugDurationMinutes.interactable;
+        drugDurationSeconds.interactable = !drugDurationSeconds.interactable;
     }
 
     void PopulateVitals() {
@@ -101,7 +106,7 @@ public class AdminSetup : MonoBehaviour {
             }
             else {
                 duration = newDuration;
-                durationSubmit.interactable = false;
+                submitButton.interactable = false;
                 replaceExistingGraphs = false;
             }
         }
@@ -239,12 +244,12 @@ public class AdminSetup : MonoBehaviour {
 
     public Administration GetAdministration() {
 
-        if (drugMax.text.Length == 0 || drugMin.text.Length == 0) {
-            Error.instance.informMessageText.text = "Enter max and min dose values for "+ gameObject.name +".";
-            Error.instance.informOkButton.onClick.AddListener(Error.instance.DeactivateErrorInformPanel);
-            Error.instance.informPanel.SetActive(true);
-            return null;
-        }
+        //if (drugMax.text.Length == 0 || drugMin.text.Length == 0) {
+        //    Error.instance.informMessageText.text = "Enter max and min dose values for "+ gameObject.name +".";
+        //    Error.instance.informOkButton.onClick.AddListener(Error.instance.DeactivateErrorInformPanel);
+        //    Error.instance.informPanel.SetActive(true);
+        //    return null;
+        //}
 
         if (units.text.Length == 0) {
             Error.instance.informMessageText.text = "Enter units for " + gameObject.name + ".";
@@ -316,8 +321,8 @@ public class AdminSetup : MonoBehaviour {
             }
         }
         administration.duration = duration;
-        administration.max = float.Parse(drugMax.text);
-        administration.min = float.Parse(drugMin.text);
+       // administration.max = float.Parse(drugMax.text);
+       // administration.min = float.Parse(drugMin.text);
         administration.units = units.text;
         administration.name = name;
         return administration;
