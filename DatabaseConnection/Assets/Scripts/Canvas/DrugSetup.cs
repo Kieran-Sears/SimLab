@@ -237,6 +237,8 @@ public class DrugSetup : MonoBehaviour {
     }
 
     public void loadChosenVital(bool chosen, int index, string vitalName) {
+        SubmitDuration();
+
         tabManager.activeTabs.transform.GetComponent<ToggleGroup>().SetAllTogglesOff();
         if (chosen) {
             Transform vitalTrans = tabManager.transform.FindChild(vitalName);
@@ -249,7 +251,9 @@ public class DrugSetup : MonoBehaviour {
                     vitalsChosen.transform.GetChild(index).GetComponent<Toggle>().isOn = false;
                     return;
                 }
+                tabManager.gameObject.SetActive(true);
                 graph = tabManager.GenerateTab(SimulationSetup.instance.vitals.vitalList[index].name).GetComponent<Graph>();
+                print(graph.name);
                 graph.GenerateGraph(0, duration, (int)Math.Ceiling(SimulationSetup.instance.vitals.vitalList[index].min), (int)Math.Ceiling(SimulationSetup.instance.vitals.vitalList[index].max), SimulationSetup.instance.vitals.vitalList[index].units);
                 if (graph.sortedGraphPointsList.Count == 0) {
                     int halfValue = (int)Math.Ceiling(((SimulationSetup.instance.vitals.vitalList[index].max - SimulationSetup.instance.vitals.vitalList[index].min) / 2) + SimulationSetup.instance.vitals.vitalList[index].min);
@@ -277,34 +281,8 @@ public class DrugSetup : MonoBehaviour {
     }
 
     public void LoadChosenAdministration(bool chosen, int index, string administrationName) {
-
-       
-
-      //  AdminSetup administrationSetup;
-        //tabManager.activeTabs.GetComponent<ToggleGroup>().SetAllTogglesOff();
-        //if (chosen) {
-        //    Transform vitalTrans = tabManager.transform.FindChild(administrationName);
-        //    Transform vitalTab = tabManager.inactiveTabs.transform.FindChild(administrationName);
-        //    if (vitalTrans == null || vitalTab == null) {
-             //   administrationSetup = tabManager.GenerateTab(administrationName).GetComponent<AdminSetup>();
-        //        administrationSetup.gameObject.SetActive(false);
-        //        tabManager.SwitchTab();
-        //    }
-        //    else {
-        //        vitalTrans.gameObject.SetActive(true);
-        //        vitalTab.SetParent(tabManager.transform);
-        //        vitalTab.gameObject.SetActive(true);
-        //        tabManager.SwitchTab();
-        //    }
-        //}
-        //else {
-        //    Transform tab = tabManager.transform.FindChild(administrationName);
-        //    if (tab != null) {
-        //        tab.gameObject.SetActive(false);
-        //        tab.SetParent(tabManager.inactiveTabs.transform);
-        //        tabManager.transform.FindChild(administrationName).gameObject.SetActive(false);
-        //    }
-        //}
+        PopulateVitals();
+        ToggleElementsActive();
     }
 
     public void AddNewDrug() {
