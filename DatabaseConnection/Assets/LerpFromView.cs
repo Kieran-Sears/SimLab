@@ -27,10 +27,23 @@ public class LerpFromView : MonoBehaviour {
     bool moveIn = false;
     bool moveOut = false;
 
-    public void Start() {
-        originalRotation = arrowIcon.eulerAngles;
-        frame.position = startPos.position;
-        startTime = Time.time;
+
+    public void OnDisable() {
+        distanceStartEnd = Vector3.Distance(startPos.position, endPos.position);
+        framePercentSize = frame.GetComponent<RectTransform>().rect.width / GetComponent<RectTransform>().rect.width;
+        background.GetComponent<RectTransform>().sizeDelta += new Vector2(GetComponent<RectTransform>().rect.width * framePercentSize, 0);
+        if (name == "Left Lerp Panel") {
+            background.position -= new Vector3(distanceStartEnd / 2, 0, 0);
+        }
+        if (name == "Right Lerp Panel") {
+            background.position += new Vector3(distanceStartEnd / 2, 0, 0);
+        }
+        if (onEnd != null) {
+            onEnd();
+        }
+    }
+
+    public void OnEnable() {
         distanceStartEnd = Vector3.Distance(startPos.position, endPos.position);
         framePercentSize = frame.GetComponent<RectTransform>().rect.width / GetComponent<RectTransform>().rect.width;
         background.GetComponent<RectTransform>().sizeDelta -= new Vector2(GetComponent<RectTransform>().rect.width * framePercentSize, 0);
@@ -40,6 +53,14 @@ public class LerpFromView : MonoBehaviour {
         if (name == "Right Lerp Panel") {
             background.position -= new Vector3(distanceStartEnd / 2, 0, 0);
         }
+        if (onEnd != null) {
+            onEnd();
+        }
+    }
+
+    public void Start() {
+        originalRotation = arrowIcon.eulerAngles;
+        frame.position = startPos.position;
     }
 
     void Update() {

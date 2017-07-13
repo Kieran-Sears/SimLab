@@ -635,7 +635,7 @@ public class Graph : MonoBehaviour {
         }
     }
 
-    private void DrawLinkedPointLines() {
+    public void DrawLinkedPointLines() {
         GameObject LineWriter;
         Vector3[] arrayToCurve = new Vector3[sortedGraphPointsList.Count];
 
@@ -759,7 +759,7 @@ public class Graph : MonoBehaviour {
         xAxisLabel.transform.localPosition += Vector3.down * xAxis.GetComponent<RectTransform>().rect.height / 3;
         // as well as label text
         yAxisLabel.GetComponent<Text>().text = yLabel;
-        xAxisLabel.GetComponent<Text>().text = "Duration (Minutes : Seconds)";
+        xAxisLabel.GetComponent<Text>().text = "Duration (MINUTES : seconds)";
 
         // record of initial values based on time (x) against units (y)
         xStart = _xStart;

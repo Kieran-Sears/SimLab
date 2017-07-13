@@ -10,6 +10,7 @@ public class SimulationSetup : MonoBehaviour {
 
     public TabManager tabManager;
     public GameObject togglePrefab;
+    public GameObject rightLerpPanel;
     public Condition condition;
 
     #region Condition
@@ -27,22 +28,22 @@ public class SimulationSetup : MonoBehaviour {
 
     #region Vital
     public GameObject newVitalPanel;
-    public InputField vitalName;
-    public InputField vitalUnit;
-    public InputField vitalMax;
-    public InputField vitalMin;
-    public GameObject vitalNameDuplicateWarning;
+    //public InputField vitalName;
+    //public InputField vitalUnit;
+    //public InputField vitalMax;
+    //public InputField vitalMin;
+    //public GameObject vitalNameDuplicateWarning;
     #endregion
 
     #region Drug
     public GameObject newDrugPanel;
-    public InputField drugName;
-    public InputField drugUnit;
-    public InputField drugMax;
-    public InputField drugMin;
-    public InputField drugDuration;
-    public GameObject drugVitalsAffected;
-    public GameObject drugAdministrations;
+    //public InputField drugName;
+    //public InputField drugUnit;
+    //public InputField drugMax;
+    //public InputField drugMin;
+    //public InputField drugDuration;
+    //public GameObject drugVitalsAffected;
+    //public GameObject drugAdministrations;
     #endregion
 
     public Drugs drugs;
@@ -70,7 +71,7 @@ public class SimulationSetup : MonoBehaviour {
         PopulateEquipment();
         simulationDurationMinutes.onValueChanged.AddListener(enableSubmitButton);
         simulationDurationSeconds.onValueChanged.AddListener(enableSubmitButton);
-        vitalName.onValidateInput += delegate (string input, int charIndex, char addedChar) { return VitalNameChangeValue(input, charIndex, addedChar); };
+        // vitalName.onValidateInput += delegate (string input, int charIndex, char addedChar) { return VitalNameChangeValue(input, charIndex, addedChar); };
     }
 
     public void enableSubmitButton(string input) {
@@ -152,15 +153,15 @@ public class SimulationSetup : MonoBehaviour {
         Error.instance.informOkButton.onClick.RemoveAllListeners();
     }
 
-    public char VitalNameChangeValue(string input, int charIndex, char character) {
-        if (vitalsChosen.transform.FindChild(input + character) != null) {
-            vitalNameDuplicateWarning.SetActive(true);
-        }
-        else {
-            vitalNameDuplicateWarning.SetActive(false);
-        }
-        return character;
-    }
+    //public char VitalNameChangeValue(string input, int charIndex, char character) {
+    //    if (vitalsChosen.transform.FindChild(input + character) != null) {
+    //        vitalNameDuplicateWarning.SetActive(true);
+    //    }
+    //    else {
+    //        vitalNameDuplicateWarning.SetActive(false);
+    //    }
+    //    return character;
+    //}
 
     void PopulatePresets() {
         UnityEngine.Object[] files = Resources.LoadAll("Conditions");
@@ -224,6 +225,7 @@ public class SimulationSetup : MonoBehaviour {
 
         replaceExistingGraphs = true;
 
+        print("someBool "  + someBool);
         if (!someBool) {
             SubmitDuration();
         }
@@ -253,7 +255,7 @@ public class SimulationSetup : MonoBehaviour {
 
                 string vitalUnits = graph.yAxisLabel.GetComponent<Text>().text;
 
-               // Destroy(graphObject);
+                // Destroy(graphObject);
 
                 graph = tabManager.GenerateTab(vitalName).GetComponent<Graph>();
                 graph.GenerateGraph(0, duration, vitalMin, vitalMax, vitalUnits);
@@ -294,9 +296,10 @@ public class SimulationSetup : MonoBehaviour {
                 if (!graph.pointsUpperThreshold.ContainsKey(duration)) {
                     graph.AddThresholdPointUpper(duration, graph.pointsUpperThreshold[0].value);
                 }
-
+                graph.DrawLinkedPointLines();
             }
         }
+        tabManager.SwitchTab();
     }
 
     public void SetInformPanelToFalse() {
@@ -392,7 +395,7 @@ public class SimulationSetup : MonoBehaviour {
                 replaceExistingGraphs = false;
             }
         }
-        
+
 
         // for each vital in the condition, loop through and create the graph for it
 
@@ -438,68 +441,68 @@ public class SimulationSetup : MonoBehaviour {
         }
     }
 
-    public void SelectMaxVitalValue() {
-        Error.instance.informPanel.SetActive(false);
-        vitalMax.Select();
-        vitalMax.ActivateInputField();
-        Error.instance.informOkButton.onClick.RemoveAllListeners();
-    }
+    //public void SelectMaxVitalValue() {
+    //    Error.instance.informPanel.SetActive(false);
+    //    vitalMax.Select();
+    //    vitalMax.ActivateInputField();
+    //    Error.instance.informOkButton.onClick.RemoveAllListeners();
+    //}
 
-    public void AddVital() {
+    //public void AddVital() {
 
-        if (float.Parse(vitalMax.text) <= float.Parse(vitalMin.text)) {
-            Error.instance.informMessageText.text = "Max value is less or equal to min value for vital";
-            Error.instance.informPanel.SetActive(true);
-            Error.instance.informOkButton.onClick.AddListener(SelectMaxVitalValue);
-            return;
-        }
+    //    if (float.Parse(vitalMax.text) <= float.Parse(vitalMin.text)) {
+    //        Error.instance.informMessageText.text = "Max value is less or equal to min value for vital";
+    //        Error.instance.informPanel.SetActive(true);
+    //        Error.instance.informOkButton.onClick.AddListener(SelectMaxVitalValue);
+    //        return;
+    //    }
 
-        Transform vitalTrans = tabManager.transform.FindChild(vitalName.text);
+    //    Transform vitalTrans = tabManager.transform.FindChild(vitalName.text);
 
-        if (vitalTrans != null) {
-            Destroy(vitalTrans.gameObject);
-        }
+    //    if (vitalTrans != null) {
+    //        Destroy(vitalTrans.gameObject);
+    //    }
 
-        int vitalIndex = -1;
+    //    int vitalIndex = -1;
 
-        for (int i = 0; i < vitals.vitalList.Count; i++) {
-            if (vitals.vitalList[i].name == vitalName.text) {
-                vitalIndex = i;
-            }
-        }
+    //    for (int i = 0; i < vitals.vitalList.Count; i++) {
+    //        if (vitals.vitalList[i].name == vitalName.text) {
+    //            vitalIndex = i;
+    //        }
+    //    }
 
-        if (vitalIndex != -1) {
-            vitals.vitalList.RemoveAt(vitalIndex);
-            Destroy(vitalsChosen.transform.FindChild(vitalName.text).gameObject);
-        }
+    //    if (vitalIndex != -1) {
+    //        vitals.vitalList.RemoveAt(vitalIndex);
+    //        Destroy(vitalsChosen.transform.FindChild(vitalName.text).gameObject);
+    //    }
 
 
-        Vital vital = new Vital();
-        vital.nodeID = vitals.vitalList.Count;
-        vital.name = vitalName.text;
-        vital.units = vitalUnit.text;
-        vital.max = float.Parse(vitalMax.text);
-        vital.min = float.Parse(vitalMin.text);
+    //    Vital vital = new Vital();
+    //    vital.nodeID = vitals.vitalList.Count;
+    //    vital.name = vitalName.text;
+    //    vital.units = vitalUnit.text;
+    //    vital.max = float.Parse(vitalMax.text);
+    //    vital.min = float.Parse(vitalMin.text);
 
-        newVitalPanel.SetActive(false);
+    //    newVitalPanel.SetActive(false);
 
-        GameObject toggleObject = Instantiate(togglePrefab);
-        toggleObject.transform.SetParent(vitalsChosen.transform);
-        toggleObject.transform.SetAsFirstSibling();
-        toggleObject.transform.localScale = Vector3.one;
-        toggleObject.transform.localPosition = Vector3.zero;
-        toggleObject.transform.GetChild(1).GetComponent<Text>().text = vital.name;
+    //    GameObject toggleObject = Instantiate(togglePrefab);
+    //    toggleObject.transform.SetParent(vitalsChosen.transform);
+    //    toggleObject.transform.SetAsFirstSibling();
+    //    toggleObject.transform.localScale = Vector3.one;
+    //    toggleObject.transform.localPosition = Vector3.zero;
+    //    toggleObject.transform.GetChild(1).GetComponent<Text>().text = vital.name;
 
-        Toggle toggle = toggleObject.GetComponent<Toggle>();
-        toggle.name = vital.name;
-        toggle.onValueChanged.AddListener((bool value) => loadChosenVital(value, toggleObject.transform.GetSiblingIndex(), vital.name));
+    //    Toggle toggle = toggleObject.GetComponent<Toggle>();
+    //    toggle.name = vital.name;
+    //    toggle.onValueChanged.AddListener((bool value) => loadChosenVital(value, toggleObject.transform.GetSiblingIndex(), vital.name));
 
-        vitals.vitalList.Insert(0, vital);
+    //    vitals.vitalList.Insert(0, vital);
 
-        loadChosenVital(true, 0, vital.name);
+    //    loadChosenVital(true, 0, vital.name);
 
-        // add checking here for is duplicate exists. If so then overwrite the existing vital
-    }
+    //    // add checking here for is duplicate exists. If so then overwrite the existing vital
+    //}
 
     public void loadChosenVital(bool chosen, int index, string vitalName) {
         tabManager.activeTabs.transform.GetComponent<ToggleGroup>().SetAllTogglesOff();
@@ -508,7 +511,7 @@ public class SimulationSetup : MonoBehaviour {
             Transform vitalTrans = tabManager.contentArea.transform.FindChild(vitalName);
             Transform vitalTab = tabManager.activeTabs.transform.FindChild(vitalName);
 
-          
+
             if (vitalTrans == null || vitalTab == null) {
                 if (duration == -1) {
                     Error.instance.informMessageText.text = "Please set the duration of the simulation before adding vitals.";
@@ -556,14 +559,15 @@ public class SimulationSetup : MonoBehaviour {
                 if (tabManager.activeTabs.transform.childCount > 0) {
                     tabManager.activeTabs.transform.GetChild(0).GetComponent<Toggle>().isOn = true;
                 }
-               // tabManager.SwitchTab();
-             //   tabManager.transform.FindChild(vitalName).gameObject.SetActive(false);
+                // tabManager.SwitchTab();
+                //   tabManager.transform.FindChild(vitalName).gameObject.SetActive(false);
             }
         }
     }
 
     public void NewVitalPanelToggleActive() {
         bool selected = !newVitalPanel.activeInHierarchy;
+        rightLerpPanel.SetActive(selected);
         newVitalPanel.SetActive(selected);
         newDrugButton.interactable = !newDrugButton.interactable;
         if (selected) {
@@ -576,14 +580,19 @@ public class SimulationSetup : MonoBehaviour {
 
     public void NewDrugPanelToggleActive() {
         bool selected = !newDrugPanel.activeInHierarchy;
-        newDrugPanel.SetActive(selected);
         newVitalButton.interactable = !newVitalButton.interactable;
         if (selected) {
             newDrugButton.GetComponent<Image>().color = newVitalButton.colors.pressedColor;
+            rightLerpPanel.SetActive(selected);
+            newDrugPanel.SetActive(selected);
         }
         else {
             newDrugButton.GetComponent<Image>().color = newVitalButton.colors.normalColor;
+            rightLerpPanel.SetActive(selected);
+            newDrugPanel.SetActive(selected);
+
         }
+        
     }
 
     public Vital GetVital(string vitalName) {
