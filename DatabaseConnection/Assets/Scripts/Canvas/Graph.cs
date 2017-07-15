@@ -263,11 +263,11 @@ public class Graph : MonoBehaviour {
 
     }
 
+
     public void OnEnable() {
         DrawLinkedPointLines();
         DrawThresholds();
-        // LerpFromView.onEnd += DrawGrid;
-        LerpFromView.onEnd += ResizeGraph;
+        LerpFromView.onEnd += this.ResizeGraph;
     }
     #endregion
 
@@ -275,14 +275,15 @@ public class Graph : MonoBehaviour {
 
 
     private void ResizeGraph() {
+        print("resizing graph " + name);
         if (graphViewport != null) {
             Transform dashMarker;
             LineRenderer lineRenderer;
             Rect viewportRect = graphViewport.GetComponent<RectTransform>().rect;
-            Vector2 sizeMarkup = new Vector2(graphContentRectTrans.sizeDelta.x / (viewportRect.width - 20), graphContentRectTrans.sizeDelta.y / (viewportRect.height - 20));
-
+            float padding = (viewportRect.width / 100 * 5);
+            Vector2 sizeMarkup = new Vector2(graphContentRectTrans.sizeDelta.x / (viewportRect.width - padding), graphContentRectTrans.sizeDelta.y / (viewportRect.height - padding));
             // content resize
-            graphContentRectTrans.sizeDelta = new Vector2(viewportRect.width - 20, viewportRect.height - 20);
+            graphContentRectTrans.sizeDelta = new Vector2(viewportRect.width - padding, viewportRect.height - padding);
             Vector2 size = new Vector2(graphContentRectTrans.rect.width, graphContentRectTrans.rect.height);
             // grid resize
             for (int i = 0; i < grid.transform.childCount; i++) {
@@ -298,8 +299,8 @@ public class Graph : MonoBehaviour {
                 }
             }
             // axis resize
-            xAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(viewportRect.width - 20, xAxisContent.GetComponent<RectTransform>().sizeDelta.y);
-            yAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(yAxisContent.GetComponent<RectTransform>().sizeDelta.x, viewportRect.height - 20);
+            xAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(viewportRect.width - padding, xAxisContent.GetComponent<RectTransform>().sizeDelta.y);
+            yAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(yAxisContent.GetComponent<RectTransform>().sizeDelta.x, viewportRect.height - padding);
 
             for (int i = 0; i < xAxis.transform.childCount; i++) {
                 dashMarker = xAxis.transform.GetChild(i);
@@ -738,25 +739,30 @@ public class Graph : MonoBehaviour {
     #region Public Methods
     public void GenerateGraph(int _xStart, int _xEnd, int _yStart, int _yEnd, string yLabel) {
         print("generating graph " + name);
+
+       
+
         GetComponent<RectTransform>().sizeDelta = transform.parent.GetComponent<RectTransform>().sizeDelta;
         // using the scrollview viewport as the basis for the graphs size
         Rect viewportRect = graphViewport.GetComponent<RectTransform>().rect;
+        float padding = (viewportRect.width / 100) * 5;
         // "-20" is for padding so that there is no clipping at the edges of the graph for graphlines or numbers
         graphContentRectTrans = graphContent.GetComponent<RectTransform>();
-        graphContentRectTrans.sizeDelta = new Vector2(viewportRect.width - 20, viewportRect.height - 20);
+        graphContentRectTrans.sizeDelta = new Vector2(viewportRect.width - padding, viewportRect.height - padding);
         graphContentRectTrans.localPosition = Vector3.zero;
 
         // resizing both axis to account for any changes in the new size
-        xAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(viewportRect.width - 20, xAxisContent.GetComponent<RectTransform>().sizeDelta.y);
-        yAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(yAxisContent.GetComponent<RectTransform>().sizeDelta.x, viewportRect.height - 20);
+        xAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(viewportRect.width - padding, xAxisContent.GetComponent<RectTransform>().sizeDelta.y);
+        yAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(yAxisContent.GetComponent<RectTransform>().sizeDelta.x, viewportRect.height - padding);
 
         // adjusting the collider which will detect mouseover for the graph in the Update function
-        graph.GetComponent<BoxCollider>().size = new Vector2(viewportRect.width - 20, viewportRect.height - 20);
+        graph.GetComponent<BoxCollider>().size = new Vector2(viewportRect.width - padding, viewportRect.height - padding);
         coordinateSystem.GetComponent<BoxCollider>().size = new Vector3(coordinateSystem.GetComponent<RectTransform>().rect.width * 1.5f, coordinateSystem.GetComponent<RectTransform>().rect.height * 1.5f, 1);
 
         // adjusting the placement of the axis labels
-        yAxisLabel.transform.localPosition += Vector3.left * yAxis.GetComponent<RectTransform>().rect.width / 3;
-        xAxisLabel.transform.localPosition += Vector3.down * xAxis.GetComponent<RectTransform>().rect.height / 3;
+        //yAxisLabel.transform.localPosition += Vector3.left * yAxis.GetComponent<RectTransform>().rect.width / 3;
+        //xAxisLabel.transform.localPosition += Vector3.down * xAxis.GetComponent<RectTransform>().rect.height / 3;
+
         // as well as label text
         yAxisLabel.GetComponent<Text>().text = yLabel;
         xAxisLabel.GetComponent<Text>().text = "Duration (MINUTES : seconds)";

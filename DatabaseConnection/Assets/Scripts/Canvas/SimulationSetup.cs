@@ -10,7 +10,8 @@ public class SimulationSetup : MonoBehaviour {
 
     public TabManager tabManager;
     public GameObject togglePrefab;
-    public GameObject rightLerpPanel;
+    public GameObject conditionWindow;
+    public GameObject drugWindow1;
     public Condition condition;
 
     #region Condition
@@ -565,32 +566,34 @@ public class SimulationSetup : MonoBehaviour {
         }
     }
 
-    public void NewVitalPanelToggleActive() {
+    public void ToggleActiveVitalWindow() {
         bool selected = !newVitalPanel.activeInHierarchy;
-        rightLerpPanel.SetActive(selected);
+        drugWindow1.SetActive(selected);
         newVitalPanel.SetActive(selected);
-        newDrugButton.interactable = !newDrugButton.interactable;
-        if (selected) {
-            newVitalButton.GetComponent<Image>().color = newVitalButton.colors.pressedColor;
-        }
-        else {
-            newVitalButton.GetComponent<Image>().color = newVitalButton.colors.normalColor;
-        }
+        conditionWindow.SetActive(!selected);
+        // newDrugButton.interactable = !newDrugButton.interactable;
+        //if (selected) {
+        //    newVitalButton.GetComponent<Image>().color = newVitalButton.colors.pressedColor;
+        //}
+        //else {
+        //    newVitalButton.GetComponent<Image>().color = newVitalButton.colors.normalColor;
+        //}
     }
 
-    public void NewDrugPanelToggleActive() {
+    public void ToggleActiveDrugWindow() {
         bool selected = !newDrugPanel.activeInHierarchy;
-        newVitalButton.interactable = !newVitalButton.interactable;
+      //  newVitalButton.interactable = !newVitalButton.interactable;
         if (selected) {
-            newDrugButton.GetComponent<Image>().color = newVitalButton.colors.pressedColor;
-            rightLerpPanel.SetActive(selected);
+           // newDrugButton.GetComponent<Image>().color = newVitalButton.colors.pressedColor;
+            drugWindow1.SetActive(selected);
             newDrugPanel.SetActive(selected);
+            conditionWindow.SetActive(!selected);
         }
         else {
-            newDrugButton.GetComponent<Image>().color = newVitalButton.colors.normalColor;
-            rightLerpPanel.SetActive(selected);
+          //  newDrugButton.GetComponent<Image>().color = newVitalButton.colors.normalColor;
+            drugWindow1.SetActive(selected);
             newDrugPanel.SetActive(selected);
-
+            conditionWindow.SetActive(!selected);
         }
         
     }

@@ -65,11 +65,13 @@ public class DrugSetup : MonoBehaviour {
     }
 
     public void SubmitDuration() {
+        print("setting duration");
         int newDuration = 0;
 
         int minutes = 0;
         int seconds = 0;
         if (int.TryParse(drugDurationMinutes.text, out minutes)) {
+            print("mins registered");
             if (minutes > 60) {
                 Error.instance.informMessageText.text = "Minutes cannot exceed 60.";
                 Error.instance.informPanel.SetActive(true);
@@ -86,6 +88,8 @@ public class DrugSetup : MonoBehaviour {
         }
 
         if (int.TryParse(drugDurationSeconds.text, out seconds)) {
+            print("secs registered");
+
             if (seconds > 60) {
                 Error.instance.informMessageText.text = "Seconds cannot exceed 60.";
                 Error.instance.informPanel.SetActive(true);
@@ -104,18 +108,24 @@ public class DrugSetup : MonoBehaviour {
             else {
                 newDuration += seconds;
             }
-            if (duration != newDuration && duration != -1 && replaceExistingGraphs == false) {
-                Error.instance.boolMessageText.text = "This action may overwrite data on already active graphs. Are you sure?";
-                Error.instance.boolPanel.SetActive(true);
-                Error.instance.boolRightButton.onClick.AddListener(ChangeActiveGraphDurations);
-                Error.instance.boolLeftButton.onClick.AddListener(ResetDurationBack);
-            }
-            else {
-                duration = newDuration;
-                submitButton.interactable = false;
-                replaceExistingGraphs = false;
-            }
         }
+        if (duration != newDuration && duration != -1 && replaceExistingGraphs == false) {
+            print("overwrite action registered");
+
+            Error.instance.boolMessageText.text = "This action may overwrite data on already active graphs. Are you sure?";
+            Error.instance.boolPanel.SetActive(true);
+            Error.instance.boolRightButton.onClick.AddListener(ChangeActiveGraphDurations);
+            Error.instance.boolLeftButton.onClick.AddListener(ResetDurationBack);
+        }
+        else {
+            if (newDuration != 0) {
+                duration = newDuration;
+            }
+            print("Setting duration to " + newDuration);
+            // submitButton.interactable = false;
+            replaceExistingGraphs = false;
+        }
+
     }
 
     private void SelectMinutesDuration() {
@@ -238,7 +248,7 @@ public class DrugSetup : MonoBehaviour {
 
     public void loadChosenVital(bool chosen, int index, string vitalName) {
         SubmitDuration();
-
+        print("duration set " + duration);
         tabManager.activeTabs.transform.GetComponent<ToggleGroup>().SetAllTogglesOff();
         if (chosen) {
             Transform vitalTrans = tabManager.transform.FindChild(vitalName);
@@ -278,6 +288,8 @@ public class DrugSetup : MonoBehaviour {
                 tabManager.transform.FindChild(vitalName).gameObject.SetActive(false);
             }
         }
+        print("onend 5");
+        LerpFromView.onEnd();
     }
 
     public void LoadChosenAdministration(bool chosen, int index, string administrationName) {
@@ -298,7 +310,7 @@ public class DrugSetup : MonoBehaviour {
         List<Administration> administrations = new List<Administration>();
 
         for (int i = 0; i < tabManager.contentArea.transform.childCount; i++) {
-            AdminSetup admin = tabManager.contentArea.transform.GetChild(i).GetComponent<AdminSetup>();
+            //  AdminSetup admin = tabManager.contentArea.transform.GetChild(i).GetComponent<AdminSetup>();
             Administration administration = GetAdministration();
             if (administration == null) {
                 return;
@@ -318,7 +330,7 @@ public class DrugSetup : MonoBehaviour {
         toggleObject.transform.GetChild(1).GetComponent<Text>().text = drug.name;
         Toggle toggle = toggleObject.GetComponent<Toggle>();
         toggle.name = drug.name;
-        SimulationSetup.instance.NewDrugPanelToggleActive();
+        SimulationSetup.instance.ToggleActiveDrugWindow();
     }
 
     public Administration GetAdministration() {
