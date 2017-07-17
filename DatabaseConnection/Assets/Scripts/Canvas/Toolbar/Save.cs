@@ -11,7 +11,7 @@ public class Save : MonoBehaviour {
     public InputField filepathInputField;
 
     public void OnEnable() {
-        if (SimulationSetup.instance.duration == -1) {
+        if (ConditionSetup.instance.duration == -1) {
             messageText.text = "Cannot save when no graphs or duration are present.";
             rightButton.interactable = false;
             filepathInputField.interactable = false;
@@ -28,23 +28,23 @@ public class Save : MonoBehaviour {
 
         Condition condition = new Condition();
         condition.vitalsData = new List<VitalData>();
-        condition.duration = SimulationSetup.instance.duration;
+        condition.duration = ConditionSetup.instance.duration;
 
         VitalData vitalData;
         TimeLine timeline;
         List<Value> values;
         Value value;
 
-        for (int i = 0; i < SimulationSetup.instance.vitalsChosen.transform.childCount; i++) {
+        for (int i = 0; i < ConditionSetup.instance.vitalsChosen.transform.childCount; i++) {
 
-            Toggle toggle = SimulationSetup.instance.vitalsChosen.transform.GetChild(i).GetComponent<Toggle>();
+            Toggle toggle = ConditionSetup.instance.vitalsChosen.transform.GetChild(i).GetComponent<Toggle>();
 
             if (toggle.isOn) {
 
                 string vitalName = toggle.gameObject.name;
 
-                GameObject graphObject = SimulationSetup.instance.tabManager.transform.FindChild(vitalName).gameObject;
-                Graph graph = SimulationSetup.instance.tabManager.transform.FindChild(vitalName).GetComponent<Graph>();
+                GameObject graphObject = ConditionSetup.instance.tabManager.transform.FindChild(vitalName).gameObject;
+                Graph graph = ConditionSetup.instance.tabManager.transform.FindChild(vitalName).GetComponent<Graph>();
 
                 timeline = new TimeLine();
 
@@ -78,7 +78,7 @@ public class Save : MonoBehaviour {
 
 
                 vitalData = new VitalData();
-                vitalData.vital = SimulationSetup.instance.GetVital(vitalName);
+                vitalData.vital = ConditionSetup.instance.GetVital(vitalName);
                 vitalData.timeline = timeline;
 
                 condition.vitalsData.Add(vitalData);

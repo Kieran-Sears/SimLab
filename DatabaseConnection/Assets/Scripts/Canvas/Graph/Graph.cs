@@ -11,7 +11,8 @@ public class Graph : MonoBehaviour {
     #region Public Variables
     public GameObject graph;
     public GameObject grid;
-    public GameObject thresholds;
+    public GameObject upperThresholds;
+    public GameObject lowerThresholds;
     public GameObject xAxis;
     public GameObject yAxis;
     public GameObject graphContent;
@@ -30,11 +31,14 @@ public class Graph : MonoBehaviour {
     public GameObject yDashMarkerPrefab;
     public GameObject graphPointPrefab;
     public GameObject lineRendererPrefab;
-    public GameObject lineRendererThresholdPrefab;
+    //public GameObject lineRendererThresholdPrefab;
     public GameObject coordinateSystem;
     public InputField coordinateX;
     public InputField coordinateY;
 
+    public LineRenderer pointLine;
+    public LineRenderer thresholdLineLower;
+    public LineRenderer thresholdLineUpper;
 
     public SortedList<float, Slider> sortedGraphPointsList = new SortedList<float, Slider>();
     public SortedList<float, Slider> pointsUpperThreshold = new SortedList<float, Slider>();
@@ -54,9 +58,7 @@ public class Graph : MonoBehaviour {
     // private float newScrollWheel;
     private Vector2 localpoint;
     private RectTransform graphContentRectTrans;
-    private LineRenderer pointLine;
-    private LineRenderer thresholdLineLower;
-    private LineRenderer thresholdLineUpper;
+
 
     private float mouseHold;
     private bool leftMouseButtonIsDown;
@@ -275,12 +277,12 @@ public class Graph : MonoBehaviour {
 
 
     private void ResizeGraph() {
-        print("resizing graph " + name);
         if (graphViewport != null) {
             Transform dashMarker;
             LineRenderer lineRenderer;
             Rect viewportRect = graphViewport.GetComponent<RectTransform>().rect;
             float padding = (viewportRect.width / 100 * 5);
+            graphContentRectTrans = graphContent.GetComponent<RectTransform>();
             Vector2 sizeMarkup = new Vector2(graphContentRectTrans.sizeDelta.x / (viewportRect.width - padding), graphContentRectTrans.sizeDelta.y / (viewportRect.height - padding));
             // content resize
             graphContentRectTrans.sizeDelta = new Vector2(viewportRect.width - padding, viewportRect.height - padding);
@@ -317,18 +319,34 @@ public class Graph : MonoBehaviour {
             yAxisScrollRect.verticalNormalizedPosition = 0;
             xAxisScrollRect.horizontalNormalizedPosition = 0;
 
+
             // replacing of points
+            sortedGraphPointsList.Clear();
             for (int i = 0; i < graph.transform.childCount; i++) {
                 Transform sliderObject = graph.transform.GetChild(i);
+                
                 sliderObject.localPosition = new Vector3(sliderObject.localPosition.x / sizeMarkup.x, sliderObject.localPosition.y / sizeMarkup.y, -20);
+                float pointTime = (sliderObject.transform.localPosition.x + (graph.GetComponent<RectTransform>().rect.width / 2)) / (graph.GetComponent<RectTransform>().rect.width / xScale);
+                sortedGraphPointsList.Add(pointTime, sliderObject.GetComponent<Slider>());
             }
-            for (int i = 0; i < thresholds.transform.childCount; i++) {
-                Transform sliderObject = thresholds.transform.GetChild(i);
+
+            pointsUpperThreshold.Clear();
+            for (int i = 0; i < upperThresholds.transform.childCount; i++) {
+                Transform sliderObject = upperThresholds.transform.GetChild(i);
                 sliderObject.localPosition = new Vector3(sliderObject.localPosition.x / sizeMarkup.x, sliderObject.localPosition.y / sizeMarkup.y, -10);
+                float pointTime = (sliderObject.transform.localPosition.x + (graph.GetComponent<RectTransform>().rect.width / 2)) / (graph.GetComponent<RectTransform>().rect.width / xScale);
+                pointsUpperThreshold.Add(pointTime, sliderObject.GetComponent<Slider>());
+            }
+            pointsLowerThreshold.Clear();
+            for (int i = 0; i < lowerThresholds.transform.childCount; i++) {
+                Transform sliderObject = lowerThresholds.transform.GetChild(i);
+                sliderObject.localPosition = new Vector3(sliderObject.localPosition.x / sizeMarkup.x, sliderObject.localPosition.y / sizeMarkup.y, -10);
+                float pointTime = (sliderObject.transform.localPosition.x + (graph.GetComponent<RectTransform>().rect.width / 2)) / (graph.GetComponent<RectTransform>().rect.width / xScale);
+                pointsLowerThreshold.Add(pointTime, sliderObject.GetComponent<Slider>());
             }
             DrawLinkedPointLines();
-           // DrawLinkedPointLinesLowerThreshold();
-           // DrawLinkedPointLineUpperThreshold();
+            DrawLinkedPointLinesLowerThreshold();
+            DrawLinkedPointLineUpperThreshold();
         }
     }
 
@@ -408,42 +426,13 @@ public class Graph : MonoBehaviour {
     }
 
     private void DrawThresholds() {
-        GameObject upperLineWriter;
-        GameObject lowerLineWriter;
-        if (thresholdLineLower == null) {
-            if (graph == null) return;
-            lowerLineWriter = Instantiate(lineRendererThresholdPrefab, graphContent.transform);
-            lowerLineWriter.transform.localScale = Vector3.one;
-            lowerLineWriter.transform.localPosition = Vector3.zero;
-            lowerLineWriter.name = "LowerThreshold";
-
-            thresholdLineLower = lowerLineWriter.GetComponent<LineRenderer>();
-            thresholdLineLower.startColor = Color.red;
-            thresholdLineLower.endColor = Color.red;
-            thresholdLineLower.startWidth = 0.1f;
-            thresholdLineLower.endWidth = 0.1f;
-        }
+        if (graph == null) return;
         thresholdLineLower.numPositions = pointsLowerThreshold.Count;
         counter = 0;
         foreach (KeyValuePair<float, Slider> item in pointsLowerThreshold) {
             thresholdLineLower.SetPosition(counter, Camera.main.WorldToScreenPoint(item.Value.handleRect.transform.position) - Camera.main.WorldToScreenPoint(graphContent.transform.position));
             counter++;
-        }
-
-
-        if (thresholdLineUpper == null) {
-            if (graph == null) return;
-            upperLineWriter = Instantiate(lineRendererThresholdPrefab, graphContent.transform);
-            upperLineWriter.transform.localScale = Vector3.one;
-            upperLineWriter.transform.localPosition = Vector3.zero;
-            upperLineWriter.name = "UpperThreshold";
-
-            thresholdLineUpper = upperLineWriter.GetComponent<LineRenderer>();
-            thresholdLineUpper.startColor = Color.red;
-            thresholdLineUpper.endColor = Color.red;
-            thresholdLineUpper.startWidth = 0.1f;
-            thresholdLineUpper.endWidth = 0.1f;
-        }
+        }     
         thresholdLineUpper.numPositions = pointsUpperThreshold.Count;
         counter = 0;
         foreach (KeyValuePair<float, Slider> item in pointsUpperThreshold) {
@@ -637,101 +626,61 @@ public class Graph : MonoBehaviour {
     }
 
     public void DrawLinkedPointLines() {
-        GameObject LineWriter;
+        if (graph == null) return;
+    
         Vector3[] arrayToCurve = new Vector3[sortedGraphPointsList.Count];
 
         counter = 0;
-        float previous = -1;
         foreach (KeyValuePair<float, Slider> item in sortedGraphPointsList) {
-            if (item.Key < previous) { print("Alert"); }
-            previous = item.Key;
             arrayToCurve[counter] = Camera.main.WorldToScreenPoint(item.Value.handleRect.transform.position) - Camera.main.WorldToScreenPoint(graphContent.transform.position);
             counter++;
         }
 
         // MakeSmoothCurve(arrayToCurve, 30);
-        if (pointLine == null) {
-            if (graph == null) return;
-            LineWriter = Instantiate(lineRendererPrefab, graphContent.transform);
-            LineWriter.transform.localScale = Vector3.one;
-            LineWriter.transform.localPosition = Vector3.zero;
-
-            pointLine = LineWriter.GetComponent<LineRenderer>();
-            pointLine.startColor = Color.red;
-            pointLine.endColor = Color.red;
-            pointLine.startWidth = 0.1f;
-            pointLine.endWidth = 0.1f;
-        }
-
-        pointLine.transform.SetAsLastSibling();
+      
         pointLine.numPositions = sortedGraphPointsList.Count;
-
-        for (int i = 0; i < sortedGraphPointsList.Count; i++) {
-            pointLine.SetPosition(i, arrayToCurve[i] - (Vector3.forward * arrayToCurve[i].z));
-        }
+            for (int i = 0; i < sortedGraphPointsList.Count; i++) {
+                pointLine.SetPosition(i, arrayToCurve[i] - (Vector3.forward * arrayToCurve[i].z));
+            }
+        
     }
 
     private void DrawLinkedPointLineUpperThreshold() {
-        GameObject LineWriter;
-        Vector3[] arrayToCurve = new Vector3[sortedGraphPointsList.Count];
+     
+      //  if (graph == null) return;
+        Vector3[] arrayToCurve = new Vector3[pointsUpperThreshold.Count];
 
         int counter = 0;
-        foreach (KeyValuePair<float, Slider> item in sortedGraphPointsList) {
+        foreach (KeyValuePair<float, Slider> item in pointsUpperThreshold) {
             arrayToCurve[counter] = Camera.main.WorldToScreenPoint(item.Value.handleRect.transform.position) - Camera.main.WorldToScreenPoint(graphContent.transform.position);
             counter++;
         }
 
-        MakeSmoothCurve(arrayToCurve, 30);
-        if (thresholdLineUpper == null) {
-            if (graph == null) return;
-            LineWriter = Instantiate(lineRendererThresholdPrefab, graphContent.transform);
-            LineWriter.transform.localScale = Vector3.one;
-            LineWriter.transform.localPosition = Vector3.zero;
+       // MakeSmoothCurve(arrayToCurve, 30);
 
-            thresholdLineUpper = LineWriter.GetComponent<LineRenderer>();
-            thresholdLineUpper.startColor = Color.red;
-            thresholdLineUpper.endColor = Color.red;
-            thresholdLineUpper.startWidth = 0.1f;
-            thresholdLineUpper.endWidth = 0.1f;
-        }
+        thresholdLineUpper.numPositions = pointsUpperThreshold.Count;
 
-        thresholdLineUpper.transform.SetAsLastSibling();
-        thresholdLineUpper.numPositions = sortedGraphPointsList.Count;
-
-        for (int i = 0; i < sortedGraphPointsList.Count; i++) {
+        for (int i = 0; i < pointsUpperThreshold.Count; i++) {
             thresholdLineUpper.SetPosition(i, arrayToCurve[i]);
         }
     }
 
     private void DrawLinkedPointLinesLowerThreshold() {
-        GameObject LineWriter;
-        Vector3[] arrayToCurve = new Vector3[sortedGraphPointsList.Count];
+     //   if (graph == null) return;
+        Vector3[] arrayToCurve = new Vector3[pointsLowerThreshold.Count];
 
         int counter = 0;
-        foreach (KeyValuePair<float, Slider> item in sortedGraphPointsList) {
+        foreach (KeyValuePair<float, Slider> item in pointsLowerThreshold) {
             arrayToCurve[counter] = Camera.main.WorldToScreenPoint(item.Value.handleRect.transform.position) - Camera.main.WorldToScreenPoint(graphContent.transform.position);
             counter++;
         }
 
-        MakeSmoothCurve(arrayToCurve, 30);
-        if (thresholdLineLower == null) {
-            if (graph == null) return;
-            LineWriter = Instantiate(lineRendererThresholdPrefab, graphContent.transform);
-            LineWriter.transform.localScale = Vector3.one;
-            LineWriter.transform.localPosition = Vector3.zero;
+       // MakeSmoothCurve(arrayToCurve, 30);
 
-            thresholdLineLower = LineWriter.GetComponent<LineRenderer>();
-            thresholdLineLower.startColor = Color.red;
-            thresholdLineLower.endColor = Color.red;
-            thresholdLineLower.startWidth = 0.1f;
-            thresholdLineLower.endWidth = 0.1f;
-        }
+        thresholdLineLower.numPositions = pointsLowerThreshold.Count;
 
-        thresholdLineLower.transform.SetAsLastSibling();
-        thresholdLineLower.numPositions = sortedGraphPointsList.Count;
-
-        for (int i = 0; i < sortedGraphPointsList.Count; i++) {
-            thresholdLineLower.SetPosition(counter, arrayToCurve[i]);
+        for (int i = 0; i < pointsLowerThreshold.Count; i++) {
+            thresholdLineLower.SetPosition(i, arrayToCurve[i]);
         }
     }
     #endregion
@@ -740,7 +689,7 @@ public class Graph : MonoBehaviour {
     public void GenerateGraph(int _xStart, int _xEnd, int _yStart, int _yEnd, string yLabel) {
         print("generating graph " + name);
 
-       
+
 
         GetComponent<RectTransform>().sizeDelta = transform.parent.GetComponent<RectTransform>().sizeDelta;
         // using the scrollview viewport as the basis for the graphs size
@@ -912,7 +861,7 @@ public class Graph : MonoBehaviour {
     }
 
     public void AddThresholdPointUpper(float xValue, float yValue) {
-        GameObject point = Instantiate(graphPointPrefab, thresholds.transform);
+        GameObject point = Instantiate(graphPointPrefab, upperThresholds.transform);
         Slider slider = point.GetComponent<Slider>();
         point.transform.localScale = Vector3.one;
         point.transform.localPosition = Vector3.zero;
@@ -928,7 +877,7 @@ public class Graph : MonoBehaviour {
     }
 
     public void AddThresholdPointLower(float xValue, float yValue) {
-        GameObject point = Instantiate(graphPointPrefab, thresholds.transform);
+        GameObject point = Instantiate(graphPointPrefab, lowerThresholds.transform);
         Slider slider = point.GetComponent<Slider>();
         point.transform.localScale = Vector3.one;
         point.transform.localPosition = Vector3.zero;

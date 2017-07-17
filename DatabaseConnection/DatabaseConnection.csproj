@@ -75,28 +75,26 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\ButtonScript.cs" />
-    <Compile Include="Assets\LerpFromView.cs" />
-    <Compile Include="Assets\Scripts\Canvas\AdminSetup.cs" />
-    <Compile Include="Assets\Scripts\Canvas\CusorSensor.cs" />
-    <Compile Include="Assets\Scripts\Canvas\DrugSetup.cs" />
-    <Compile Include="Assets\Scripts\Canvas\Error.cs" />
-    <Compile Include="Assets\Scripts\Canvas\ErrorInput.cs" />
-    <Compile Include="Assets\Scripts\Canvas\FileDropdownOption.cs" />
-    <Compile Include="Assets\Scripts\Canvas\Graph.cs" />
-    <Compile Include="Assets\Scripts\Canvas\KeyboardCoordinate.cs" />
-    <Compile Include="Assets\Scripts\Canvas\NoScrollRect.cs" />
-    <Compile Include="Assets\Scripts\Canvas\RightClickMenu.cs" />
-    <Compile Include="Assets\Scripts\Canvas\Save.cs" />
-    <Compile Include="Assets\Scripts\Canvas\SimulationSetup.cs" />
-    <Compile Include="Assets\Scripts\Canvas\Toolbar.cs" />
-    <Compile Include="Assets\Scripts\Canvas\UIDrag.cs" />
-    <Compile Include="Assets\Scripts\Canvas\ViewPortArea.cs" />
-    <Compile Include="Assets\Scripts\Canvas\VitalSetup.cs" />
+    <Compile Include="Assets\Scripts\Canvas\Error\Error.cs" />
+    <Compile Include="Assets\Scripts\Canvas\Error\ErrorInput.cs" />
+    <Compile Include="Assets\Scripts\Canvas\Graph\CusorSensor.cs" />
+    <Compile Include="Assets\Scripts\Canvas\Graph\Graph.cs" />
+    <Compile Include="Assets\Scripts\Canvas\Right Click Menu\ButtonScript.cs" />
+    <Compile Include="Assets\Scripts\Canvas\Right Click Menu\RightClickMenu.cs" />
+    <Compile Include="Assets\Scripts\Canvas\Setup Scripts\ConditionSetup.cs" />
+    <Compile Include="Assets\Scripts\Canvas\Setup Scripts\DrugSetup.cs" />
+    <Compile Include="Assets\Scripts\Canvas\Setup Scripts\VisualizationSetup.cs" />
+    <Compile Include="Assets\Scripts\Canvas\Setup Scripts\VitalSetup.cs" />
+    <Compile Include="Assets\Scripts\Canvas\Side Panels\LerpFromView.cs" />
+    <Compile Include="Assets\Scripts\Canvas\Toolbar\FileDropdownOption.cs" />
+    <Compile Include="Assets\Scripts\Canvas\Toolbar\Save.cs" />
+    <Compile Include="Assets\Scripts\Canvas\Toolbar\Toolbar.cs" />
+    <Compile Include="Assets\Scripts\Canvas\Utilities\UIDrag.cs" />
     <Compile Include="Assets\Scripts\Managers\DatabaseManager.cs" />
     <Compile Include="Assets\Scripts\Managers\ExportManager.cs" />
     <Compile Include="Assets\Scripts\Managers\NetworkManager.cs" />
     <Compile Include="Assets\Scripts\Managers\TabManager.cs" />
+    <Compile Include="Assets\Scripts\Managers\WindowManager.cs" />
     <Compile Include="Assets\Scripts\System\Condition.cs" />
     <Compile Include="Assets\Scripts\System\Drugs.cs" />
     <Compile Include="Assets\Scripts\System\Equipment.cs" />
@@ -106,7 +104,7 @@
   <ItemGroup>
     <None Include="Assets\Resources\Conditions\newCondition2.xml" />
     <None Include="Assets\Resources\drugs.xml" />
-    <None Include="Assets\Resources\equipment.xml" />
+    <None Include="Assets\Resources\equipment (Depricated).xml" />
     <None Include="Assets\Resources\vitals.xml" />
     <None Include="Assets\Shaders\DiffuseNotEqualOne.shader" />
     <None Include="Assets\Shaders\MaskOneZLess.shader" />

@@ -5,6 +5,8 @@ using UnityEngine.UI;
 
 public class DrugSetup : MonoBehaviour {
 
+    public static DrugSetup instance { get; private set; }
+
     public TabManager tabManager;
     public GameObject togglePrefab;
     public InputField drugName;
@@ -14,11 +16,21 @@ public class DrugSetup : MonoBehaviour {
     public InputField drugDurationMinutes;
     public InputField drugDurationSeconds;
     public GameObject vitalsChosen;
+    public Button visualizeButton;
     public Button submitButton;
+    public Graph graph;
 
-    private Graph graph;
     private int duration = -1;
     private bool replaceExistingGraphs;
+
+    private void Awake() {
+        if (instance) {
+            DestroyImmediate(this);
+        }
+        else {
+            instance = this;
+        }
+    }
 
     public void Start() {
         PopulateAdministrations();
@@ -27,6 +39,7 @@ public class DrugSetup : MonoBehaviour {
 
     public void ResetValues() {
         submitButton.interactable = false;
+        visualizeButton.interactable = false;
         unitOfMeasure.interactable = false;
         drugDurationMinutes.interactable = false;
         drugDurationSeconds.interactable = false;
@@ -143,16 +156,22 @@ public class DrugSetup : MonoBehaviour {
     }
 
     void PopulateVitals() {
-        foreach (Vital vital in SimulationSetup.instance.vitals.vitalList) {
-            GameObject toggleObject = Instantiate(togglePrefab);
-            toggleObject.transform.SetParent(vitalsChosen.transform);
-            toggleObject.transform.localScale = Vector3.one;
-            toggleObject.transform.localPosition = Vector3.zero;
-            toggleObject.transform.GetChild(1).GetComponent<Text>().text = vital.name;
-            Toggle toggle = toggleObject.GetComponent<Toggle>();
-            toggle.name = vital.name;
-            toggle.isOn = false;
-            toggle.onValueChanged.AddListener((bool value) => loadChosenVital(value, toggleObject.transform.GetSiblingIndex(), vital.name));
+        foreach (Vital vital in ConditionSetup.instance.vitals.vitalList) {
+            Transform child = vitalsChosen.transform.FindChild(vital.name);
+            if (child != null) {
+                child.gameObject.SetActive(true);
+            }
+            else {
+                GameObject toggleObject = Instantiate(togglePrefab);
+                toggleObject.transform.SetParent(vitalsChosen.transform);
+                toggleObject.transform.localScale = Vector3.one;
+                toggleObject.transform.localPosition = Vector3.zero;
+                toggleObject.transform.GetChild(1).GetComponent<Text>().text = vital.name;
+                Toggle toggle = toggleObject.GetComponent<Toggle>();
+                toggle.name = vital.name;
+                toggle.isOn = false;
+                toggle.onValueChanged.AddListener((bool value) => loadChosenVital(value, toggleObject.transform.GetSiblingIndex(), vital.name));
+            }
         }
     }
 
@@ -248,25 +267,30 @@ public class DrugSetup : MonoBehaviour {
 
     public void loadChosenVital(bool chosen, int index, string vitalName) {
         SubmitDuration();
-        print("duration set " + duration);
+        // clear the background area ready for display
         tabManager.activeTabs.transform.GetComponent<ToggleGroup>().SetAllTogglesOff();
         if (chosen) {
+            // check to see if vital selected has already been previously created and is idle
             Transform vitalTrans = tabManager.transform.FindChild(vitalName);
             Transform vitalTab = tabManager.inactiveTabs.transform.FindChild(vitalName);
+            // if vital isn't sitting idle
             if (vitalTrans == null || vitalTab == null) {
+                // check this isn't the first attempt of choosing a vital before a duration has been even set
                 if (duration == -1) {
+                    // if it is then warn user to set a duration first before choosing a vital
                     Error.instance.informMessageText.text = "Please set the duration of the drugs effects before adding vitals.";
                     Error.instance.informPanel.SetActive(true);
                     Error.instance.informOkButton.onClick.AddListener(SelectMinutesDuration);
                     vitalsChosen.transform.GetChild(index).GetComponent<Toggle>().isOn = false;
                     return;
                 }
+                // if it is the first attempt of choosing a vital and a duration has been set then initialise the vital graph with starting values
                 tabManager.gameObject.SetActive(true);
-                graph = tabManager.GenerateTab(SimulationSetup.instance.vitals.vitalList[index].name).GetComponent<Graph>();
+                graph = tabManager.GenerateTab(ConditionSetup.instance.vitals.vitalList[index].name).GetComponent<Graph>();
                 print(graph.name);
-                graph.GenerateGraph(0, duration, (int)Math.Ceiling(SimulationSetup.instance.vitals.vitalList[index].min), (int)Math.Ceiling(SimulationSetup.instance.vitals.vitalList[index].max), SimulationSetup.instance.vitals.vitalList[index].units);
+                graph.GenerateGraph(0, duration, (int)Math.Ceiling(ConditionSetup.instance.vitals.vitalList[index].min), (int)Math.Ceiling(ConditionSetup.instance.vitals.vitalList[index].max), ConditionSetup.instance.vitals.vitalList[index].units);
                 if (graph.sortedGraphPointsList.Count == 0) {
-                    int halfValue = (int)Math.Ceiling(((SimulationSetup.instance.vitals.vitalList[index].max - SimulationSetup.instance.vitals.vitalList[index].min) / 2) + SimulationSetup.instance.vitals.vitalList[index].min);
+                    int halfValue = (int)Math.Ceiling(((ConditionSetup.instance.vitals.vitalList[index].max - ConditionSetup.instance.vitals.vitalList[index].min) / 2) + ConditionSetup.instance.vitals.vitalList[index].min);
                     graph.AddPoint(0, halfValue);
                     graph.AddPoint(duration, halfValue);
                 }
@@ -274,25 +298,45 @@ public class DrugSetup : MonoBehaviour {
                 tabManager.SwitchTab();
             }
             else {
+                // if vital was on standby then reactivate it as its toggle has been selected
                 vitalTrans.gameObject.SetActive(true);
                 vitalTab.SetParent(tabManager.transform);
                 vitalTab.gameObject.SetActive(true);
                 tabManager.SwitchTab();
             }
+            if (ConditionSetup.instance.tabManager.activeTabs.transform.FindChild(vitalName) != null && tabManager.activeTabs.transform.FindChild(vitalName) != null) {
+                visualizeButton.interactable = true;
+            }
+            else {
+                print("didnt find " + vitalName + " in conditions active tabs");
+                visualizeButton.interactable = false;
+            }
         }
         else {
-            Transform tab = tabManager.transform.FindChild(vitalName);
+            // if the user has unticked the vitals toggle then hide the vital's graph display away along with its tab
+            Transform tab = tabManager.activeTabs.transform.FindChild(vitalName);
             if (tab != null) {
                 tab.gameObject.SetActive(false);
                 tab.SetParent(tabManager.inactiveTabs.transform);
-                tabManager.transform.FindChild(vitalName).gameObject.SetActive(false);
+                // always set the vital now being looked at as the first one in the list
+                if (tabManager.activeTabs.transform.childCount > 0) {
+                    tabManager.activeTabs.transform.GetChild(0).GetComponent<Toggle>().isOn = true;
+                }
             }
         }
-        print("onend 5");
-        LerpFromView.onEnd();
+       
+        // LerpFromView.onEnd();
     }
 
     public void LoadChosenAdministration(bool chosen, int index, string administrationName) {
+        if (chosen) {
+            PopulateVitals();
+        }
+        else {
+            for (int i = 0; i < vitalsChosen.transform.childCount; i++) {
+                vitalsChosen.transform.GetChild(i).gameObject.SetActive(false);
+            }
+        }
         PopulateVitals();
         ToggleElementsActive();
     }
@@ -321,16 +365,16 @@ public class DrugSetup : MonoBehaviour {
         }
         drug.administrations = administrations;
         drug.name = drugName.text;
-        SimulationSetup.instance.drugs.drugs.Add(drug);
+        ConditionSetup.instance.drugs.drugs.Add(drug);
 
         GameObject toggleObject = Instantiate(togglePrefab);
-        toggleObject.transform.SetParent(SimulationSetup.instance.drugsChosen.transform);
+        toggleObject.transform.SetParent(ConditionSetup.instance.drugsChosen.transform);
         toggleObject.transform.localScale = Vector3.one;
         toggleObject.transform.localPosition = Vector3.zero;
         toggleObject.transform.GetChild(1).GetComponent<Text>().text = drug.name;
         Toggle toggle = toggleObject.GetComponent<Toggle>();
         toggle.name = drug.name;
-        SimulationSetup.instance.ToggleActiveDrugWindow();
+        ConditionSetup.instance.ToggleActiveDrugWindow();
     }
 
     public Administration GetAdministration() {
@@ -398,17 +442,26 @@ public class DrugSetup : MonoBehaviour {
                 timeLine.lowerThresholdValues = values;
 
                 vitalData = new VitalData();
-                vitalData.vital = SimulationSetup.instance.GetVital(vitalName);
+                vitalData.vital = ConditionSetup.instance.GetVital(vitalName);
                 vitalData.timeline = timeLine;
 
                 administration.vitalsData.Add(vitalData);
             }
         }
         administration.duration = duration;
-        // administration.max = float.Parse(drugMax.text);
-        // administration.min = float.Parse(drugMin.text);
         administration.units = unitOfMeasure.text;
         administration.name = name;
         return administration;
+    }
+
+    public void ToggleActiveVisualizeWindow() {
+        WindowManager.instance.drug.SetActive(!WindowManager.instance.drug.activeInHierarchy);
+        WindowManager.instance.visualise.SetActive(!WindowManager.instance.visualise.activeInHierarchy);
+        if (WindowManager.instance.visualise.activeInHierarchy) {
+            VisualizationSetup.instance.GetGraphs();
+        }
+        else {
+            VisualizationSetup.instance.ReturnGraphs();
+        }
     }
 }
