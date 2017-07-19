@@ -537,22 +537,38 @@ public class Graph : MonoBehaviour {
     }
 
     private void LayoutYScale() {
-        int diff = 0;
-
-        if (yStart % 10 != 0) {
-            diff = 10 - (yStart % 10);
-        }
-
-        for (int i = 0; i < yScale; i++) {
-            if (i % 10 == diff) {
-                yAxis.transform.GetChild(i).gameObject.SetActive(true);
-                grid.transform.GetChild(xScale + i + 1).GetComponent<LineRenderer>().enabled = true;
-            }
-            else {
-                yAxis.transform.GetChild(i).gameObject.SetActive(false);
-                grid.transform.GetChild(xScale + i + 1).GetComponent<LineRenderer>().enabled = false;
+        // find the increment used to set the scaling
+        float currentIncrement = -1;
+        float numberOfIncrements = 0;
+        float[] increments = { 1, 2, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000 };
+        for (int i = 0; i < increments.Length; i++) {
+             numberOfIncrements = yScale / increments[i];
+           // print(numberOfIncrements);  // ~~~ Print increments here
+            if (numberOfIncrements >= 5 && numberOfIncrements <= 25) {
+                currentIncrement = increments[i];
+                i = increments.Length;
             }
         }
+
+         int unitDiff =  (negativeOffset % 10);
+    
+            // set the scaling based on the chosen increment
+            if (currentIncrement != -1) {
+                for (int i = 0; i < yScale; i++) {
+                    if (i % (currentIncrement) == unitDiff) {
+                        yAxis.transform.GetChild(i).gameObject.SetActive(true);
+                        grid.transform.GetChild(xScale + i + 1).GetComponent<LineRenderer>().enabled = true;
+
+                    } else {
+                        yAxis.transform.GetChild(i).gameObject.SetActive(false);
+                        grid.transform.GetChild(xScale + i + 1).GetComponent<LineRenderer>().enabled = false;
+                    }
+                }
+            } else {
+                print("Error: increments are out of bounds in Graph.LayoutYScale() - print " +
+                    "increments to console from this method and use these to guide the setting of" +
+                    "range values within conditional statement.");
+            }
     }
 
     private void ChangeLinkedPointLineWithSlider(float value) {
@@ -782,7 +798,7 @@ public class Graph : MonoBehaviour {
         float currentValue = worldPoint.y - minValue;
         float percent = (currentValue / maxValue) * 100;
         point.transform.position = new Vector3(worldPoint.x, point.transform.position.y, 0);
-        slider.value = (((slider.maxValue - slider.minValue) / 100) * percent);
+        slider.value = (((slider.maxValue - slider.minValue) / 100) * percent) + negativeOffset;
         float pointTime = (slider.transform.localPosition.x + (graph.GetComponent<RectTransform>().rect.width / 2)) / (graph.GetComponent<RectTransform>().rect.width / xScale);
         HierachyPositionSearch(point);
         point.transform.localPosition += (Vector3.back * point.transform.localPosition.z) - (Vector3.forward * 50);
@@ -844,7 +860,7 @@ public class Graph : MonoBehaviour {
         DrawThresholds();
     }
 
-    public void AddPoint(float xValue, float yValue) {
+    public void AddPoint(float xValue, float yValue, bool interactable = true) {
         GameObject point = Instantiate(graphPointPrefab, graph.transform);
         Slider slider = point.GetComponent<Slider>();
         point.transform.localScale = Vector3.one;
@@ -854,7 +870,8 @@ public class Graph : MonoBehaviour {
         point.GetComponent<RectTransform>().sizeDelta = new Vector2(20, graphContentRectTrans.rect.height + slider.handleRect.sizeDelta.y);
         slider.minValue = yStart;
         slider.maxValue = yEnd;
-        slider.value = yValue;
+        slider.value = yValue + negativeOffset;
+        slider.interactable = interactable;
         if (sortedGraphPointsList.ContainsKey(xValue)) {
             sortedGraphPointsList.Remove(xValue);
         }

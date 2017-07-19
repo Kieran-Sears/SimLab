@@ -268,6 +268,7 @@ public class DrugSetup : MonoBehaviour {
     }
 
     public void loadChosenVital(bool chosen, int index, string vitalName) {
+      //  int halfValue = 0;
         SubmitDuration();
         // clear the background area ready for display
         tabManager.activeTabs.transform.GetComponent<ToggleGroup>().SetAllTogglesOff();
@@ -294,32 +295,47 @@ public class DrugSetup : MonoBehaviour {
                     Error.instance.informMessageText.text = "Enter both range values.";
                     Error.instance.informPanel.SetActive(true);
                     Error.instance.informOkButton.onClick.AddListener(this.SelectMinutesDuration);
+                    vitals.transform.GetChild(index).GetComponent<Toggle>().isOn = false;
+                    return;
                 } else {
                     if (min + 5 >= max) {
                         Error.instance.informMessageText.text = "Range must exceed 5 units.";
                         Error.instance.informPanel.SetActive(true);
                         Error.instance.informOkButton.onClick.AddListener(this.SelectMinutesDuration);
+                        vitals.transform.GetChild(index).GetComponent<Toggle>().isOn = false;
+                        return;
                     }
                     if (max - min > 10000) {
                         Error.instance.informMessageText.text = "Range must not exceed 10,000.";
                         Error.instance.informPanel.SetActive(true);
                         Error.instance.informOkButton.onClick.AddListener(this.SelectMinutesDuration);
+                        vitals.transform.GetChild(index).GetComponent<Toggle>().isOn = false;
+                        return;
                     }
                     if (max < 0 || min > 0 ) {
                         Error.instance.informMessageText.text = "The value 0 must be included within the range.";
                         Error.instance.informPanel.SetActive(true);
                         Error.instance.informOkButton.onClick.AddListener(this.SelectMinutesDuration);
+                        vitals.transform.GetChild(index).GetComponent<Toggle>().isOn = false;
+                        return;
                     }
+                    // set the initial points to mid range values
+                    //if (min < 0) {
+                    //    print("min range < 0");
+                    //    halfValue = (int)Math.Ceiling(((max - min) / 2) + min ) ;// + ConditionSetup.instance.vitals.vitalList[index].min);
+                    //    print(halfValue);
+                    //} else {
+                    //    halfValue = (int)Math.Ceiling(((max - min) / 2) + ConditionSetup.instance.vitals.vitalList[index].min);
+                    //}
                 }
                 // if it is the first attempt of choosing a vital and a duration has been set then initialise the vital graph with starting values
                 tabManager.gameObject.SetActive(true);
                 graph = tabManager.GenerateTab(ConditionSetup.instance.vitals.vitalList[index].name).GetComponent<Graph>();
-                print(graph.name);
                 graph.GenerateGraph(0, duration, (int)Math.Ceiling(min), (int)Math.Ceiling(max), ConditionSetup.instance.vitals.vitalList[index].units);
                 if (graph.sortedGraphPointsList.Count == 0) {
-                    int halfValue = (int)Math.Ceiling(((ConditionSetup.instance.vitals.vitalList[index].max - ConditionSetup.instance.vitals.vitalList[index].min) / 2) + ConditionSetup.instance.vitals.vitalList[index].min);
-                    graph.AddPoint(0, halfValue);
-                    graph.AddPoint(duration, halfValue);
+                    // change to "halfValue" variable to make mid ranges, otherwise initialise points with value 0
+                    graph.AddPoint(0, 0, false);
+                    graph.AddPoint(duration, 0);
                 }
                 graph.gameObject.SetActive(false);
                 tabManager.SwitchTab();
