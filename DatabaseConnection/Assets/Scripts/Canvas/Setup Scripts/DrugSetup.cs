@@ -10,14 +10,16 @@ public class DrugSetup : MonoBehaviour {
     public TabManager tabManager;
     public GameObject togglePrefab;
     public InputField drugName;
-    public GameObject administrationsChosen;
+    public GameObject administrations;
 
-    public InputField unitOfMeasure;
-    public InputField drugDurationMinutes;
-    public InputField drugDurationSeconds;
-    public GameObject vitalsChosen;
-    public Button visualizeButton;
-    public Button submitButton;
+    public InputField dose;
+    public InputField minimum;
+    public InputField maximum;
+    public InputField minutes;
+    public InputField seconds;
+    public GameObject vitals;
+    public Button visualisation;
+    public Button submit;
     public Graph graph;
 
     private int duration = -1;
@@ -26,33 +28,40 @@ public class DrugSetup : MonoBehaviour {
     private void Awake() {
         if (instance) {
             DestroyImmediate(this);
-        }
-        else {
+        } else {
             instance = this;
         }
     }
 
     public void Start() {
         PopulateAdministrations();
-        ResetValues();
+        PopulateVitals();
+        for (int i = 0; i < vitals.transform.childCount; i++) {
+            vitals.transform.GetChild(i).gameObject.SetActive(false);
+        }
+        submit.interactable = false;
+        visualisation.interactable = false;
+        dose.interactable = false;
+        maximum.interactable = false;
+        minimum.interactable = false;
+        minutes.interactable = false;
+        seconds.interactable = false;
     }
 
-    public void ResetValues() {
-        submitButton.interactable = false;
-        visualizeButton.interactable = false;
-        unitOfMeasure.interactable = false;
-        drugDurationMinutes.interactable = false;
-        drugDurationSeconds.interactable = false;
-        for (int i = 0; i < vitalsChosen.transform.childCount; i++) {
-            Destroy(vitalsChosen.transform.GetChild(i).gameObject);
-        }
-    }
+    //public void ResetValues() {
+
+    //    for (int i = 0; i < vitals.transform.childCount; i++) {
+    //        Destroy(vitals.transform.GetChild(i).gameObject);
+    //    }
+    //}
 
     public void ToggleElementsActive() {
-        submitButton.interactable = !submitButton.interactable;
-        unitOfMeasure.interactable = !unitOfMeasure.interactable;
-        drugDurationMinutes.interactable = !drugDurationMinutes.interactable;
-        drugDurationSeconds.interactable = !drugDurationSeconds.interactable;
+        submit.interactable = !submit.interactable;
+        dose.interactable = !dose.interactable;
+        minimum.interactable = !minimum.interactable;
+        maximum.interactable = !maximum.interactable;
+        minutes.interactable = !minutes.interactable;
+        seconds.interactable = !seconds.interactable;
     }
 
     void PopulateAdministrations() {
@@ -61,10 +70,10 @@ public class DrugSetup : MonoBehaviour {
             print("Exploring drug " + drug.name + " for administrations");
             foreach (Administration admin in drug.administrations) {
                 print("found " + admin.name);
-                if (administrationsChosen.transform.FindChild(admin.name) == null) {
+                if (administrations.transform.FindChild(admin.name) == null) {
                     print("no duplicate found so adding to administrationsChosen");
                     GameObject toggleObject = Instantiate(togglePrefab);
-                    toggleObject.transform.SetParent(administrationsChosen.transform);
+                    toggleObject.transform.SetParent(administrations.transform);
                     toggleObject.transform.localScale = Vector3.one;
                     toggleObject.transform.localPosition = Vector3.zero;
                     toggleObject.transform.GetChild(1).GetComponent<Text>().text = admin.name;
@@ -83,42 +92,37 @@ public class DrugSetup : MonoBehaviour {
 
         int minutes = 0;
         int seconds = 0;
-        if (int.TryParse(drugDurationMinutes.text, out minutes)) {
+        if (int.TryParse(this.minutes.text, out minutes)) {
             print("mins registered");
             if (minutes > 60) {
                 Error.instance.informMessageText.text = "Minutes cannot exceed 60.";
                 Error.instance.informPanel.SetActive(true);
-                Error.instance.informOkButton.onClick.AddListener(SelectMinutesDuration);
-            }
-            else if (minutes < 0) {
+                Error.instance.informOkButton.onClick.AddListener(this.SelectMinutesDuration);
+            } else if (minutes < 0) {
                 Error.instance.informMessageText.text = "Minutes cannot be less than 0.";
                 Error.instance.informPanel.SetActive(true);
-                Error.instance.informOkButton.onClick.AddListener(SelectMinutesDuration);
-            }
-            else {
+                Error.instance.informOkButton.onClick.AddListener(this.SelectMinutesDuration);
+            } else {
                 newDuration += minutes * 60;
             }
         }
 
-        if (int.TryParse(drugDurationSeconds.text, out seconds)) {
+        if (int.TryParse(this.seconds.text, out seconds)) {
             print("secs registered");
 
             if (seconds > 60) {
                 Error.instance.informMessageText.text = "Seconds cannot exceed 60.";
                 Error.instance.informPanel.SetActive(true);
-                Error.instance.informOkButton.onClick.AddListener(SelectSecondsDuration);
-            }
-            else if (seconds < 0) {
+                Error.instance.informOkButton.onClick.AddListener(this.SelectSecondsDuration);
+            } else if (seconds < 0) {
                 Error.instance.informMessageText.GetComponentInChildren<Text>().text = "Seconds cannot be less than 0.";
                 Error.instance.informPanel.SetActive(true);
-                Error.instance.informOkButton.onClick.AddListener(SelectMinutesDuration);
-            }
-            else if (minutes == 0 && seconds < 5) {
+                Error.instance.informOkButton.onClick.AddListener(this.SelectMinutesDuration);
+            } else if (minutes == 0 && seconds < 5) {
                 Error.instance.informMessageText.text = "Simulation duration should exeed 5 seconds.";
                 Error.instance.informPanel.SetActive(true);
-                Error.instance.informOkButton.onClick.AddListener(SelectMinutesDuration);
-            }
-            else {
+                Error.instance.informOkButton.onClick.AddListener(this.SelectMinutesDuration);
+            } else {
                 newDuration += seconds;
             }
         }
@@ -129,8 +133,7 @@ public class DrugSetup : MonoBehaviour {
             Error.instance.boolPanel.SetActive(true);
             Error.instance.boolRightButton.onClick.AddListener(ChangeActiveGraphDurations);
             Error.instance.boolLeftButton.onClick.AddListener(ResetDurationBack);
-        }
-        else {
+        } else {
             if (newDuration != 0) {
                 duration = newDuration;
             }
@@ -143,27 +146,26 @@ public class DrugSetup : MonoBehaviour {
 
     private void SelectMinutesDuration() {
         Error.instance.informPanel.SetActive(false);
-        drugDurationMinutes.Select();
-        drugDurationMinutes.ActivateInputField();
+        minutes.Select();
+        minutes.ActivateInputField();
         Error.instance.informOkButton.onClick.RemoveAllListeners();
     }
 
     private void SelectSecondsDuration() {
         Error.instance.informPanel.SetActive(false);
-        drugDurationSeconds.Select();
-        drugDurationSeconds.ActivateInputField();
+        seconds.Select();
+        seconds.ActivateInputField();
         Error.instance.informOkButton.onClick.RemoveAllListeners();
     }
 
     void PopulateVitals() {
         foreach (Vital vital in ConditionSetup.instance.vitals.vitalList) {
-            Transform child = vitalsChosen.transform.FindChild(vital.name);
+            Transform child = vitals.transform.FindChild(vital.name);
             if (child != null) {
                 child.gameObject.SetActive(true);
-            }
-            else {
+            } else {
                 GameObject toggleObject = Instantiate(togglePrefab);
-                toggleObject.transform.SetParent(vitalsChosen.transform);
+                toggleObject.transform.SetParent(vitals.transform);
                 toggleObject.transform.localScale = Vector3.one;
                 toggleObject.transform.localPosition = Vector3.zero;
                 toggleObject.transform.GetChild(1).GetComponent<Text>().text = vital.name;
@@ -179,8 +181,8 @@ public class DrugSetup : MonoBehaviour {
         Error.instance.boolPanel.SetActive(false);
         Error.instance.boolRightButton.onClick.RemoveAllListeners();
         Error.instance.boolLeftButton.onClick.RemoveAllListeners();
-        drugDurationMinutes.text = (duration / 60).ToString();
-        drugDurationSeconds.text = (duration % 60).ToString();
+        minutes.text = (duration / 60).ToString();
+        seconds.text = (duration % 60).ToString();
     }
 
     void ChangeActiveGraphDurations() {
@@ -196,9 +198,9 @@ public class DrugSetup : MonoBehaviour {
         //    SubmitDuration();
         //}
 
-        for (int i = 0; i < vitalsChosen.transform.childCount; i++) {
+        for (int i = 0; i < vitals.transform.childCount; i++) {
 
-            Toggle toggle = vitalsChosen.transform.GetChild(i).GetComponent<Toggle>();
+            Toggle toggle = vitals.transform.GetChild(i).GetComponent<Toggle>();
 
             if (toggle.isOn) {
 
@@ -281,14 +283,39 @@ public class DrugSetup : MonoBehaviour {
                     Error.instance.informMessageText.text = "Please set the duration of the drugs effects before adding vitals.";
                     Error.instance.informPanel.SetActive(true);
                     Error.instance.informOkButton.onClick.AddListener(SelectMinutesDuration);
-                    vitalsChosen.transform.GetChild(index).GetComponent<Toggle>().isOn = false;
+                    vitals.transform.GetChild(index).GetComponent<Toggle>().isOn = false;
                     return;
+                }
+                // check range values are acceptable
+                double min = double.Parse(minimum.text);
+                double max = double.Parse(maximum.text);
+
+                if (minimum.text.Length == 0 || maximum.text.Length == 0) {
+                    Error.instance.informMessageText.text = "Enter both range values.";
+                    Error.instance.informPanel.SetActive(true);
+                    Error.instance.informOkButton.onClick.AddListener(this.SelectMinutesDuration);
+                } else {
+                    if (min + 5 >= max) {
+                        Error.instance.informMessageText.text = "Range must exceed 5 units.";
+                        Error.instance.informPanel.SetActive(true);
+                        Error.instance.informOkButton.onClick.AddListener(this.SelectMinutesDuration);
+                    }
+                    if (max - min > 10000) {
+                        Error.instance.informMessageText.text = "Range must not exceed 10,000.";
+                        Error.instance.informPanel.SetActive(true);
+                        Error.instance.informOkButton.onClick.AddListener(this.SelectMinutesDuration);
+                    }
+                    if (max < 0 || min > 0 ) {
+                        Error.instance.informMessageText.text = "The value 0 must be included within the range.";
+                        Error.instance.informPanel.SetActive(true);
+                        Error.instance.informOkButton.onClick.AddListener(this.SelectMinutesDuration);
+                    }
                 }
                 // if it is the first attempt of choosing a vital and a duration has been set then initialise the vital graph with starting values
                 tabManager.gameObject.SetActive(true);
                 graph = tabManager.GenerateTab(ConditionSetup.instance.vitals.vitalList[index].name).GetComponent<Graph>();
                 print(graph.name);
-                graph.GenerateGraph(0, duration, (int)Math.Ceiling(ConditionSetup.instance.vitals.vitalList[index].min), (int)Math.Ceiling(ConditionSetup.instance.vitals.vitalList[index].max), ConditionSetup.instance.vitals.vitalList[index].units);
+                graph.GenerateGraph(0, duration, (int)Math.Ceiling(min), (int)Math.Ceiling(max), ConditionSetup.instance.vitals.vitalList[index].units);
                 if (graph.sortedGraphPointsList.Count == 0) {
                     int halfValue = (int)Math.Ceiling(((ConditionSetup.instance.vitals.vitalList[index].max - ConditionSetup.instance.vitals.vitalList[index].min) / 2) + ConditionSetup.instance.vitals.vitalList[index].min);
                     graph.AddPoint(0, halfValue);
@@ -296,8 +323,7 @@ public class DrugSetup : MonoBehaviour {
                 }
                 graph.gameObject.SetActive(false);
                 tabManager.SwitchTab();
-            }
-            else {
+            } else {
                 // if vital was on standby then reactivate it as its toggle has been selected
                 vitalTrans.gameObject.SetActive(true);
                 vitalTab.SetParent(tabManager.transform);
@@ -305,14 +331,12 @@ public class DrugSetup : MonoBehaviour {
                 tabManager.SwitchTab();
             }
             if (ConditionSetup.instance.tabManager.activeTabs.transform.FindChild(vitalName) != null && tabManager.activeTabs.transform.FindChild(vitalName) != null) {
-                visualizeButton.interactable = true;
-            }
-            else {
+                visualisation.interactable = true;
+            } else {
                 print("didnt find " + vitalName + " in conditions active tabs");
-                visualizeButton.interactable = false;
+                visualisation.interactable = false;
             }
-        }
-        else {
+        } else {
             // if the user has unticked the vitals toggle then hide the vital's graph display away along with its tab
             Transform tab = tabManager.activeTabs.transform.FindChild(vitalName);
             if (tab != null) {
@@ -324,20 +348,28 @@ public class DrugSetup : MonoBehaviour {
                 }
             }
         }
-       
+
         // LerpFromView.onEnd();
     }
 
     public void LoadChosenAdministration(bool chosen, int index, string administrationName) {
         if (chosen) {
-            PopulateVitals();
-        }
-        else {
-            for (int i = 0; i < vitalsChosen.transform.childCount; i++) {
-                vitalsChosen.transform.GetChild(i).gameObject.SetActive(false);
+            for (int i = 0; i < administrations.transform.childCount; i++) {
+                if (index != i) {
+                    administrations.transform.GetChild(i).gameObject.SetActive(false);
+                }
+            }
+            for (int i = 0; i < vitals.transform.childCount; i++) {
+                vitals.transform.GetChild(i).gameObject.SetActive(true);
+            }
+        } else {
+            for (int i = 0; i < administrations.transform.childCount; i++) {
+                administrations.transform.GetChild(i).gameObject.SetActive(true);
+            }
+            for (int i = 0; i < vitals.transform.childCount; i++) {
+                vitals.transform.GetChild(i).gameObject.SetActive(false);
             }
         }
-        PopulateVitals();
         ToggleElementsActive();
     }
 
@@ -358,8 +390,7 @@ public class DrugSetup : MonoBehaviour {
             Administration administration = GetAdministration();
             if (administration == null) {
                 return;
-            }
-            else {
+            } else {
                 administrations.Add(GetAdministration());
             }
         }
@@ -379,7 +410,7 @@ public class DrugSetup : MonoBehaviour {
 
     public Administration GetAdministration() {
 
-        if (unitOfMeasure.text.Length == 0) {
+        if (dose.text.Length == 0) {
             Error.instance.informMessageText.text = "Enter units for " + gameObject.name + ".";
             Error.instance.informOkButton.onClick.AddListener(Error.instance.DeactivateErrorInformPanel);
             Error.instance.informPanel.SetActive(true);
@@ -401,9 +432,9 @@ public class DrugSetup : MonoBehaviour {
         List<Value> values;
         Value value;
 
-        for (int j = 0; j < vitalsChosen.transform.childCount; j++) {
+        for (int j = 0; j < vitals.transform.childCount; j++) {
 
-            Toggle toggle = vitalsChosen.transform.GetChild(j).GetComponent<Toggle>();
+            Toggle toggle = vitals.transform.GetChild(j).GetComponent<Toggle>();
 
             if (toggle.isOn) {
 
@@ -449,7 +480,7 @@ public class DrugSetup : MonoBehaviour {
             }
         }
         administration.duration = duration;
-        administration.units = unitOfMeasure.text;
+        administration.units = dose.text;
         administration.name = name;
         return administration;
     }
@@ -459,8 +490,7 @@ public class DrugSetup : MonoBehaviour {
         WindowManager.instance.visualise.SetActive(!WindowManager.instance.visualise.activeInHierarchy);
         if (WindowManager.instance.visualise.activeInHierarchy) {
             VisualizationSetup.instance.GetGraphs();
-        }
-        else {
+        } else {
             VisualizationSetup.instance.ReturnGraphs();
         }
     }
