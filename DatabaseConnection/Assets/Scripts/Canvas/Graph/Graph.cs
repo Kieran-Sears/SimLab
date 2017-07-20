@@ -79,7 +79,14 @@ public class Graph : MonoBehaviour {
 
         // check for the acceptance of the coordinate system which replaces a designated point to a new location
         if (coordinateSystem != null && coordinateSystem.activeSelf && Input.GetKeyDown(KeyCode.Return)) {
-            float x = float.Parse(coordinateX.text);
+            float x;
+            if (coordinateX.text.Contains(":")) {
+                string[] split = coordinateX.text.Split(':');
+                x = float.Parse(split[0]) * 60;
+                x += float.Parse(split[1]);
+            } else {
+                x = float.Parse(coordinateX.text);
+            }
             float y = float.Parse(coordinateY.text);
             if ((x > xStart && x < xEnd) && (y > yStart && y < yEnd)) {
                 if (sortedGraphPointsList.ContainsKey(x)) {
@@ -93,8 +100,7 @@ public class Graph : MonoBehaviour {
                 coordinateX.text = "";
                 coordinateY.text = "";
                 DrawLinkedPointLines();
-            }
-            else {
+            } else {
                 // the values given are not within range bounds
                 Error.instance.informMessageText.text = "Ensure coordinates are within range limits";
                 Error.instance.informPanel.SetActive(true);
@@ -121,8 +127,7 @@ public class Graph : MonoBehaviour {
                         if (coordinateSystem.activeSelf) {
                             coordinateSystem.SetActive(false);
                             sliderHandleTransform.GetComponent<Image>().color = currentlySelectedSlider.colors.normalColor;
-                        }
-                        else {
+                        } else {
                             AddPoint(Camera.main.WorldToScreenPoint(hit1.point));
                         }
                     }
@@ -152,8 +157,7 @@ public class Graph : MonoBehaviour {
                             if (coordinateSystem.activeSelf) {
                                 coordinateSystem.SetActive(false);
                                 sliderHandleTransform.GetComponent<Image>().color = currentlySelectedSlider.colors.normalColor;
-                            }
-                            else {
+                            } else {
                                 if (previousSliderHandleTransform != null) {
                                     previousSliderHandleTransform.GetComponent<Image>().color = currentlySelectedSlider.colors.normalColor;
                                 }
@@ -163,7 +167,7 @@ public class Graph : MonoBehaviour {
                                 coordinateSystem.transform.localPosition = Vector3.zero;
                                 coordinateSystem.transform.localScale = new Vector3(0.5f, 0.5f, 1);
                                 coordinateSystem.transform.position = sliderHandleTransform.position + new Vector3(0.3f, 0.3f, 0);
-                                coordinateSystem.transform.localPosition = new Vector3(coordinateSystem.transform.localPosition.x, coordinateSystem.transform.localPosition.y, 0);
+                                coordinateSystem.transform.localPosition = new Vector3(coordinateSystem.transform.localPosition.x, coordinateSystem.transform.localPosition.y, -500);
                                 string minutes = (Mathf.CeilToInt(sortedGraphPointsList.Keys[sortedGraphPointsList.IndexOfValue(currentlySelectedSlider)]) / 60).ToString();
                                 string Seconds = (Mathf.CeilToInt(sortedGraphPointsList.Keys[sortedGraphPointsList.IndexOfValue(currentlySelectedSlider)]) % 60).ToString();
 
@@ -190,8 +194,7 @@ public class Graph : MonoBehaviour {
 
                 }
 
-            }
-            else {
+            } else {
                 // no raycast hit detected
                 return;
             }
@@ -225,12 +228,14 @@ public class Graph : MonoBehaviour {
                 newSliderTime = (currentlySelectedSlider.transform.localPosition.x + (graph.GetComponent<RectTransform>().rect.width / 2)) / (graph.GetComponent<RectTransform>().rect.width / xScale);
                 if (((newSliderTime <= 0) || newSliderTime >= duration) && !(indexOfSliderMinipulated == 0 || indexOfSliderMinipulated == sortedGraphPointsList.Count - 1)) {
                     // if the user has dragged the point beyond the first or last point then place point between the first and second, or penultimate and last
+                    StandaloneInputModule input = EventSystem.current.GetComponent<StandaloneInputModule>();
+                    input.DeactivateModule();
                     Slider beforePoint = sortedGraphPointsList.Values[indexOfSliderMinipulated - 1];
                     Slider afterPoint = sortedGraphPointsList.Values[indexOfSliderMinipulated + 1];
                     Vector3 newVector = (beforePoint.transform.localPosition + afterPoint.transform.localPosition) / 2;
                     currentlySelectedSlider.transform.localPosition = newVector;
-                    // float newValue = (beforePoint.value + afterPoint.value) / 2;
-                    // currentlySelectedSlider.value = newValue;
+                    float newValue = (beforePoint.value + afterPoint.value) / 2;
+                    currentlySelectedSlider.value = newValue;
                     newSliderTime = (currentlySelectedSlider.transform.localPosition.x + (graph.GetComponent<RectTransform>().rect.width / 2)) / (graph.GetComponent<RectTransform>().rect.width / xScale);
                     if (!sortedGraphPointsList.ContainsKey(newSliderTime) && allowChangingPosition) {
                         sortedGraphPointsList.RemoveAt(indexOfSliderMinipulated);
@@ -241,8 +246,8 @@ public class Graph : MonoBehaviour {
                     mouseHold = 0;
                     previousFrameTime = newSliderTime;
                     DrawLinkedPointLines();
-                }
-                else {
+
+                } else {
                     // if the user isnt just holding the handle still
                     if (newSliderTime != previousFrameTime) {
                         // ensure there isn't overwriting of existing points and if it isn't an end point slider
@@ -299,8 +304,7 @@ public class Graph : MonoBehaviour {
                 if (i <= xScale) {
                     lineRenderer.SetPosition(0, new Vector3((((size.x / xScale) * i) - (size.x / 2)), (-size.y / 2), 20));
                     lineRenderer.SetPosition(1, new Vector3((((size.x / xScale) * i) - (size.x / 2)), (size.y / 2), 20));
-                }
-                else {
+                } else {
                     lineRenderer.SetPosition(0, new Vector3((-size.x / 2), (((size.y / yScale) * (i - (xScale + 1))) - (size.y / 2)), 20));
                     lineRenderer.SetPosition(1, new Vector3((size.x / 2), (((size.y / yScale) * (i - (xScale + 1))) - (size.y / 2)), 20));
                 }
@@ -410,8 +414,7 @@ public class Graph : MonoBehaviour {
             // duration numbering format 2
             if (i % 60 == 0) {
                 dashMarker.GetComponent<Text>().text = ((i / 60)).ToString();
-            }
-            else {
+            } else {
                 dashMarker.GetComponent<Text>().text = ((i % 60)).ToString();
                 dashMarker.transform.localScale = Vector3.one / 3f;
 
@@ -527,8 +530,7 @@ public class Graph : MonoBehaviour {
                     xAxis.transform.GetChild(i).gameObject.SetActive(true);
                     grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = true;
 
-                }
-                else {
+                } else {
                     xAxis.transform.GetChild(i).gameObject.SetActive(false);
                     grid.transform.GetChild(i).GetComponent<LineRenderer>().enabled = false;
                 }
@@ -542,33 +544,33 @@ public class Graph : MonoBehaviour {
         float numberOfIncrements = 0;
         float[] increments = { 1, 2, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000 };
         for (int i = 0; i < increments.Length; i++) {
-             numberOfIncrements = yScale / increments[i];
-           // print(numberOfIncrements);  // ~~~ Print increments here
+            numberOfIncrements = yScale / increments[i];
+            // print(numberOfIncrements);  // ~~~ Print increments here
             if (numberOfIncrements >= 5 && numberOfIncrements <= 25) {
                 currentIncrement = increments[i];
                 i = increments.Length;
             }
         }
 
-         int unitDiff =  (negativeOffset % 10);
-    
-            // set the scaling based on the chosen increment
-            if (currentIncrement != -1) {
-                for (int i = 0; i < yScale; i++) {
-                    if (i % (currentIncrement) == unitDiff) {
-                        yAxis.transform.GetChild(i).gameObject.SetActive(true);
-                        grid.transform.GetChild(xScale + i + 1).GetComponent<LineRenderer>().enabled = true;
+        int unitDiff = (negativeOffset % 10);
 
-                    } else {
-                        yAxis.transform.GetChild(i).gameObject.SetActive(false);
-                        grid.transform.GetChild(xScale + i + 1).GetComponent<LineRenderer>().enabled = false;
-                    }
+        // set the scaling based on the chosen increment
+        if (currentIncrement != -1) {
+            for (int i = 0; i < yScale; i++) {
+                if (i % (currentIncrement) == unitDiff) {
+                    yAxis.transform.GetChild(i).gameObject.SetActive(true);
+                    grid.transform.GetChild(xScale + i + 1).GetComponent<LineRenderer>().enabled = true;
+
+                } else {
+                    yAxis.transform.GetChild(i).gameObject.SetActive(false);
+                    grid.transform.GetChild(xScale + i + 1).GetComponent<LineRenderer>().enabled = false;
                 }
-            } else {
-                print("Error: increments are out of bounds in Graph.LayoutYScale() - print " +
-                    "increments to console from this method and use these to guide the setting of" +
-                    "range values within conditional statement.");
             }
+        } else {
+            print("Error: increments are out of bounds in Graph.LayoutYScale() - print " +
+                "increments to console from this method and use these to guide the setting of" +
+                "range values within conditional statement.");
+        }
     }
 
     private void ChangeLinkedPointLineWithSlider(float value) {
@@ -704,75 +706,78 @@ public class Graph : MonoBehaviour {
 
         bool yStartNeg = _yStart < 0;
         bool yEndNeg = _yEnd < 0;
-        
+
         if (yStartNeg) {
-           negativeOffset = _yStart * -1;
+            negativeOffset = _yStart * -1;
             print("negative offset = " + negativeOffset);
-        } 
+        }
 
-            GetComponent<RectTransform>().sizeDelta = transform.parent.GetComponent<RectTransform>().sizeDelta;
-            // using the scrollview viewport as the basis for the graphs size
-            Rect viewportRect = graphViewport.GetComponent<RectTransform>().rect;
-            float padding = (viewportRect.width / 100) * 5;
-            // "-20" is for padding so that there is no clipping at the edges of the graph for graphlines or numbers
-            graphContentRectTrans = graphContent.GetComponent<RectTransform>();
-            graphContentRectTrans.sizeDelta = new Vector2(viewportRect.width - padding, viewportRect.height - padding);
-            graphContentRectTrans.localPosition = Vector3.zero;
+        GetComponent<RectTransform>().sizeDelta = transform.parent.GetComponent<RectTransform>().sizeDelta;
+        // using the scrollview viewport as the basis for the graphs size
+        Rect viewportRect = graphViewport.GetComponent<RectTransform>().rect;
+        float padding = (viewportRect.width / 100) * 5;
+        // "-20" is for padding so that there is no clipping at the edges of the graph for graphlines or numbers
+        graphContentRectTrans = graphContent.GetComponent<RectTransform>();
+        graphContentRectTrans.sizeDelta = new Vector2(viewportRect.width - padding, viewportRect.height - padding);
+        graphContentRectTrans.localPosition = Vector3.zero;
 
-            // resizing both axis to account for any changes in the new size
-            xAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(viewportRect.width - padding, xAxisContent.GetComponent<RectTransform>().sizeDelta.y);
-            yAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(yAxisContent.GetComponent<RectTransform>().sizeDelta.x, viewportRect.height - padding);
+        // resizing both axis to account for any changes in the new size
+        xAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(viewportRect.width - padding, xAxisContent.GetComponent<RectTransform>().sizeDelta.y);
+        yAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(yAxisContent.GetComponent<RectTransform>().sizeDelta.x, viewportRect.height - padding);
 
-            // adjusting the collider which will detect mouseover for the graph in the Update function
-            graph.GetComponent<BoxCollider>().size = new Vector2(viewportRect.width - padding, viewportRect.height - padding);
-            coordinateSystem.GetComponent<BoxCollider>().size = new Vector3(coordinateSystem.GetComponent<RectTransform>().rect.width * 1.5f, coordinateSystem.GetComponent<RectTransform>().rect.height * 1.5f, 1);
+        // adjusting the collider which will detect mouseover for the graph in the Update function
+        graph.GetComponent<BoxCollider>().size = new Vector2(viewportRect.width - padding, viewportRect.height - padding);
+        coordinateSystem.GetComponent<BoxCollider>().size = new Vector3(400, 75, 1);
+        coordinateSystem.GetComponent<BoxCollider>().center = Vector3.right * 50;
+        // incase fixed size doesnt scale with different resolutions set dynamically (requires tweaking)
+        // coordinateSystem.GetComponent<BoxCollider>().size = new Vector3(coordinateSystem.GetComponent<RectTransform>().rect.width * 1.5f, coordinateSystem.GetComponent<RectTransform>().rect.height * 1.5f, 1);
 
-            // adjusting the placement of the axis labels
-            //yAxisLabel.transform.localPosition += Vector3.left * yAxis.GetComponent<RectTransform>().rect.width / 3;
-            //xAxisLabel.transform.localPosition += Vector3.down * xAxis.GetComponent<RectTransform>().rect.height / 3;
+        // adjusting the placement of the axis labels
+        //yAxisLabel.transform.localPosition += Vector3.left * yAxis.GetComponent<RectTransform>().rect.width / 3;
+        //xAxisLabel.transform.localPosition += Vector3.down * xAxis.GetComponent<RectTransform>().rect.height / 3;
 
-            // as well as label text
-            yAxisLabel.GetComponent<Text>().text = yLabel;
-            xAxisLabel.GetComponent<Text>().text = "Duration (MINUTES : seconds)";
+        // as well as label text
+        yAxisLabel.GetComponent<Text>().text = yLabel;
+        xAxisLabel.GetComponent<Text>().text = "Duration (MINUTES : seconds)";
 
-            // record of initial values based on time (x) against units (y)
-            xStart = _xStart;
-            xEnd = _xEnd;
-            yStart = _yStart + negativeOffset;
-            yEnd = _yEnd + negativeOffset;
-            xScale = _xEnd - _xStart;
-            yScale = _yEnd - _yStart;
+        // record of initial values based on time (x) against units (y)
+        xStart = _xStart;
+        xEnd = _xEnd;
+        yStart = _yStart + negativeOffset;
+        yEnd = _yEnd + negativeOffset;
+        xScale = _xEnd - _xStart;
+        yScale = _yEnd - _yStart;
 
-            // duration set to difference, slightly redundant but in place in case the simulation were 
-            // ever to start from anything other than 0
-            duration = xScale;
+        // duration set to difference, slightly redundant but in place in case the simulation were 
+        // ever to start from anything other than 0
+        duration = xScale;
 
-            // placement of all axis markers
-            InitialiseXScale();
-            InitialiseYScale();
+        // placement of all axis markers
+        InitialiseXScale();
+        InitialiseYScale();
 
-            // creation of gridlines in seporate gameobject which shares the same size and position properties as the
-            // gameobject which will hold the vital values via points along the graph.
-            DrawGrid();
+        // creation of gridlines in seporate gameobject which shares the same size and position properties as the
+        // gameobject which will hold the vital values via points along the graph.
+        DrawGrid();
 
-            // set all axis markers to inactive other than the ones which make sense to show
-            // based on the size and scale of the graph
-            LayoutXScale();
-            LayoutYScale();
+        // set all axis markers to inactive other than the ones which make sense to show
+        // based on the size and scale of the graph
+        LayoutXScale();
+        LayoutYScale();
 
-            // this ensures there are no descrepencies between the axis scrollareas and the main
-            // graph area scroll rect
-            xAxisScrollRect.horizontalNormalizedPosition = 0;
-            xAxisScrollRect.scrollSensitivity = 0;
-            yAxisScrollRect.verticalNormalizedPosition = 0;
-            yAxisScrollRect.scrollSensitivity = 0;
-            GraphScrollRect.scrollSensitivity = 0;
-            GraphScrollRect.normalizedPosition = new Vector2(0, 0);
+        // this ensures there are no descrepencies between the axis scrollareas and the main
+        // graph area scroll rect
+        xAxisScrollRect.horizontalNormalizedPosition = 0;
+        xAxisScrollRect.scrollSensitivity = 0;
+        yAxisScrollRect.verticalNormalizedPosition = 0;
+        yAxisScrollRect.scrollSensitivity = 0;
+        GraphScrollRect.scrollSensitivity = 0;
+        GraphScrollRect.normalizedPosition = new Vector2(0, 0);
 
-            // functionality which allows the axis markers and the graph movement to remain syncronised
-            // (providing the sizes of each are the exact same)
-            // GraphScrollRect.onValueChanged.AddListener(ListenerMethod);
-        
+        // functionality which allows the axis markers and the graph movement to remain syncronised
+        // (providing the sizes of each are the exact same)
+        // GraphScrollRect.onValueChanged.AddListener(ListenerMethod);
+
     }
 
     // for dragging of the content within the viewport of the scrollRect, to ensure axis follow where the graph is dragged
@@ -886,7 +891,7 @@ public class Graph : MonoBehaviour {
         point.transform.localScale = Vector3.one;
         point.transform.localPosition = Vector3.zero;
         point.transform.localPosition += new Vector3((-graphContentRectTrans.rect.width / 2), (-graphContentRectTrans.rect.height / 2), 0);
-        point.transform.localPosition += new Vector3(((graphContentRectTrans.rect.width / xScale) * xValue), graphContentRectTrans.rect.height / 2, -1);
+        point.transform.localPosition += new Vector3(((graphContentRectTrans.rect.width / xScale) * xValue), graphContentRectTrans.rect.height / 2, -51);
         point.GetComponent<RectTransform>().sizeDelta = new Vector2(20, graphContentRectTrans.rect.height + slider.handleRect.sizeDelta.y);
         slider.minValue = yStart;
         slider.maxValue = yEnd;
@@ -902,7 +907,7 @@ public class Graph : MonoBehaviour {
         point.transform.localScale = Vector3.one;
         point.transform.localPosition = Vector3.zero;
         point.transform.localPosition += new Vector3((-graphContentRectTrans.rect.width / 2), (-graphContentRectTrans.rect.height / 2), 0);
-        point.transform.localPosition += new Vector3(((graphContentRectTrans.rect.width / xScale) * xValue), graphContentRectTrans.rect.height / 2, -1);
+        point.transform.localPosition += new Vector3(((graphContentRectTrans.rect.width / xScale) * xValue), graphContentRectTrans.rect.height / 2, -51);
         point.GetComponent<RectTransform>().sizeDelta = new Vector2(20, graphContentRectTrans.rect.height + slider.handleRect.sizeDelta.y);
         slider.minValue = yStart;
         slider.maxValue = yEnd;
