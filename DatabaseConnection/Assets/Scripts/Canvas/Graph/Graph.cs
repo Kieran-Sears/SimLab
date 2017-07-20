@@ -545,26 +545,30 @@ public class Graph : MonoBehaviour {
         float[] increments = { 1, 2, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000 };
         for (int i = 0; i < increments.Length; i++) {
             numberOfIncrements = yScale / increments[i];
-            // print(numberOfIncrements);  // ~~~ Print increments here
+            // print(numberOfIncrements + " : " + increments[i]);  // ~~~ Print increments here
             if (numberOfIncrements >= 5 && numberOfIncrements <= 25) {
                 currentIncrement = increments[i];
                 i = increments.Length;
             }
         }
 
-        int unitDiff = (negativeOffset % 10);
-
+       
         // set the scaling based on the chosen increment
         if (currentIncrement != -1) {
             for (int i = 0; i < yScale; i++) {
-                if (i % (currentIncrement) == unitDiff) {
-                    yAxis.transform.GetChild(i).gameObject.SetActive(true);
-                    grid.transform.GetChild(xScale + i + 1).GetComponent<LineRenderer>().enabled = true;
+                if ((i + (yScale % 2) ) % (currentIncrement) ==  0 ) {
+                    print("i " + i + " % " + currentIncrement + " == " + i % currentIncrement);
+
+                    yAxis.transform.GetChild(i ).gameObject.SetActive(true);
+                    grid.transform.GetChild(xScale + i + 1 ).GetComponent<LineRenderer>().enabled = true;
 
                 } else {
                     yAxis.transform.GetChild(i).gameObject.SetActive(false);
                     grid.transform.GetChild(xScale + i + 1).GetComponent<LineRenderer>().enabled = false;
                 }
+            }
+            if ((yScale % 2) == 1) {
+                grid.transform.GetChild(xScale + 1).GetComponent<LineRenderer>().enabled = true;
             }
         } else {
             print("Error: increments are out of bounds in Graph.LayoutYScale() - print " +
