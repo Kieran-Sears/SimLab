@@ -8,6 +8,9 @@ using System.Collections.Generic;
 
 public class Graph : MonoBehaviour {
 
+    public delegate void OverlayPointChange();
+    public static OverlayPointChange overlayPointChange;
+
     #region Public Variables
     public GameObject graph;
     public GameObject grid;
@@ -15,6 +18,7 @@ public class Graph : MonoBehaviour {
     public GameObject lowerThresholds;
     public GameObject xAxis;
     public GameObject yAxis;
+    public BoxCollider graphBoxCollider;
     public GameObject graphContent;
     public GameObject xAxisContent;
     public GameObject yAxisContent;
@@ -50,13 +54,16 @@ public class Graph : MonoBehaviour {
     public int yScale;
     public int yStart;
     public int yEnd;
+
+    public int offset = 0;
+
     #endregion
 
     #region Private Variables
     // private float scrollWheel = 1;
     // private float newScrollWheel;
     private Vector2 localpoint;
-    private RectTransform graphContentRectTrans;
+    public RectTransform graphContentRectTrans;
 
 
     private float mouseHold;
@@ -70,7 +77,6 @@ public class Graph : MonoBehaviour {
     private int indexOfSliderMinipulated;
     private float newSliderTime;
     private bool allowChangingPosition;
-    private int negativeOffset = 0;
     #endregion
 
     #region Unity Methods
@@ -120,7 +126,6 @@ public class Graph : MonoBehaviour {
             RaycastHit hit1;
             if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit1, 800)) {
                 string tag = hit1.collider.tag;
-
                 // if over graph check for a "mouse up" to place a new point, else deactivate coordinate system
                 if (tag == "Graph") {
                     if (Input.GetMouseButtonUp(0) && mouseHold < 0.3) {
@@ -172,7 +177,7 @@ public class Graph : MonoBehaviour {
                                 string Seconds = (Mathf.CeilToInt(sortedGraphPointsList.Keys[sortedGraphPointsList.IndexOfValue(currentlySelectedSlider)]) % 60).ToString();
 
                                 coordinateX.text = minutes + ":" + Seconds;
-                                coordinateY.text = Mathf.CeilToInt(currentlySelectedSlider.value - negativeOffset).ToString();
+                                coordinateY.text = Mathf.CeilToInt(currentlySelectedSlider.value - offset).ToString();
                             }
                             mouseHold = 0;
                         }
@@ -286,17 +291,30 @@ public class Graph : MonoBehaviour {
     #region Private Methods
 
 
-    private void ResizeGraph() {
+    public void ResizeGraph() {
+        // have graph prefab fit parent container
+        GetComponent<RectTransform>().sizeDelta = transform.parent.GetComponent<RectTransform>().sizeDelta;
+        GetComponent<RectTransform>().offsetMin = new Vector2(0, 0);
+        GetComponent<RectTransform>().offsetMax = new Vector2(0, 0);
+
+        // check for null viewport as this causes crash, not sure why the delay for viewport to instantiate but this requires a frame or two.
         if (graphViewport != null) {
             Transform dashMarker;
             LineRenderer lineRenderer;
             Rect viewportRect = graphViewport.GetComponent<RectTransform>().rect;
-            float padding = (viewportRect.width / 100 * 5);
+            Vector2 padding = new Vector2(viewportRect.width / 100 * 5, viewportRect.height / 100 * 5);
             graphContentRectTrans = graphContent.GetComponent<RectTransform>();
-            Vector2 sizeMarkup = new Vector2(graphContentRectTrans.sizeDelta.x / (viewportRect.width - padding), graphContentRectTrans.sizeDelta.y / (viewportRect.height - padding));
+            Vector2 sizeMarkup = new Vector2(graphContentRectTrans.sizeDelta.x / (viewportRect.width - padding.x), graphContentRectTrans.sizeDelta.y / (viewportRect.height - padding.y));
+
             // content resize
-            graphContentRectTrans.sizeDelta = new Vector2(viewportRect.width - padding, viewportRect.height - padding);
+            graphContentRectTrans.sizeDelta = new Vector2(viewportRect.width - padding.x, viewportRect.height - padding.y);
             Vector2 size = new Vector2(graphContentRectTrans.rect.width, graphContentRectTrans.rect.height);
+            graphBoxCollider.size = graphContentRectTrans.sizeDelta;
+
+            // axis resize
+            xAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(viewportRect.width - padding.x, xAxisContent.GetComponent<RectTransform>().sizeDelta.y);
+            yAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(yAxisContent.GetComponent<RectTransform>().sizeDelta.x, viewportRect.height - padding.y);
+
             // grid resize
             for (int i = 0; i < grid.transform.childCount; i++) {
                 dashMarker = grid.transform.GetChild(i);
@@ -309,9 +327,6 @@ public class Graph : MonoBehaviour {
                     lineRenderer.SetPosition(1, new Vector3((size.x / 2), (((size.y / yScale) * (i - (xScale + 1))) - (size.y / 2)), 20));
                 }
             }
-            // axis resize
-            xAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(viewportRect.width - padding, xAxisContent.GetComponent<RectTransform>().sizeDelta.y);
-            yAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(yAxisContent.GetComponent<RectTransform>().sizeDelta.x, viewportRect.height - padding);
 
             for (int i = 0; i < xAxis.transform.childCount; i++) {
                 dashMarker = xAxis.transform.GetChild(i);
@@ -333,7 +348,7 @@ public class Graph : MonoBehaviour {
             sortedGraphPointsList.Clear();
             for (int i = 0; i < graph.transform.childCount; i++) {
                 Transform sliderObject = graph.transform.GetChild(i);
-
+                sliderObject.GetComponent<RectTransform>().sizeDelta = new Vector2(20, graph.GetComponent<RectTransform>().rect.height + sliderObject.GetComponent<Slider>().handleRect.sizeDelta.y);
                 sliderObject.localPosition = new Vector3(sliderObject.localPosition.x / sizeMarkup.x, sliderObject.localPosition.y / sizeMarkup.y, -20);
                 float pointTime = (sliderObject.transform.localPosition.x + (graph.GetComponent<RectTransform>().rect.width / 2)) / (graph.GetComponent<RectTransform>().rect.width / xScale);
                 sortedGraphPointsList.Add(pointTime, sliderObject.GetComponent<Slider>());
@@ -384,7 +399,7 @@ public class Graph : MonoBehaviour {
 
             lineRenderer = dashMarker.GetComponent<LineRenderer>();
             lineRenderer.transform.localScale = new Vector3(1f, 1f, 1f);
-            if (n - negativeOffset == 0) {
+            if (n - offset == 0) {
                 lineRenderer.startWidth = 0.05f;
                 lineRenderer.endWidth = 0.05f;
             } else {
@@ -398,20 +413,12 @@ public class Graph : MonoBehaviour {
     }
 
     private void InitialiseXScale() {
-        //if (xScale > 300) {
-        //    xAxisLabel.GetComponent<Text>().text = "Duration (Minutes)";
-        //    xScale /= 60;
-        //}
         for (int i = 0; i <= xScale; i++) {
             GameObject dashMarker = Instantiate(xDashMarkerPrefab, xAxis.transform);
             dashMarker.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
             dashMarker.transform.localPosition = Vector3.zero;
             dashMarker.transform.localPosition += new Vector3((-graphContentRectTrans.rect.width / 2), 0, 0);
             dashMarker.transform.localPosition += new Vector3((((graphContentRectTrans.rect.width) / xScale) * i), 0, 0);
-            // duration numbering format 1
-            // dashMarker.GetComponent<Text>().text = ((i / 60)).ToString() + ":" + ((i % 60)).ToString();
-            // dashMarker.transform.localScale = Vector3.one / (xScale / 30);
-            // duration numbering format 2
             if (i % 60 == 0) {
                 dashMarker.GetComponent<Text>().text = ((i / 60)).ToString();
             } else {
@@ -425,7 +432,6 @@ public class Graph : MonoBehaviour {
     private void InitialiseYScale() {
         GameObject dashMarker;
         Text text;
-
         for (int i = yStart; i <= yEnd; i++) {
             dashMarker = Instantiate(yDashMarkerPrefab, yAxis.transform);
             dashMarker.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
@@ -433,7 +439,7 @@ public class Graph : MonoBehaviour {
             dashMarker.transform.localPosition += new Vector3(0, (-graphContentRectTrans.rect.height / 2), 0);
             dashMarker.transform.localPosition += new Vector3(0, (((graphContentRectTrans.rect.height) / yScale) * (i - yStart)), 0);
             text = dashMarker.GetComponent<Text>();
-            text.text = (i - negativeOffset).ToString();
+            text.text = (i - offset).ToString();
             text.fontSize = 1;
         }
     }
@@ -540,9 +546,9 @@ public class Graph : MonoBehaviour {
 
     private void LayoutYScale() {
         // find the increment used to set the scaling
-        float currentIncrement = -1;
+        int currentIncrement = -1;
         float numberOfIncrements = 0;
-        float[] increments = { 1, 2, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000 };
+        int[] increments = { 1, 2, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000 };
         for (int i = 0; i < increments.Length; i++) {
             numberOfIncrements = yScale / increments[i];
             // print(numberOfIncrements + " : " + increments[i]);  // ~~~ Print increments here
@@ -552,23 +558,22 @@ public class Graph : MonoBehaviour {
             }
         }
 
-       
+
         // set the scaling based on the chosen increment
         if (currentIncrement != -1) {
             for (int i = 0; i < yScale; i++) {
-                if ((i + (yScale % 2) ) % (currentIncrement) ==  0 ) {
-                    print("i " + i + " % " + currentIncrement + " == " + i % currentIncrement);
-
-                    yAxis.transform.GetChild(i ).gameObject.SetActive(true);
-                    grid.transform.GetChild(xScale + i + 1 ).GetComponent<LineRenderer>().enabled = true;
+                if ((i + (yScale % currentIncrement)) % (currentIncrement) == 0) {
+                    //  print("i " + i + " % " + currentIncrement + " == " + i % currentIncrement);
+                    yAxis.transform.GetChild(i).gameObject.SetActive(true);
+                    grid.transform.GetChild(xScale + i + 1).GetComponent<LineRenderer>().enabled = true;
 
                 } else {
                     yAxis.transform.GetChild(i).gameObject.SetActive(false);
                     grid.transform.GetChild(xScale + i + 1).GetComponent<LineRenderer>().enabled = false;
                 }
             }
-            if ((yScale % 2) == 1) {
-                grid.transform.GetChild(xScale + 1).GetComponent<LineRenderer>().enabled = true;
+            if ((yScale % currentIncrement) != 0) {
+                grid.transform.GetChild(xScale + (yScale % currentIncrement)).GetComponent<LineRenderer>().enabled = true;
             }
         } else {
             print("Error: increments are out of bounds in Graph.LayoutYScale() - print " +
@@ -708,47 +713,22 @@ public class Graph : MonoBehaviour {
     public void GenerateGraph(int _xStart, int _xEnd, int _yStart, int _yEnd, string yLabel) {
         print("generating graph " + name);
 
-        bool yStartNeg = _yStart < 0;
-        bool yEndNeg = _yEnd < 0;
-
-        if (yStartNeg) {
-            negativeOffset = _yStart * -1;
-            print("negative offset = " + negativeOffset);
+        // establish if y range has negative value and offset values to have range be positive
+        // numbers output then have the offset added back onto them before being displayed or saved.
+        if (_yStart < 0) {
+            offset = _yStart * -1;
+            print("offset in graph y axis = " + offset);
         }
-
-        GetComponent<RectTransform>().sizeDelta = transform.parent.GetComponent<RectTransform>().sizeDelta;
-        // using the scrollview viewport as the basis for the graphs size
-        Rect viewportRect = graphViewport.GetComponent<RectTransform>().rect;
-        float padding = (viewportRect.width / 100) * 5;
-        // "-20" is for padding so that there is no clipping at the edges of the graph for graphlines or numbers
-        graphContentRectTrans = graphContent.GetComponent<RectTransform>();
-        graphContentRectTrans.sizeDelta = new Vector2(viewportRect.width - padding, viewportRect.height - padding);
-        graphContentRectTrans.localPosition = Vector3.zero;
-
-        // resizing both axis to account for any changes in the new size
-        xAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(viewportRect.width - padding, xAxisContent.GetComponent<RectTransform>().sizeDelta.y);
-        yAxisContent.GetComponent<RectTransform>().sizeDelta = new Vector2(yAxisContent.GetComponent<RectTransform>().sizeDelta.x, viewportRect.height - padding);
-
-        // adjusting the collider which will detect mouseover for the graph in the Update function
-        graph.GetComponent<BoxCollider>().size = new Vector2(viewportRect.width - padding, viewportRect.height - padding);
-        coordinateSystem.GetComponent<BoxCollider>().size = new Vector3(400, 75, 1);
-        coordinateSystem.GetComponent<BoxCollider>().center = Vector3.right * 50;
-        // incase fixed size doesnt scale with different resolutions set dynamically (requires tweaking)
-        // coordinateSystem.GetComponent<BoxCollider>().size = new Vector3(coordinateSystem.GetComponent<RectTransform>().rect.width * 1.5f, coordinateSystem.GetComponent<RectTransform>().rect.height * 1.5f, 1);
-
-        // adjusting the placement of the axis labels
-        //yAxisLabel.transform.localPosition += Vector3.left * yAxis.GetComponent<RectTransform>().rect.width / 3;
-        //xAxisLabel.transform.localPosition += Vector3.down * xAxis.GetComponent<RectTransform>().rect.height / 3;
 
         // as well as label text
         yAxisLabel.GetComponent<Text>().text = yLabel;
-        xAxisLabel.GetComponent<Text>().text = "Duration (MINUTES : seconds)";
+        xAxisLabel.GetComponent<Text>().text = "Duration";
 
         // record of initial values based on time (x) against units (y)
         xStart = _xStart;
         xEnd = _xEnd;
-        yStart = _yStart + negativeOffset;
-        yEnd = _yEnd + negativeOffset;
+        yStart = _yStart + offset;
+        yEnd = _yEnd + offset;
         xScale = _xEnd - _xStart;
         yScale = _yEnd - _yStart;
 
@@ -756,6 +736,7 @@ public class Graph : MonoBehaviour {
         // ever to start from anything other than 0
         duration = xScale;
 
+        ResizeGraph();
         // placement of all axis markers
         InitialiseXScale();
         InitialiseYScale();
@@ -807,7 +788,7 @@ public class Graph : MonoBehaviour {
         float currentValue = worldPoint.y - minValue;
         float percent = (currentValue / maxValue) * 100;
         point.transform.position = new Vector3(worldPoint.x, point.transform.position.y, 0);
-        slider.value = (((slider.maxValue - slider.minValue) / 100) * percent) + negativeOffset;
+        slider.value = (((slider.maxValue - slider.minValue) / 100) * percent);
         float pointTime = (slider.transform.localPosition.x + (graph.GetComponent<RectTransform>().rect.width / 2)) / (graph.GetComponent<RectTransform>().rect.width / xScale);
         HierachyPositionSearch(point);
         point.transform.localPosition += (Vector3.back * point.transform.localPosition.z) - (Vector3.forward * 50);
@@ -879,7 +860,7 @@ public class Graph : MonoBehaviour {
         point.GetComponent<RectTransform>().sizeDelta = new Vector2(20, graphContentRectTrans.rect.height + slider.handleRect.sizeDelta.y);
         slider.minValue = yStart;
         slider.maxValue = yEnd;
-        slider.value = yValue + negativeOffset;
+        slider.value = yValue + offset;
         slider.interactable = interactable;
         if (sortedGraphPointsList.ContainsKey(xValue)) {
             sortedGraphPointsList.Remove(xValue);

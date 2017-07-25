@@ -505,7 +505,7 @@ public class DrugSetup : MonoBehaviour {
         WindowManager.instance.drug.SetActive(!WindowManager.instance.drug.activeInHierarchy);
         WindowManager.instance.visualise.SetActive(!WindowManager.instance.visualise.activeInHierarchy);
         if (WindowManager.instance.visualise.activeInHierarchy) {
-            VisualizationSetup.instance.GetGraphs();
+            VisualizationSetup.instance.SetVisualization();
         } else {
             VisualizationSetup.instance.ReturnGraphs();
         }
