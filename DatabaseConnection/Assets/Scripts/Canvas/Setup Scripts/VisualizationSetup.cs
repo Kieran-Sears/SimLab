@@ -108,10 +108,12 @@ public class VisualizationSetup : MonoBehaviour {
             print("y value with difference : " + yValue);
             // add the point to the overlay ### conditional check to see if within permitted viewing area before adding
             float yCoordinate = (overlayRect.rect.height / vitalGraph.yScale) * yValue;
+            // have drug point begin positioned at the start of the vital graph
+            float xCoordinate = (drugOverlay.transform.position.x - (overlayRect.rect.width / 2)) + before.Value.handleRect.rect.width / 2;
+            // then use the points duration added to the slider duration as the calculation for its correct position
+            xCoordinate += (overlayRect.rect.width / vitalGraph.xScale) * (chosenDuration + drugPoint.Key);
 
-            float xCoordinate = ((drugOverlay.transform.position.x - (overlayRect.rect.width / 2)) + (overlayRect.rect.width / vitalGraph.xScale)) * (chosenDuration + drugPoint.Key);
-
-            Vector3 newPos = new Vector3(xCoordinate, yValue, 0);
+            Vector3 newPos = new Vector3(xCoordinate, yCoordinate, 0);
             print("i : " + i + " newPos : " + newPos);
             // convert point values into world positions
             overlayDrugLine.SetPosition(i, newPos);
