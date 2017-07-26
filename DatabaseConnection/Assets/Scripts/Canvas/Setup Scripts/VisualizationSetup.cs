@@ -8,15 +8,13 @@ public class VisualizationSetup : MonoBehaviour {
 
     public static VisualizationSetup instance { get; private set; }
 
+
+
     public Transform vitalPanel;
     public Transform drugPanel;
     public Transform drugOverlay;
-
     public Slider timeLineSlider;
-
-
     public LineRenderer overlayDrugLine;
-
     public SortedList<float, Slider> sortedGraphPointsList = new SortedList<float, Slider>();
 
     private Graph drugGraph;
@@ -59,6 +57,7 @@ public class VisualizationSetup : MonoBehaviour {
         drugGraph.pointsUpperThreshold = originalDrugGraph.GetComponent<Graph>().pointsUpperThreshold;
         drugGraph.pointsLowerThreshold = originalDrugGraph.GetComponent<Graph>().pointsLowerThreshold;
         LerpFromView.onEnd();
+        drugGraph.overlayPointChange += SetOverlay;
     }
 
     private void SetOverlay() {
@@ -74,6 +73,7 @@ public class VisualizationSetup : MonoBehaviour {
         float yValue;
         float gradientBetweenPoints;
 
+        KeyValuePair<float, Slider> drugPoint;
         KeyValuePair<float, Slider> before = new KeyValuePair<float, Slider>(-1, null);
         KeyValuePair<float, Slider> after = new KeyValuePair<float, Slider>(-1, null);
 
@@ -82,8 +82,7 @@ public class VisualizationSetup : MonoBehaviour {
         // for each drug point 
         for (int i = 0; i < drugGraph.sortedGraphPointsList.Keys.Count; i++) {
 
-            KeyValuePair<float, Slider> drugPoint = new KeyValuePair<float, Slider>(drugGraph.sortedGraphPointsList.Keys[i], drugGraph.sortedGraphPointsList[drugGraph.sortedGraphPointsList.Keys[i]]);
-            print("Finding new y value for drug point ( " + drugPoint.Key + ", " + drugPoint.Value.value + ")");
+            drugPoint = new KeyValuePair<float, Slider>(drugGraph.sortedGraphPointsList.Keys[i], drugGraph.sortedGraphPointsList[drugGraph.sortedGraphPointsList.Keys[i]]);
 
             // find the points on the vital graph which lie between this drug point
             for (int j = 1; j < vitalGraph.sortedGraphPointsList.Keys.Count; j++) {
@@ -98,23 +97,24 @@ public class VisualizationSetup : MonoBehaviour {
             }
 
             // calculate the gradient of the line between the vital points
-            gradientBetweenPoints = before.Key / after.Value.value;
-            print(before.Key + " / " + after.Value.value + " = Gradient : " + gradientBetweenPoints);
-            // use the gradient to find what the yValue should be for this drug point
-            yValue = chosenDuration * gradientBetweenPoints;
-            print("y value without difference of drug influence : " + yValue);
+            gradientBetweenPoints = (after.Value.value - before.Value.value) / (after.Key - before.Key);
+            print("Gradient: " + (after.Value.value - before.Value.value) + " / " + (after.Key - before.Key) + " = " + gradientBetweenPoints);
+            // use the gradient to find what the yValue should be for this drug point (y = mX + C)
+            yValue = (drugPoint.Key - before.Key) * gradientBetweenPoints;// + before.Value.value;
+            print("vital yValue = " + yValue);
             // then add the difference to the yValue based on what the drug point's value is
-            yValue += drugPoint.Value.value;
-            print("y value with difference : " + yValue);
+            float drugYValue = drugPoint.Value.value - drugGraph.offset;
+            print("drug yValue = " + drugYValue);
+            yValue += drugYValue; // do i need the offset?
+            print("final overlay yValue = " + yValue);
             // add the point to the overlay ### conditional check to see if within permitted viewing area before adding
             float yCoordinate = (overlayRect.rect.height / vitalGraph.yScale) * yValue;
             // have drug point begin positioned at the start of the vital graph
             float xCoordinate = (drugOverlay.transform.position.x - (overlayRect.rect.width / 2)) + before.Value.handleRect.rect.width / 2;
             // then use the points duration added to the slider duration as the calculation for its correct position
             xCoordinate += (overlayRect.rect.width / vitalGraph.xScale) * (chosenDuration + drugPoint.Key);
-
+            // set position on line
             Vector3 newPos = new Vector3(xCoordinate, yCoordinate, 0);
-            print("i : " + i + " newPos : " + newPos);
             // convert point values into world positions
             overlayDrugLine.SetPosition(i, newPos);
         }
@@ -124,5 +124,6 @@ public class VisualizationSetup : MonoBehaviour {
     public void ReturnGraphs() {
         vitalPanel.SetParent(ConditionSetup.instance.tabManager.contentArea.transform);
         drugPanel.SetParent(DrugSetup.instance.tabManager.contentArea.transform);
+        // add here call to resize graphs
     }
 }

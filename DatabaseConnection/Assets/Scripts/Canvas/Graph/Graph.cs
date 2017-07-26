@@ -9,7 +9,7 @@ using System.Collections.Generic;
 public class Graph : MonoBehaviour {
 
     public delegate void OverlayPointChange();
-    public static OverlayPointChange overlayPointChange;
+    public OverlayPointChange overlayPointChange;
 
     #region Public Variables
     public GameObject graph;
@@ -276,6 +276,9 @@ public class Graph : MonoBehaviour {
         if (Input.GetMouseButtonUp(0)) {
             leftMouseButtonIsDown = false;
             mouseHold = 0;
+            if (overlayPointChange != null) {
+                overlayPointChange();
+            }
         }
 
     }
@@ -545,6 +548,9 @@ public class Graph : MonoBehaviour {
     }
 
     private void LayoutYScale() {
+        // -23, 50
+        // 73 yscale
+
         // find the increment used to set the scaling
         int currentIncrement = -1;
         float numberOfIncrements = 0;
@@ -558,12 +564,14 @@ public class Graph : MonoBehaviour {
             }
         }
 
-
+        // yStart % increment = roundingOffset
+        print("yStart " + yStart);
         // set the scaling based on the chosen increment
         if (currentIncrement != -1) {
             for (int i = 0; i < yScale; i++) {
-                if ((i + (yScale % currentIncrement)) % (currentIncrement) == 0) {
-                    //  print("i " + i + " % " + currentIncrement + " == " + i % currentIncrement);
+            
+                if ((i + (-offset % currentIncrement)) % (currentIncrement) == 0) {
+                    // print("yStart % currentIncrement = " + yStart % currentIncrement + " + i (" + i + ") = " + (i + (yStart % currentIncrement)) + "  % currentIncrement  =" + (i + (yStart % currentIncrement)) % (currentIncrement));
                     yAxis.transform.GetChild(i).gameObject.SetActive(true);
                     grid.transform.GetChild(xScale + i + 1).GetComponent<LineRenderer>().enabled = true;
 
@@ -587,7 +595,11 @@ public class Graph : MonoBehaviour {
             Slider slider = EventSystem.current.currentSelectedGameObject.GetComponent<Slider>();
             float yPos = (Camera.main.WorldToScreenPoint(slider.handleRect.position) - Camera.main.WorldToScreenPoint(graph.transform.position / graphContent.transform.localScale.y)).y / graphContent.transform.localScale.y;
             Vector3 pos = new Vector3(pointLine.GetPosition(sortedGraphPointsList.IndexOfValue(slider)).x, yPos, -1);
-            pointLine.SetPosition(sortedGraphPointsList.IndexOfValue(slider), pos);
+            if (!(sortedGraphPointsList.IndexOfValue(slider) > pointLine.numPositions) || !(sortedGraphPointsList.IndexOfValue(slider) < 0)) {
+                pointLine.SetPosition(sortedGraphPointsList.IndexOfValue(slider), pos);
+            } else {
+                Destroy(currentlySelectedSlider.gameObject);
+            }
         }
     }
 
