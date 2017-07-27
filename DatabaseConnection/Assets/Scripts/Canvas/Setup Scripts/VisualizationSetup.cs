@@ -8,8 +8,6 @@ public class VisualizationSetup : MonoBehaviour {
 
     public static VisualizationSetup instance { get; private set; }
 
-
-
     public Transform vitalPanel;
     public Transform drugPanel;
     public Transform drugOverlay;
@@ -50,7 +48,7 @@ public class VisualizationSetup : MonoBehaviour {
     }
 
     private void GetGraphs() {
-        GameObject originalVitalGraph = ConditionSetup.instance.tabManager.contentArea.transform.FindChild(DrugSetup.instance.graph.name).gameObject;
+        GameObject originalVitalGraph = ConditionSetup.Instance.tabManager.contentArea.transform.FindChild(DrugSetup.instance.graph.name).gameObject;
         GameObject originalDrugGraph = DrugSetup.instance.tabManager.contentArea.transform.FindChild(DrugSetup.instance.graph.name).gameObject;
         vitalGraph = Instantiate(originalVitalGraph, vitalPanel).GetComponent<Graph>();
         drugGraph = Instantiate(originalDrugGraph, drugPanel).GetComponent<Graph>();
@@ -150,10 +148,26 @@ public class VisualizationSetup : MonoBehaviour {
 
     }
 
-    public void ReturnGraphs() {
-        vitalPanel.SetParent(ConditionSetup.instance.tabManager.contentArea.transform);
+    private void SaveChanges() {
+        ConditionSetup.Instance.ResetCondition();
+
+        vitalPanel.SetParent(ConditionSetup.Instance.tabManager.contentArea.transform);
         drugPanel.SetParent(DrugSetup.instance.tabManager.contentArea.transform);
         LerpFromView.onEnd();
-        // add here call to resize graphs
+    }
+
+    private void RevertChanges() { }
+
+    public void NavitageBackToDrugSetup() {
+        Error.instance.boolPanel.SetActive(true);
+        Error.instance.boolMessageText.text = "Would you like to save your changes?";
+        Error.instance.boolLeftButton.onClick.AddListener(RevertChanges);
+        Error.instance.boolRightButton.onClick.AddListener(SaveChanges);
+
+
+        vitalPanel.SetParent(ConditionSetup.Instance.tabManager.contentArea.transform);
+        drugPanel.SetParent(DrugSetup.instance.tabManager.contentArea.transform);
+        LerpFromView.onEnd();
+    
     }
 }

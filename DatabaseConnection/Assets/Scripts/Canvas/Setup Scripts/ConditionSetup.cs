@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 public class ConditionSetup : MonoBehaviour {
 
-    public static ConditionSetup instance { get; private set; }
+    public static ConditionSetup Instance { get; private set; }
 
     public TabManager tabManager;
     public GameObject togglePrefab;
@@ -37,14 +37,16 @@ public class ConditionSetup : MonoBehaviour {
     public Graph graph;
 
     private bool replaceExistingGraphs;
-    private bool someBool;
+    private bool changeDuration;
+    private int previousConditionChosen;
+    private enum ConditionState { notAsked, current, condition, cancelled };
+    private ConditionState state;
 
     private void Awake() {
-        if (instance) {
+        if (Instance) {
             DestroyImmediate(this);
-        }
-        else {
-            instance = this;
+        } else {
+            Instance = this;
         }
     }
 
@@ -53,12 +55,11 @@ public class ConditionSetup : MonoBehaviour {
         PopulatePresets();
         PopulateVitals();
         PopulateDrugs();
-        simulationDurationMinutes.onValueChanged.AddListener(enableSubmitButton);
-        simulationDurationSeconds.onValueChanged.AddListener(enableSubmitButton);
-        // vitalName.onValidateInput += delegate (string input, int charIndex, char addedChar) { return VitalNameChangeValue(input, charIndex, addedChar); };
+        simulationDurationMinutes.onValueChanged.AddListener(EnableSubmitButton);
+        simulationDurationSeconds.onValueChanged.AddListener(EnableSubmitButton);
     }
 
-    public void enableSubmitButton(string input) {
+    public void EnableSubmitButton(string input) {
         durationSubmit.interactable = true;
     }
 
@@ -72,13 +73,11 @@ public class ConditionSetup : MonoBehaviour {
                 Error.instance.informMessageText.text = "Minutes cannot exceed 60.";
                 Error.instance.informPanel.SetActive(true);
                 Error.instance.informOkButton.onClick.AddListener(SelectMinutesDuration);
-            }
-            else if (minutes < 0) {
+            } else if (minutes < 0) {
                 Error.instance.informMessageText.text = "Minutes cannot be less than 0.";
                 Error.instance.informPanel.SetActive(true);
                 Error.instance.informOkButton.onClick.AddListener(SelectMinutesDuration);
-            }
-            else {
+            } else {
                 newDuration += minutes * 60;
             }
         }
@@ -88,18 +87,15 @@ public class ConditionSetup : MonoBehaviour {
                 Error.instance.informMessageText.text = "Seconds cannot exceed 60.";
                 Error.instance.informPanel.SetActive(true);
                 Error.instance.informOkButton.onClick.AddListener(SelectSecondsDuration);
-            }
-            else if (seconds < 0) {
+            } else if (seconds < 0) {
                 Error.instance.informMessageText.GetComponentInChildren<Text>().text = "Seconds cannot be less than 0.";
                 Error.instance.informPanel.SetActive(true);
                 Error.instance.informOkButton.onClick.AddListener(SelectMinutesDuration);
-            }
-            else if (minutes == 0 && seconds < 30) {
+            } else if (minutes == 0 && seconds < 30) {
                 Error.instance.informMessageText.text = "Simulation duration should exeed 30 seconds.";
                 Error.instance.informPanel.SetActive(true);
                 Error.instance.informOkButton.onClick.AddListener(SelectMinutesDuration);
-            }
-            else {
+            } else {
                 newDuration += seconds;
             }
         }
@@ -109,8 +105,7 @@ public class ConditionSetup : MonoBehaviour {
             Error.instance.boolPanel.SetActive(true);
             Error.instance.boolRightButton.onClick.AddListener(ChangeActiveGraphDurations);
             Error.instance.boolLeftButton.onClick.AddListener(ResetDurationBack);
-        }
-        else {
+        } else {
             duration = newDuration;
             durationSubmit.interactable = false;
             replaceExistingGraphs = false;
@@ -137,16 +132,6 @@ public class ConditionSetup : MonoBehaviour {
         Error.instance.informOkButton.onClick.RemoveAllListeners();
     }
 
-    //public char VitalNameChangeValue(string input, int charIndex, char character) {
-    //    if (vitalsChosen.transform.FindChild(input + character) != null) {
-    //        vitalNameDuplicateWarning.SetActive(true);
-    //    }
-    //    else {
-    //        vitalNameDuplicateWarning.SetActive(false);
-    //    }
-    //    return character;
-    //}
-
     void PopulatePresets() {
         UnityEngine.Object[] files = Resources.LoadAll("Conditions");
         presets.options.Add(new Dropdown.OptionData() { text = "None" });
@@ -154,7 +139,18 @@ public class ConditionSetup : MonoBehaviour {
             presets.options.Add(new Dropdown.OptionData() { text = files[i].name });
         }
         presets.captionText.text = "Preset Conditions...";
+        presets.onValueChanged.AddListener(LoadCondition);
     }
+
+    #region developers note
+    /*
+     the "populate" functions below are used for adding vitals from disk to the selection on the condition setup side panel
+     a "Selectable Toggle" prefab is set up to use for the functionality of choosing a vital
+     to edit, same applying to drugs, however, further code for changing any active graphs
+     of the edited vital / drug will be needed, so that upon applying the changes in edit mode the corrosponding
+     graphs are updated. - this may prove challenging.
+    */
+    #endregion
 
     void PopulateVitals() {
         vitals = ExportManager.instance.Load("vitals") as Vitals;
@@ -167,7 +163,7 @@ public class ConditionSetup : MonoBehaviour {
             Toggle toggle = toggleObject.GetComponent<Toggle>();
             toggle.name = vital.name;
             toggle.isOn = false;
-            toggle.onValueChanged.AddListener((bool value) => loadChosenVital(value, toggleObject.transform.GetSiblingIndex(), vital.name));
+            toggle.onValueChanged.AddListener((bool value) => LoadChosenVital(value, toggleObject.transform.GetSiblingIndex(), vital.name));
         }
     }
 
@@ -193,9 +189,8 @@ public class ConditionSetup : MonoBehaviour {
         Error.instance.boolLeftButton.GetComponentInChildren<Text>().text = "no";
 
         replaceExistingGraphs = true;
-
-        print("someBool "  + someBool);
-        if (!someBool) {
+        
+        if (!changeDuration) {
             SubmitDuration();
         }
 
@@ -224,16 +219,12 @@ public class ConditionSetup : MonoBehaviour {
 
                 string vitalUnits = graph.yAxisLabel.GetComponent<Text>().text;
 
-                // Destroy(graphObject);
-
                 graph = tabManager.GenerateTab(vitalName).GetComponent<Graph>();
                 graph.GenerateGraph(0, duration, vitalMin, vitalMax, vitalUnits);
 
-                // place here listener for graph right click menu
-
                 toggle.onValueChanged.RemoveAllListeners();
                 toggle.isOn = true;
-                toggle.onValueChanged.AddListener((bool value) => loadChosenVital(value, i, vitalName));
+                toggle.onValueChanged.AddListener((bool value) => LoadChosenVital(value, i, vitalName));
 
                 if (i != 0) {
                     graph.transform.gameObject.SetActive(false);
@@ -285,193 +276,174 @@ public class ConditionSetup : MonoBehaviour {
     }
 
     public void CancelAddingPrefab() {
+        state = ConditionState.cancelled;
+        LoadCondition(presets.value);
+    }
+
+    public void ClearBoolError() {
         Error.instance.boolPanel.SetActive(false);
         Error.instance.boolDropdown.gameObject.SetActive(false);
         Error.instance.boolLeftButton.onClick.RemoveAllListeners();
         Error.instance.boolRightButton.onClick.RemoveAllListeners();
+        presets.onValueChanged.RemoveAllListeners();
+        presets.value = previousConditionChosen;
+        presets.onValueChanged.AddListener(LoadCondition);
     }
 
-    public void OverwriteDurationWithPreset() {
-        replaceExistingGraphs = true;
-        string choice = Error.instance.boolDropdown.options[Error.instance.boolDropdown.value].text;
-        print(choice);
+    public void ResetCondition() {
+        duration = -1;
+        simulationDurationMinutes.text = "Mins";
+        simulationDurationSeconds.text = "Secs";
+        Error.instance.boolPanel.SetActive(false);
+        Error.instance.boolMessageText.text = "";
+        Error.instance.boolLeftButton.onClick.RemoveAllListeners();
+        Error.instance.boolRightButton.onClick.RemoveAllListeners();
 
-        if (choice == ("Current (" + simulationDurationMinutes.text + ":" + simulationDurationSeconds.text + ")")) {
-            replaceExistingGraphs = true;
-
-            // put here code to make duration = to the conditions duration
-            LoadCondition(presets.value);
-
-            duration = (int.Parse(simulationDurationMinutes.text) * 60) + int.Parse(simulationDurationSeconds.text);
-            ChangeActiveGraphDurations();
-            print("IF STRING 1");
+        if (tabManager.activeTabs.transform.childCount > 0) {
+            for (int i = tabManager.activeTabs.transform.childCount - 1; i >= 0; i--) {
+                Transform tab = tabManager.activeTabs.transform.GetChild(i);
+                tab.gameObject.SetActive(false);
+                tab.SetParent(tabManager.inactiveTabs.transform);
+            }
+            for (int i = tabManager.contentArea.transform.childCount - 1; i >= 0; i--) {
+                tabManager.contentArea.transform.GetChild(i).gameObject.SetActive(false);
+            }
         }
-        else {
-            simulationDurationMinutes.text = (condition.duration / 60).ToString();
-            simulationDurationSeconds.text = (condition.duration % 60).ToString();
-            duration = condition.duration;
-            replaceExistingGraphs = false;
-            someBool = true;
-            ChangeActiveGraphDurations();
-            someBool = false;
+        for (int i = 0; i < vitalsChosen.transform.childCount; i++) {
+            vitalsChosen.transform.GetChild(i).GetComponent<Toggle>().isOn = false;
+        }
+    }
+
+    public void DurationOverwrite() {
+        if (Error.instance.boolDropdown.value == 0) {
+            state = ConditionState.condition;
             LoadCondition(presets.value);
-            //LoadCondition(presets.value);
-            print("IF STRING 2");
+       
+        }
+        if (Error.instance.boolDropdown.value == 1) { 
+            state = ConditionState.current;
+            LoadCondition(presets.value);
         }
     }
 
     public void LoadCondition(int index) {
-        if (presets.options[index].text != "None") {
-            condition = ExportManager.instance.Load("Conditions/" + presets.options[index].text) as Condition;
-            if (condition == null) {
-                Error.instance.informMessageText.text = "Condition could not be found.";
-                Error.instance.informPanel.SetActive(true);
-                Error.instance.informOkButton.onClick.AddListener(SetInformPanelToFalse);
-                return;
-            }
 
-            // if a duration already exists prompt the user on how they want to overwrite the duration with the preset with different duration (warning: recursive function call)
-            if (duration != -1 && replaceExistingGraphs == false) {
-
-                Error.instance.boolPanel.SetActive(true);
-                Error.instance.boolDropdown.gameObject.SetActive(true);
-                Error.instance.boolMessageText.text = "The duration of the preset " + condition.name + " is not equal to the existing duration. Which duration would you prefer to keep?";
-                Error.instance.boolLeftButton.onClick.AddListener(CancelAddingPrefab);
-                Error.instance.boolRightButton.onClick.AddListener(OverwriteDurationWithPreset);
-                Error.instance.boolDropdown.ClearOptions();
-                Error.instance.boolDropdown.captionText.text = "Select...";
-                Error.instance.boolLeftButton.GetComponentInChildren<Text>().text = "Cancel";
-                List<Dropdown.OptionData> options = new List<Dropdown.OptionData>();
-                Dropdown.OptionData data = new Dropdown.OptionData();
-
-                data.text = condition.name + " (" + (condition.duration / 60).ToString() + ":" + (condition.duration % 60).ToString() + ")";
-
-
-                options.Add(data);
-                data = new Dropdown.OptionData();
-                data.text = "Current (" + simulationDurationMinutes.text + ":" + simulationDurationSeconds.text + ")";
-                options.Add(data);
-                Error.instance.boolDropdown.AddOptions(options);
-                return;
-            }
-            else {
-
+        // if "none" clear any graphs to do with the current condition
+        // if condition has been chosen
+            // if there is no duration set load the condition with no questions asked
+            // if there is a duration already
+                // if user chooses to keep current duration
+                    // change all the loading condition graphs to match the current duration
+                // if user chooses the conditions duration
+                    // change all the current graphs to match the condition's
+                // if user presses cancel just close the prompt window and dont change anything
+        
+         if (presets.options[index].text == "None") {
+            Error.instance.boolPanel.SetActive(true);
+            Error.instance.boolMessageText.text = "This will erase any existing data. Are you sure?";
+            Error.instance.boolLeftButton.onClick.AddListener(ClearBoolError);
+            Error.instance.boolRightButton.onClick.AddListener(ResetCondition);
+         } else {
+            if (duration == -1) {
+                print("initialising preset condition");
+                condition = ExportManager.instance.Load("Conditions/" + presets.options[index].text) as Condition;
+                previousConditionChosen = index;
+                duration = condition.duration;
                 simulationDurationMinutes.text = (condition.duration / 60).ToString();
                 simulationDurationSeconds.text = (condition.duration % 60).ToString();
-                duration = condition.duration;
-                replaceExistingGraphs = false;
+                durationSubmit.interactable = false;
+                bool firstInList = true;
+                foreach (VitalData vitalData in condition.vitalsData) {
+                    if (!tabManager.transform.FindChild(vitalData.vital.name)) {
+                        Vital vital = vitalData.vital;
+
+                        graph = tabManager.GenerateTab(vital.name).GetComponent<Graph>();
+                        graph.GenerateGraph(0, duration, (int)Math.Ceiling(vital.min), (int)Math.Ceiling(vital.max), vital.units);
+
+                        // TODO prompt user to see if they want vitals in the preset they dont have?
+
+                        // Add the listener to the vitals list toggles so graphs can be selected / deselected at will
+                        Transform vitalChosen = vitalsChosen.transform.FindChild(vital.name);
+                        Toggle toggle = vitalChosen.GetComponent<Toggle>();
+                        toggle.onValueChanged.RemoveAllListeners();
+                        toggle.isOn = true;
+                        toggle.onValueChanged.AddListener((bool value) => LoadChosenVital(value, vitalChosen.transform.GetSiblingIndex(), vital.name));
+
+                        // populate the graph with its values
+                        foreach (Value value in vitalData.timeline.vitalValues) {
+                            graph.AddPoint(value.second, value.value);
+                        }
+                        foreach (Value value in vitalData.timeline.upperThresholdValues) {
+                            graph.AddThresholdPointUpper(value.second, value.value);
+                        }
+                        foreach (Value value in vitalData.timeline.lowerThresholdValues) {
+                            graph.AddThresholdPointLower(value.second, value.value);
+                        }
+
+                        // ensure that the first vital added automatically appears for the user to view
+                        if (firstInList) {
+                            graph.transform.gameObject.SetActive(true);
+                            firstInList = false;
+                        } else {
+                            graph.transform.gameObject.SetActive(false);
+                        }
+                    }
+                }
+            } else {
+                print("Duration already set");
+                switch (state) {
+                    case ConditionState.notAsked:
+                        print("prompting user for duration to keep");
+                        Error.instance.boolPanel.SetActive(true);
+                        Error.instance.boolDropdown.gameObject.SetActive(true);
+                        Error.instance.boolMessageText.text = "The duration of the preset " + condition.name + " is not equal to the existing duration. Which duration would you prefer to keep?";
+                        Error.instance.boolLeftButton.onClick.AddListener(CancelAddingPrefab);
+                        Error.instance.boolRightButton.onClick.AddListener(DurationOverwrite);
+                        Error.instance.boolDropdown.ClearOptions();
+                        Error.instance.boolDropdown.captionText.text = "Select...";
+                        Error.instance.boolLeftButton.GetComponentInChildren<Text>().text = "Cancel";
+                        List<Dropdown.OptionData> options = new List<Dropdown.OptionData>();
+                        Dropdown.OptionData data = new Dropdown.OptionData();
+                        data.text = condition.name + "Preset (" + (condition.duration / 60).ToString() + ":" + (condition.duration % 60).ToString() + ")";
+                        options.Add(data);
+                        data = new Dropdown.OptionData();
+                        data.text = "Current (" + simulationDurationMinutes.text + ":" + simulationDurationSeconds.text + ")";
+                        options.Add(data);
+                        Error.instance.boolDropdown.AddOptions(options);
+                        return;
+                    case ConditionState.current:
+                        print("keeping current duration");
+                        replaceExistingGraphs = true;
+                        LoadCondition(presets.value);
+                        duration = (int.Parse(simulationDurationMinutes.text) * 60) + int.Parse(simulationDurationSeconds.text);
+                        ChangeActiveGraphDurations();
+                        state = ConditionState.notAsked;
+                        break;
+                    case ConditionState.condition:
+                        print("changing to preset conditions duration");
+                        simulationDurationMinutes.text = (condition.duration / 60).ToString();
+                        simulationDurationSeconds.text = (condition.duration % 60).ToString();
+                        duration = condition.duration;
+                        replaceExistingGraphs = false;
+                        changeDuration = true;
+                        ChangeActiveGraphDurations();
+                        changeDuration = false;
+                        LoadCondition(presets.value);
+                        state = ConditionState.notAsked;
+                        break;
+                    case ConditionState.cancelled:
+                        print("user cancelled action to load preset condition");
+                        ClearBoolError();
+                        state = ConditionState.notAsked;
+                        break;
+                    default:
+                        break;
+                }
             }
-        }
-
-
-        // for each vital in the condition, loop through and create the graph for it
-
-        bool firstInList = true;
-        foreach (VitalData vitalData in condition.vitalsData) {
-            if (!tabManager.transform.FindChild(vitalData.vital.name)) {
-                Vital vital = vitalData.vital;
-
-                graph = tabManager.GenerateTab(vital.name).GetComponent<Graph>();
-                graph.GenerateGraph(0, duration, (int)Math.Ceiling(vital.min), (int)Math.Ceiling(vital.max), vital.units);
-
-                // TODO place here listener for graph right click menu
-
-                // TODO prompt user to see if they want vitals in the preset they dont have
-
-                // Add the listener to the vitals list toggles so graphs can be selected / deselected at will
-                Transform vitalChosen = vitalsChosen.transform.FindChild(vital.name);
-                Toggle toggle = vitalChosen.GetComponent<Toggle>();
-                toggle.onValueChanged.RemoveAllListeners();
-                toggle.isOn = true;
-                toggle.onValueChanged.AddListener((bool value) => loadChosenVital(value, vitalChosen.transform.GetSiblingIndex(), vital.name));
-
-                // populate the graph with its values
-                foreach (Value value in vitalData.timeline.vitalValues) {
-                    graph.AddPoint(value.second, value.value);
-                }
-                foreach (Value value in vitalData.timeline.upperThresholdValues) {
-                    graph.AddThresholdPointUpper(value.second, value.value);
-                }
-                foreach (Value value in vitalData.timeline.lowerThresholdValues) {
-                    graph.AddThresholdPointLower(value.second, value.value);
-                }
-
-                // ensure that the first vital added automatically appears for the user to view
-                if (firstInList) {
-                    graph.transform.gameObject.SetActive(true);
-                    firstInList = false;
-                }
-                else {
-                    graph.transform.gameObject.SetActive(false);
-                }
-            }
-        }
+         }
     }
 
-    //public void SelectMaxVitalValue() {
-    //    Error.instance.informPanel.SetActive(false);
-    //    vitalMax.Select();
-    //    vitalMax.ActivateInputField();
-    //    Error.instance.informOkButton.onClick.RemoveAllListeners();
-    //}
-
-    //public void AddVital() {
-
-    //    if (float.Parse(vitalMax.text) <= float.Parse(vitalMin.text)) {
-    //        Error.instance.informMessageText.text = "Max value is less or equal to min value for vital";
-    //        Error.instance.informPanel.SetActive(true);
-    //        Error.instance.informOkButton.onClick.AddListener(SelectMaxVitalValue);
-    //        return;
-    //    }
-
-    //    Transform vitalTrans = tabManager.transform.FindChild(vitalName.text);
-
-    //    if (vitalTrans != null) {
-    //        Destroy(vitalTrans.gameObject);
-    //    }
-
-    //    int vitalIndex = -1;
-
-    //    for (int i = 0; i < vitals.vitalList.Count; i++) {
-    //        if (vitals.vitalList[i].name == vitalName.text) {
-    //            vitalIndex = i;
-    //        }
-    //    }
-
-    //    if (vitalIndex != -1) {
-    //        vitals.vitalList.RemoveAt(vitalIndex);
-    //        Destroy(vitalsChosen.transform.FindChild(vitalName.text).gameObject);
-    //    }
-
-
-    //    Vital vital = new Vital();
-    //    vital.nodeID = vitals.vitalList.Count;
-    //    vital.name = vitalName.text;
-    //    vital.units = vitalUnit.text;
-    //    vital.max = float.Parse(vitalMax.text);
-    //    vital.min = float.Parse(vitalMin.text);
-
-    //    newVitalPanel.SetActive(false);
-
-    //    GameObject toggleObject = Instantiate(togglePrefab);
-    //    toggleObject.transform.SetParent(vitalsChosen.transform);
-    //    toggleObject.transform.SetAsFirstSibling();
-    //    toggleObject.transform.localScale = Vector3.one;
-    //    toggleObject.transform.localPosition = Vector3.zero;
-    //    toggleObject.transform.GetChild(1).GetComponent<Text>().text = vital.name;
-
-    //    Toggle toggle = toggleObject.GetComponent<Toggle>();
-    //    toggle.name = vital.name;
-    //    toggle.onValueChanged.AddListener((bool value) => loadChosenVital(value, toggleObject.transform.GetSiblingIndex(), vital.name));
-
-    //    vitals.vitalList.Insert(0, vital);
-
-    //    loadChosenVital(true, 0, vital.name);
-
-    //    // add checking here for is duplicate exists. If so then overwrite the existing vital
-    //}
-
-    public void loadChosenVital(bool chosen, int index, string vitalName) {
+    public void LoadChosenVital(bool chosen, int index, string vitalName) {
         // clear the background area ready for display
         tabManager.activeTabs.transform.GetComponent<ToggleGroup>().SetAllTogglesOff();
         if (chosen) {
@@ -510,8 +482,7 @@ public class ConditionSetup : MonoBehaviour {
                 }
                 graph.gameObject.SetActive(false);
                 tabManager.SwitchTab();
-            }
-            else {
+            } else {
                 // if vital was on standby then reactivate it as its toggle has been selected
                 vitalTrans.gameObject.SetActive(true);
                 vitalTab.SetParent(tabManager.activeTabs.transform);
@@ -519,8 +490,7 @@ public class ConditionSetup : MonoBehaviour {
                 tabManager.SwitchTab();
                 vitalTab.GetComponent<Toggle>().isOn = true;
             }
-        }
-        else { 
+        } else {
             // if the user has unticked the vitals toggle then hide the vital's graph display away along with its tab
             Transform tab = tabManager.activeTabs.transform.FindChild(vitalName);
             if (tab != null) {
@@ -534,25 +504,31 @@ public class ConditionSetup : MonoBehaviour {
         }
     }
 
-    public void ToggleActiveVitalWindow() {
+    public void ToggleActiveVitalWindow(bool clear = true) {
+        if (clear) {
+            newVitalPanel.GetComponent<VitalSetup>().ClearAttributes();
+        }
         bool selected = !newVitalPanel.activeInHierarchy;
         drugWindow1.SetActive(selected);
         newVitalPanel.SetActive(selected);
         conditionWindow.SetActive(!selected);
     }
 
-    public void ToggleActiveDrugWindow() {
+    public void ToggleActiveDrugWindow(bool clear = true) {
+        if (clear) {
+            newDrugPanel.GetComponent<DrugSetup>().ClearAttributes();
+        }
+
         bool selected = !newDrugPanel.activeInHierarchy;
         if (selected) {
             drugWindow1.SetActive(selected);
             newDrugPanel.SetActive(selected);
             conditionWindow.SetActive(!selected);
-        }
-        else {
+        } else {
             drugWindow1.SetActive(selected);
             newDrugPanel.SetActive(selected);
             conditionWindow.SetActive(!selected);
-        } 
+        }
     }
 
     public Vital GetVital(string vitalName) {

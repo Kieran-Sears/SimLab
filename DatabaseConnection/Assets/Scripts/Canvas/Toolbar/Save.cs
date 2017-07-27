@@ -10,17 +10,23 @@ public class Save : MonoBehaviour {
     public Text messageText;
     public InputField filepathInputField;
 
+
     public void OnEnable() {
-        if (ConditionSetup.instance.duration == -1) {
-            messageText.text = "Cannot save when no graphs or duration are present.";
-            rightButton.interactable = false;
-            filepathInputField.interactable = false;
-        }
-        else {
+        if (ConditionSetup.Instance.duration == -1) {
+            Error.instance.informMessageText.text = "Cannot save when no graphs or duration are present.";
+            Error.instance.informPanel.SetActive(true);
+            Error.instance.informOkButton.onClick.AddListener(SetInformPanelToFalse);
+            WindowManager.instance.save.SetActive(false);
+        } else {
             rightButton.interactable = true;
             filepathInputField.interactable = true;
             messageText.text = "Enter the filepath and name to save to...";
         }
+    }
+
+    public void SetInformPanelToFalse() {
+        Error.instance.informPanel.SetActive(false);
+        Error.instance.informOkButton.onClick.RemoveAllListeners();
     }
 
     public void SaveCondition() {
@@ -28,23 +34,23 @@ public class Save : MonoBehaviour {
 
         Condition condition = new Condition();
         condition.vitalsData = new List<VitalData>();
-        condition.duration = ConditionSetup.instance.duration;
+        condition.duration = ConditionSetup.Instance.duration;
 
         VitalData vitalData;
         TimeLine timeline;
         List<Value> values;
         Value value;
 
-        for (int i = 0; i < ConditionSetup.instance.vitalsChosen.transform.childCount; i++) {
+        for (int i = 0; i < ConditionSetup.Instance.vitalsChosen.transform.childCount; i++) {
 
-            Toggle toggle = ConditionSetup.instance.vitalsChosen.transform.GetChild(i).GetComponent<Toggle>();
+            Toggle toggle = ConditionSetup.Instance.vitalsChosen.transform.GetChild(i).GetComponent<Toggle>();
 
             if (toggle.isOn) {
 
                 string vitalName = toggle.gameObject.name;
 
-                GameObject graphObject = ConditionSetup.instance.tabManager.transform.FindChild(vitalName).gameObject;
-                Graph graph = ConditionSetup.instance.tabManager.transform.FindChild(vitalName).GetComponent<Graph>();
+                GameObject graphObject = ConditionSetup.Instance.tabManager.transform.FindChild(vitalName).gameObject;
+                Graph graph = ConditionSetup.Instance.tabManager.transform.FindChild(vitalName).GetComponent<Graph>();
 
                 timeline = new TimeLine();
 
@@ -78,7 +84,7 @@ public class Save : MonoBehaviour {
 
 
                 vitalData = new VitalData();
-                vitalData.vital = ConditionSetup.instance.GetVital(vitalName);
+                vitalData.vital = ConditionSetup.Instance.GetVital(vitalName);
                 vitalData.timeline = timeline;
 
                 condition.vitalsData.Add(vitalData);

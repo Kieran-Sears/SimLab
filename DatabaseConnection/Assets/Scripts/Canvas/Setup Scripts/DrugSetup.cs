@@ -34,18 +34,7 @@ public class DrugSetup : MonoBehaviour {
     }
 
     public void Start() {
-        PopulateAdministrations();
-        PopulateVitals();
-        for (int i = 0; i < vitals.transform.childCount; i++) {
-            vitals.transform.GetChild(i).gameObject.SetActive(false);
-        }
-        submit.interactable = false;
-        visualisation.interactable = false;
-        dose.interactable = false;
-        maximum.interactable = false;
-        minimum.interactable = false;
-        minutes.interactable = false;
-        seconds.interactable = false;
+        ClearAttributes();
     }
 
     //public void ResetValues() {
@@ -62,6 +51,31 @@ public class DrugSetup : MonoBehaviour {
         maximum.interactable = !maximum.interactable;
         minutes.interactable = !minutes.interactable;
         seconds.interactable = !seconds.interactable;
+    }
+
+    public void ClearAttributes() {
+        drugName.text = "";
+        dose.text = "e.g. mg/mL";
+        minimum.text = "Min";
+        maximum.text = "Max";
+        seconds.text = "Secs";
+        minutes.text = "Mins";
+        for (int i = 0; i < administrations.transform.childCount; i++) {
+           Destroy(administrations.transform.GetChild(i).gameObject);
+        }
+
+        PopulateAdministrations();
+        PopulateVitals();
+        for (int i = 0; i < vitals.transform.childCount; i++) {
+            vitals.transform.GetChild(i).gameObject.SetActive(false);
+        }
+        submit.interactable = false;
+        visualisation.interactable = false;
+        dose.interactable = false;
+        maximum.interactable = false;
+        minimum.interactable = false;
+        minutes.interactable = false;
+        seconds.interactable = false;
     }
 
     void PopulateAdministrations() {
@@ -154,7 +168,7 @@ public class DrugSetup : MonoBehaviour {
     }
 
     void PopulateVitals() {
-        foreach (Vital vital in ConditionSetup.instance.vitals.vitalList) {
+        foreach (Vital vital in ConditionSetup.Instance.vitals.vitalList) {
             Transform child = vitals.transform.FindChild(vital.name);
             if (child != null) {
                 child.gameObject.SetActive(true);
@@ -325,8 +339,8 @@ public class DrugSetup : MonoBehaviour {
                 }
                 // if it is the first attempt of choosing a vital and a duration has been set then initialise the vital graph with starting values
                 tabManager.gameObject.SetActive(true);
-                graph = tabManager.GenerateTab(ConditionSetup.instance.vitals.vitalList[index].name).GetComponent<Graph>();
-                graph.GenerateGraph(0, duration, (int)Math.Ceiling(min), (int)Math.Ceiling(max), ConditionSetup.instance.vitals.vitalList[index].units);
+                graph = tabManager.GenerateTab(ConditionSetup.Instance.vitals.vitalList[index].name).GetComponent<Graph>();
+                graph.GenerateGraph(0, duration, (int)Math.Ceiling(min), (int)Math.Ceiling(max), ConditionSetup.Instance.vitals.vitalList[index].units);
                 if (graph.sortedGraphPointsList.Count == 0) {
                     // change to "halfValue" variable to make mid ranges, otherwise initialise points with value 0
                     graph.AddPoint(0, 0, false);
@@ -341,7 +355,7 @@ public class DrugSetup : MonoBehaviour {
                 vitalTab.gameObject.SetActive(true);
                 tabManager.SwitchTab();
             }
-            if (ConditionSetup.instance.tabManager.activeTabs.transform.FindChild(vitalName) != null && tabManager.activeTabs.transform.FindChild(vitalName) != null) {
+            if (ConditionSetup.Instance.tabManager.activeTabs.transform.FindChild(vitalName) != null && tabManager.activeTabs.transform.FindChild(vitalName) != null) {
                 visualisation.interactable = true;
             } else {
                 print("didnt find " + vitalName + " in conditions active tabs");
@@ -407,16 +421,16 @@ public class DrugSetup : MonoBehaviour {
         }
         drug.administrations = administrations;
         drug.name = drugName.text;
-        ConditionSetup.instance.drugs.drugs.Add(drug);
+        ConditionSetup.Instance.drugs.drugs.Add(drug);
 
         GameObject toggleObject = Instantiate(togglePrefab);
-        toggleObject.transform.SetParent(ConditionSetup.instance.drugsChosen.transform);
+        toggleObject.transform.SetParent(ConditionSetup.Instance.drugsChosen.transform);
         toggleObject.transform.localScale = Vector3.one;
         toggleObject.transform.localPosition = Vector3.zero;
         toggleObject.transform.GetChild(1).GetComponent<Text>().text = drug.name;
         Toggle toggle = toggleObject.GetComponent<Toggle>();
         toggle.name = drug.name;
-        ConditionSetup.instance.ToggleActiveDrugWindow();
+        ConditionSetup.Instance.ToggleActiveDrugWindow();
     }
 
     public Administration GetAdministration() {
@@ -484,7 +498,7 @@ public class DrugSetup : MonoBehaviour {
                 timeLine.lowerThresholdValues = values;
 
                 vitalData = new VitalData();
-                vitalData.vital = ConditionSetup.instance.GetVital(vitalName);
+                vitalData.vital = ConditionSetup.Instance.GetVital(vitalName);
                 vitalData.timeline = timeLine;
 
                 administration.vitalsData.Add(vitalData);
@@ -501,8 +515,6 @@ public class DrugSetup : MonoBehaviour {
         WindowManager.instance.visualise.SetActive(!WindowManager.instance.visualise.activeInHierarchy);
         if (WindowManager.instance.visualise.activeInHierarchy) {
             VisualizationSetup.instance.SetVisualization();
-        } else {
-            VisualizationSetup.instance.ReturnGraphs();
-        }
+        } 
     }
 }
