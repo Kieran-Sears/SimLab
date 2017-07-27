@@ -321,9 +321,7 @@ public class ConditionSetup : MonoBehaviour {
     }
 
     public void LoadCondition(int index) {
-        print("Duration " + duration);
         if (presets.options[index].text != "None") {
-            Debug.Log("Finding condition: " + presets.options[index].text);
             condition = ExportManager.instance.Load("Conditions/" + presets.options[index].text) as Condition;
             if (condition == null) {
                 Error.instance.informMessageText.text = "Condition could not be found.";

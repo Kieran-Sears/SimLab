@@ -195,6 +195,9 @@ public class Graph : MonoBehaviour {
                         sortedGraphPointsList.RemoveAt(indexOfSliderMinipulated);
                         Destroy(currentlySelectedSlider.gameObject);
                         DrawLinkedPointLines();
+                        if (overlayPointChange != null && graphViewport.GetComponent<CusorSensor>().mouseOver) {
+                            overlayPointChange();
+                        }
                     }
 
                 }
@@ -276,7 +279,7 @@ public class Graph : MonoBehaviour {
         if (Input.GetMouseButtonUp(0)) {
             leftMouseButtonIsDown = false;
             mouseHold = 0;
-            if (overlayPointChange != null) {
+            if (overlayPointChange != null && graphViewport.GetComponent<CusorSensor>().mouseOver) {
                 overlayPointChange();
             }
         }
@@ -548,8 +551,6 @@ public class Graph : MonoBehaviour {
     }
 
     private void LayoutYScale() {
-        // -23, 50
-        // 73 yscale
 
         // find the increment used to set the scaling
         int currentIncrement = -1;
@@ -564,8 +565,6 @@ public class Graph : MonoBehaviour {
             }
         }
 
-        // yStart % increment = roundingOffset
-        print("yStart " + yStart);
         // set the scaling based on the chosen increment
         if (currentIncrement != -1) {
             for (int i = 0; i < yScale; i++) {
@@ -723,7 +722,6 @@ public class Graph : MonoBehaviour {
 
     #region Public Methods
     public void GenerateGraph(int _xStart, int _xEnd, int _yStart, int _yEnd, string yLabel) {
-        print("generating graph " + name);
 
         // establish if y range has negative value and offset values to have range be positive
         // numbers output then have the offset added back onto them before being displayed or saved.

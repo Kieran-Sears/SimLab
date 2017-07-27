@@ -67,11 +67,8 @@ public class DrugSetup : MonoBehaviour {
     void PopulateAdministrations() {
         Drugs drugs = ExportManager.instance.Load("drugs") as Drugs;
         foreach (Drug drug in drugs.drugs) {
-            print("Exploring drug " + drug.name + " for administrations");
             foreach (Administration admin in drug.administrations) {
-                print("found " + admin.name);
                 if (administrations.transform.FindChild(admin.name) == null) {
-                    print("no duplicate found so adding to administrationsChosen");
                     GameObject toggleObject = Instantiate(togglePrefab);
                     toggleObject.transform.SetParent(administrations.transform);
                     toggleObject.transform.localScale = Vector3.one;
@@ -87,9 +84,7 @@ public class DrugSetup : MonoBehaviour {
     }
 
     public void SubmitDuration() {
-        print("setting duration");
         int newDuration = 0;
-
         int minutes = 0;
         int seconds = 0;
         if (int.TryParse(this.minutes.text, out minutes)) {
