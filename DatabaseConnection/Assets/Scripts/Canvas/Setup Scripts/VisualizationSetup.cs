@@ -36,6 +36,11 @@ public class VisualizationSetup : MonoBehaviour {
         SetTimelineSlider();
     }
 
+    private void SetDescriptions() {
+        vitalDescription.text = vitalGraph.name;
+        drugDescription.text = drugGraph.name;
+    }
+
     private void SetTimelineSlider() {
         timeLineSlider.GetComponent<RectTransform>().sizeDelta =
             new Vector2(vitalGraph.graphContent.GetComponent<RectTransform>().sizeDelta.x + timeLineSlider.handleRect.GetComponent<RectTransform>().sizeDelta.x,
