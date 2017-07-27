@@ -13,6 +13,8 @@ public class VisualizationSetup : MonoBehaviour {
     public Transform vitalPanel;
     public Transform drugPanel;
     public Transform drugOverlay;
+    public Text vitalDescription;
+    public Text drugDescription;
     public Slider timeLineSlider;
     public LineRenderer overlayDrugLine;
     public SortedList<float, Slider> sortedGraphPointsList = new SortedList<float, Slider>();
@@ -94,7 +96,7 @@ public class VisualizationSetup : MonoBehaviour {
 
             // get the drug points before and after the current second being calculated    ### may need to change the condition around to look for greater than and set "-1" to "+1"
             for (int j = drugCounter; j < drugGraph.sortedGraphPointsList.Count; j++) {
-                if (drugGraph.sortedGraphPointsList.Keys[j] >= chosenDuration + i) {
+                if (drugGraph.sortedGraphPointsList.Keys[j] >= i) {
                     drugPointBefore = new KeyValuePair<float, Slider>(drugGraph.sortedGraphPointsList.Keys[j - 1], drugGraph.sortedGraphPointsList[drugGraph.sortedGraphPointsList.Keys[j - 1]]);
                     drugPointAfter = new KeyValuePair<float, Slider>(drugGraph.sortedGraphPointsList.Keys[j], drugGraph.sortedGraphPointsList[drugGraph.sortedGraphPointsList.Keys[j]]);
                     //  print("Drug Points : " + drugPointBefore.Key + ", " + drugPointBefore.Value.value + " || " + drugPointAfter.Key + ", " + drugPointAfter.Value.value);
@@ -118,10 +120,16 @@ public class VisualizationSetup : MonoBehaviour {
             drugGradient = (drugPointAfter.Value.value - drugPointBefore.Value.value) / (drugPointAfter.Key - drugPointBefore.Key);
             vitalGradient = (vitalPointAfter.Value.value - vitalPointBefore.Value.value) / (vitalPointAfter.Key - vitalPointBefore.Key);
             // then add the difference to the yValue based on what the drug point's value is
-            drugYValue = (drugPointBefore.Value.value - drugGraph.offset) + (((chosenDuration + i) - drugPointBefore.Key) * drugGradient);
+            drugYValue = (drugPointBefore.Value.value - drugGraph.offset) + ((i - drugPointBefore.Key) * drugGradient);
             vitalYValue = vitalPointBefore.Value.value + (((chosenDuration + i) - vitalPointBefore.Key) * vitalGradient);
             // subtract one from another for the final yValue used in the overlay
             yValue = vitalYValue + drugYValue;
+
+            // Debugging print statements
+            print("drugYValue " + drugYValue);
+            print("vitalYValue " + vitalYValue);
+            print("yValue " + yValue);
+
             // add the point to the overlay ### conditional check to see if within permitted viewing area before adding
             float yCoordinate = (overlayRect.rect.height / vitalGraph.yScale) * (yValue);
             // have drug point begin positioned at the start of the vital graph
