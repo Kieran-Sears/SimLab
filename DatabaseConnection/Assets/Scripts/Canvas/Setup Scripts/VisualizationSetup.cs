@@ -32,6 +32,16 @@ public class VisualizationSetup : MonoBehaviour {
         GetGraphs();
         SetOverlay();
         SetTimelineSlider();
+        SetDescriptions();
+        //if (LerpFromView.onEnd != null) {
+        //    LerpFromView.onEnd();
+        //}
+        //if (drugGraph.overlayPointChange != null) {
+        //    drugGraph.overlayPointChange();
+        //}
+        //if (vitalGraph.overlayPointChange != null) {
+        //    vitalGraph.overlayPointChange();
+        //}
     }
 
     private void SetDescriptions() {
@@ -48,10 +58,12 @@ public class VisualizationSetup : MonoBehaviour {
     }
 
     private void GetGraphs() {
-        GameObject originalVitalGraph = ConditionSetup.Instance.tabManager.contentArea.transform.FindChild(DrugSetup.instance.graph.name).gameObject;
-        GameObject originalDrugGraph = DrugSetup.instance.tabManager.contentArea.transform.FindChild(DrugSetup.instance.graph.name).gameObject;
+        GameObject originalVitalGraph = ConditionSetup.Instance.tabManager.contentArea.transform.FindChild(DrugSetup.Instance.graph.name).gameObject;
+        GameObject originalDrugGraph = DrugSetup.Instance.tabManager.contentArea.transform.FindChild(DrugSetup.Instance.graph.name).gameObject;
         vitalGraph = Instantiate(originalVitalGraph, vitalPanel).GetComponent<Graph>();
         drugGraph = Instantiate(originalDrugGraph, drugPanel).GetComponent<Graph>();
+        vitalGraph.name = originalVitalGraph.name;
+        drugGraph.name = DrugSetup.Instance.drugName.text;
         vitalGraph.GetComponent<RectTransform>().offsetMin = new Vector2(0, 0);
         vitalGraph.GetComponent<RectTransform>().offsetMax = new Vector2(0, 0);
         drugGraph.GetComponent<RectTransform>().offsetMin = new Vector2(0, 0);
@@ -64,6 +76,7 @@ public class VisualizationSetup : MonoBehaviour {
         drugGraph.pointsLowerThreshold = originalDrugGraph.GetComponent<Graph>().pointsLowerThreshold;
         LerpFromView.onEnd();
         drugGraph.overlayPointChange += SetOverlay;
+        vitalGraph.overlayPointChange += SetOverlay;
     }
 
     public void SetOverlay() {
@@ -129,9 +142,9 @@ public class VisualizationSetup : MonoBehaviour {
             yValue = vitalYValue + drugYValue;
 
             // Debugging print statements
-            print("drugYValue " + drugYValue);
-            print("vitalYValue " + vitalYValue);
-            print("yValue " + yValue);
+            //print("drugYValue " + drugYValue);
+            //print("vitalYValue " + vitalYValue);
+            //print("yValue " + yValue);
 
             // add the point to the overlay ### conditional check to see if within permitted viewing area before adding
             float yCoordinate = (overlayRect.rect.height / vitalGraph.yScale) * (yValue);
@@ -142,18 +155,59 @@ public class VisualizationSetup : MonoBehaviour {
             // set position on line
             Vector3 newPos = new Vector3(xCoordinate, yCoordinate, 0);
             // convert point values into world positions
-            print(i + " pos " + newPos);
+            //print(i + " pos " + newPos);
             overlayDrugLine.SetPosition(i, newPos);
         }
 
     }
 
     private void SaveChanges() {
-        ConditionSetup.Instance.ResetCondition();
+        // clear the message for saving from the screen
+        Error.instance.boolPanel.SetActive(false);
+        Error.instance.boolMessageText.text = "";
+        Error.instance.boolLeftButton.onClick.RemoveAllListeners();
+        Error.instance.boolRightButton.onClick.RemoveAllListeners();
 
-        vitalPanel.SetParent(ConditionSetup.Instance.tabManager.contentArea.transform);
-        drugPanel.SetParent(DrugSetup.instance.tabManager.contentArea.transform);
+        // find the original graphs in condition and drug windows and retract their resizing delegates
+        Transform originalVitalGraph = ConditionSetup.Instance.tabManager.contentArea.transform.FindChild(vitalGraph.name);
+        if (originalVitalGraph != null) {
+            print("found the original vital graph");
+            LerpFromView.onEnd -= originalVitalGraph.GetComponent<Graph>().ResizeGraph;
+        }
+        Transform originalDrugGraph = DrugSetup.Instance.tabManager.contentArea.transform.FindChild(vitalGraph.name);
+        if (originalVitalGraph != null) {
+            print("found the original drug graph");
+            LerpFromView.onEnd -= originalDrugGraph.GetComponent<Graph>().ResizeGraph;
+        }
+        // make sure the drug graphs name is set to the vital it is effecting and not the name of the drug
+        drugGraph.name = DrugSetup.Instance.graph.name;
+
+        // exchange the toggles for the original graphs and attach them to the newly edited graphs
+        Transform toggleObject = ConditionSetup.Instance.tabManager.activeTabs.transform.FindChild(vitalGraph.name);
+        if (toggleObject != null) {
+            ConditionSetup.Instance.tabManager.tabGraphs[toggleObject.GetComponent<Toggle>()] = vitalGraph.gameObject;
+        }
+        toggleObject = DrugSetup.Instance.tabManager.activeTabs.transform.FindChild(drugGraph.name);
+        if (toggleObject != null) {
+            DrugSetup.Instance.tabManager.tabGraphs[toggleObject.GetComponent<Toggle>()] = drugGraph.gameObject;
+        }
+      
+        // have the new edited graphs take their position
+        vitalGraph.transform.SetParent(ConditionSetup.Instance.tabManager.contentArea.transform);
+        drugGraph.transform.SetParent(DrugSetup.Instance.tabManager.contentArea.transform);
+        // ensure the toggles are active and ready to be used
+        for (int i = 0; i < ConditionSetup.Instance.tabManager.activeTabs.transform.childCount; i++) {
+            ConditionSetup.Instance.tabManager.activeTabs.transform.GetChild(i).gameObject.SetActive(true);
+        }
+       // close down the visualisation window and open the drug window
+        WindowManager.instance.drug.SetActive(true);
+        WindowManager.instance.visualise.SetActive(false);
+        // make sure the drug graph is resized in the drug window
         LerpFromView.onEnd();
+
+        // remove the original graphs
+        Destroy(originalVitalGraph.gameObject);
+        Destroy(originalDrugGraph.gameObject);
     }
 
     private void RevertChanges() { }
@@ -163,11 +217,7 @@ public class VisualizationSetup : MonoBehaviour {
         Error.instance.boolMessageText.text = "Would you like to save your changes?";
         Error.instance.boolLeftButton.onClick.AddListener(RevertChanges);
         Error.instance.boolRightButton.onClick.AddListener(SaveChanges);
-
-
-        vitalPanel.SetParent(ConditionSetup.Instance.tabManager.contentArea.transform);
-        drugPanel.SetParent(DrugSetup.instance.tabManager.contentArea.transform);
-        LerpFromView.onEnd();
+        
     
     }
 }

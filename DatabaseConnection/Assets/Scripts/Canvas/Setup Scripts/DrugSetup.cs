@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class DrugSetup : MonoBehaviour {
 
-    public static DrugSetup instance { get; private set; }
+    public static DrugSetup Instance { get; private set; }
 
     public TabManager tabManager;
     public GameObject togglePrefab;
@@ -26,10 +26,10 @@ public class DrugSetup : MonoBehaviour {
     private bool replaceExistingGraphs;
 
     private void Awake() {
-        if (instance) {
+        if (Instance) {
             DestroyImmediate(this);
         } else {
-            instance = this;
+            Instance = this;
         }
     }
 
@@ -61,14 +61,9 @@ public class DrugSetup : MonoBehaviour {
         seconds.text = "Secs";
         minutes.text = "Mins";
         for (int i = 0; i < administrations.transform.childCount; i++) {
-           Destroy(administrations.transform.GetChild(i).gameObject);
+           DestroyImmediate(administrations.transform.GetChild(i).gameObject);
         }
 
-        PopulateAdministrations();
-        PopulateVitals();
-        for (int i = 0; i < vitals.transform.childCount; i++) {
-            vitals.transform.GetChild(i).gameObject.SetActive(false);
-        }
         submit.interactable = false;
         visualisation.interactable = false;
         dose.interactable = false;
@@ -76,6 +71,11 @@ public class DrugSetup : MonoBehaviour {
         minimum.interactable = false;
         minutes.interactable = false;
         seconds.interactable = false;
+        PopulateAdministrations();
+        PopulateVitals();
+        for (int i = 0; i < vitals.transform.childCount; i++) {
+            vitals.transform.GetChild(i).gameObject.SetActive(false);
+        }
     }
 
     void PopulateAdministrations() {
@@ -277,7 +277,6 @@ public class DrugSetup : MonoBehaviour {
     }
 
     public void loadChosenVital(bool chosen, int index, string vitalName) {
-      //  int halfValue = 0;
         SubmitDuration();
         // clear the background area ready for display
         tabManager.activeTabs.transform.GetComponent<ToggleGroup>().SetAllTogglesOff();
@@ -328,14 +327,7 @@ public class DrugSetup : MonoBehaviour {
                         vitals.transform.GetChild(index).GetComponent<Toggle>().isOn = false;
                         return;
                     }
-                    // set the initial points to mid range values
-                    //if (min < 0) {
-                    //    print("min range < 0");
-                    //    halfValue = (int)Math.Ceiling(((max - min) / 2) + min ) ;// + ConditionSetup.instance.vitals.vitalList[index].min);
-                    //    print(halfValue);
-                    //} else {
-                    //    halfValue = (int)Math.Ceiling(((max - min) / 2) + ConditionSetup.instance.vitals.vitalList[index].min);
-                    //}
+               
                 }
                 // if it is the first attempt of choosing a vital and a duration has been set then initialise the vital graph with starting values
                 tabManager.gameObject.SetActive(true);
@@ -411,7 +403,6 @@ public class DrugSetup : MonoBehaviour {
         List<Administration> administrations = new List<Administration>();
 
         for (int i = 0; i < tabManager.contentArea.transform.childCount; i++) {
-            //  AdminSetup admin = tabManager.contentArea.transform.GetChild(i).GetComponent<AdminSetup>();
             Administration administration = GetAdministration();
             if (administration == null) {
                 return;

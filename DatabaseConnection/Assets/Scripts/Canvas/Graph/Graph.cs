@@ -290,7 +290,11 @@ public class Graph : MonoBehaviour {
     public void OnEnable() {
         DrawLinkedPointLines();
         DrawThresholds();
-        LerpFromView.onEnd += this.ResizeGraph;
+        LerpFromView.onEnd += ResizeGraph;
+    }
+
+    public void OnDisable() {
+        // LerpFromView.onEnd -= ResizeGraph;
     }
     #endregion
 
@@ -568,7 +572,7 @@ public class Graph : MonoBehaviour {
         // set the scaling based on the chosen increment
         if (currentIncrement != -1) {
             for (int i = 0; i < yScale; i++) {
-            
+
                 if ((i + (-offset % currentIncrement)) % (currentIncrement) == 0) {
                     // print("yStart % currentIncrement = " + yStart % currentIncrement + " + i (" + i + ") = " + (i + (yStart % currentIncrement)) + "  % currentIncrement  =" + (i + (yStart % currentIncrement)) % (currentIncrement));
                     yAxis.transform.GetChild(i).gameObject.SetActive(true);

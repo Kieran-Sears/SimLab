@@ -524,10 +524,16 @@ public class ConditionSetup : MonoBehaviour {
             drugWindow1.SetActive(selected);
             newDrugPanel.SetActive(selected);
             conditionWindow.SetActive(!selected);
+            if (LerpFromView.onEnd != null) {
+                LerpFromView.onEnd();
+            }
         } else {
             drugWindow1.SetActive(selected);
             newDrugPanel.SetActive(selected);
             conditionWindow.SetActive(!selected);
+            if (LerpFromView.onEnd != null) {
+                LerpFromView.onEnd();
+            }
         }
     }
 
