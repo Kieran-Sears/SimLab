@@ -15,13 +15,13 @@ public class VitalsData {
 public class NetworkManager : MonoBehaviour {
 
 
-    public static NetworkManager instance { get; private set; }
+    public static NetworkManager Instance { get; private set; }
 
     private void Awake() {
-        if (instance) {
+        if (Instance) {
             DestroyImmediate(this);
         } else {
-            instance = this;
+            Instance = this;
         }
     }
 
@@ -45,13 +45,12 @@ public class NetworkManager : MonoBehaviour {
     //    }
     //}
 
-    public Vitals Download() {
+    public Vital Download() {
         WWW www = new WWW("http://localhost:8084/VisualAnalytics/VisualAnalyticsServlet");
         StartCoroutine(WaitForRequest(www));
         while (!www.isDone) { }
-        Vitals vitals = JsonUtility.FromJson<Vitals>(www.text);      
-        Debug.Log(vitals.vitalList.Count + " rows found");
-        return vitals;
+        Vital vital = JsonUtility.FromJson<Vital>(www.text);      
+        return vital;
     }
 
     IEnumerator WaitForRequest(WWW www) {

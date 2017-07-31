@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<Vital xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" name="John">
+  <NodeID>4</NodeID>
+  <Units>flibs</Units>
+  <Min>-10</Min>
+  <Max>30</Max>
+</Vital>

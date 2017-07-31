@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<Drug xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" name="belkanax (belkanax30mlps)">
+  <Administration>
+    <VitalsData>
+      <VitalData>
+        <Vital name="John">
+          <NodeID>4</NodeID>
+          <Units>flibs</Units>
+          <Min>-10</Min>
+          <Max>30</Max>
+        </Vital>
+        <TimeLine>
+          <VitalValues>
+            <Value second="0">
+              <Value>0</Value>
+            </Value>
+            <Value second="12.5681839">
+              <Value>13.8985653</Value>
+            </Value>
+            <Value second="36.0816422">
+              <Value>18.3598175</Value>
+            </Value>
+            <Value second="60.0444">
+              <Value>20.2186737</Value>
+            </Value>
+            <Value second="97.03688">
+              <Value>17.69063</Value>
+            </Value>
+            <Value second="120">
+              <Value>15.5400324</Value>
+            </Value>
+          </VitalValues>
+          <UpperThreshold />
+          <LowerThreshold />
+        </TimeLine>
+      </VitalData>
+    </VitalsData>
+    <Name>belkanax</Name>
+    <Units>30mlps</Units>
+    <Min>0</Min>
+    <Max>0</Max>
+    <Duration>120</Duration>
+  </Administration>
+  <NodeID>0</NodeID>
+</Drug>

@@ -401,21 +401,9 @@ public class DrugSetup : MonoBehaviour {
 
         // instanciate the new drug template
         Drug drug = new Drug();
-
-        // This would be for adding multiple administration types
-        //List<Administration> administrations = new List<Administration>();
-
-        //for (int i = 0; i < tabManager.contentArea.transform.childCount; i++) {
-        //    Administration administration = GetAdministration();
-        //    if (administration == null) {
-        //        return;
-        //    } else {
-        //        administrations.Add(GetAdministration());
-        //    }
-        //}
-       
         drug.administration = GetAdministration();
-        drug.name = drugName.text + " (" + drug.administration.name + "" + drug.administration.dose +")";
+        drug.name = drugName.text + " ("+ drug.administration.dose +")";
+
         // add the drug to the condition list
         ConditionSetup.Instance.drugs.Add(drug);
 
@@ -428,6 +416,7 @@ public class DrugSetup : MonoBehaviour {
         toggle.name = drug.name;
 
         ExportManager.Instance.SaveDrug(drug, "/Resources/Drugs/"+drug.name+".xml");
+
         // change the drug window for the condition one and display
         ConditionSetup.Instance.ToggleActiveDrugWindow();
     }

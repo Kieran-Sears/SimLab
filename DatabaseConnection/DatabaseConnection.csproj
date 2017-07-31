@@ -95,10 +95,7 @@
     <Compile Include="Assets\Scripts\Managers\NetworkManager.cs" />
     <Compile Include="Assets\Scripts\Managers\TabManager.cs" />
     <Compile Include="Assets\Scripts\Managers\WindowManager.cs" />
-    <Compile Include="Assets\Scripts\System\Condition.cs" />
-    <Compile Include="Assets\Scripts\System\Drugs.cs" />
-    <Compile Include="Assets\Scripts\System\Equipment.cs" />
-    <Compile Include="Assets\Scripts\System\Vitals.cs" />
+    <Compile Include="Assets\Scripts\System\Data.cs" />
     <Compile Include="Assets\Scripts\System\VitalsDatum.cs" />
     <Compile Include="Assets\SelectableToggle.cs" />
     <Compile Include="Assets\SimulationManager.cs" />
@@ -106,6 +103,8 @@
   <ItemGroup>
     <None Include="Assets\Resources\Conditions\newCondition2.xml" />
     <None Include="Assets\Resources\Drugs\Drug.xml" />
+    <None Include="Assets\Resources\Drugs\belkanax (belkanax30mlps).xml" />
+    <None Include="Assets\Resources\Vitals\John.xml" />
     <None Include="Assets\Resources\Vitals\bloodPressure.xml" />
     <None Include="Assets\Resources\Vitals\breathingRate.xml" />
     <None Include="Assets\Resources\Vitals\heartRate.xml" />

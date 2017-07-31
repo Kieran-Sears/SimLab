@@ -21,9 +21,9 @@ public class VitalSetup : MonoBehaviour {
 
     public void ClearAttributes() {
         vitalName.text = "";
-        vitalMax.text = "Max";
-        vitalMin.text = "Min";
-        vitalUnit.text = "e.g. bpm";
+        vitalMax.text = "";
+        vitalMin.text = "";
+        vitalUnit.text = "";
     }
 
     public void SelectMaxVitalValue() {
