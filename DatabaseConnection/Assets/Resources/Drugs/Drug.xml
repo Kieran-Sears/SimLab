@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<Drug xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" name="kipper (kipper1 gallon)">
+  <Administration>
+    <VitalsData>
+      <VitalData>
+        <Vital name="breathingRate">
+          <NodeID>0</NodeID>
+          <Units>bpm</Units>
+          <Min>0</Min>
+          <Max>100</Max>
+        </Vital>
+        <TimeLine>
+          <VitalValues>
+            <Value second="0">
+              <Value>10</Value>
+            </Value>
+            <Value second="163.184982">
+              <Value>15.2140474</Value>
+            </Value>
+            <Value second="361.626556">
+              <Value>6.142834</Value>
+            </Value>
+            <Value second="600">
+              <Value>10</Value>
+            </Value>
+          </VitalValues>
+          <UpperThreshold />
+          <LowerThreshold />
+        </TimeLine>
+      </VitalData>
+    </VitalsData>
+    <Name>kipper</Name>
+    <Units>1 gallon</Units>
+    <Min>0</Min>
+    <Max>0</Max>
+    <Duration>600</Duration>
+  </Administration>
+  <NodeID>0</NodeID>
+</Drug>

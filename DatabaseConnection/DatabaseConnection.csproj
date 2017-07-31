@@ -101,9 +101,11 @@
     <Compile Include="Assets\Scripts\System\Vitals.cs" />
     <Compile Include="Assets\Scripts\System\VitalsDatum.cs" />
     <Compile Include="Assets\SelectableToggle.cs" />
+    <Compile Include="Assets\SimulationManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Resources\Conditions\newCondition2.xml" />
+    <None Include="Assets\Resources\Drugs\Drug.xml" />
     <None Include="Assets\Resources\drugs.xml" />
     <None Include="Assets\Resources\equipment (Depricated).xml" />
     <None Include="Assets\Resources\vitals.xml" />

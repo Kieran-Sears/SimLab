@@ -20,9 +20,12 @@ public class Drug {
     [XmlElement("NodeID")]
     public int nodeID { get; set; }
 
-    [XmlArray("Administrations")]
-    [XmlArrayItem("Administration")]
-    public List<Administration> administrations = new List<Administration>();
+    // For adding multiple administrations to a single drug
+    // [XmlArray("Administrations")]
+    // [XmlArrayItem("Administration")]
+    // public List<Administration> administrations = new List<Administration>();
+    [XmlElement("Administration")]
+    public Administration administration;
 }
 
 
@@ -33,7 +36,7 @@ public class Administration {
     public string name { get; set; }
 
     [XmlElement("Units")]
-    public string units { get; set; }
+    public string dose { get; set; }
 
     [XmlElement("Min")]
     public float min { get; set; }

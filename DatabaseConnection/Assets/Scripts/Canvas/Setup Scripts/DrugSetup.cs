@@ -25,6 +25,7 @@ public class DrugSetup : MonoBehaviour {
     private int duration = -1;
     private bool replaceExistingGraphs;
 
+
     private void Awake() {
         if (Instance) {
             DestroyImmediate(this);
@@ -37,13 +38,6 @@ public class DrugSetup : MonoBehaviour {
         ClearAttributes();
     }
 
-    //public void ResetValues() {
-
-    //    for (int i = 0; i < vitals.transform.childCount; i++) {
-    //        Destroy(vitals.transform.GetChild(i).gameObject);
-    //    }
-    //}
-
     public void ToggleElementsActive() {
         submit.interactable = !submit.interactable;
         dose.interactable = !dose.interactable;
@@ -55,7 +49,7 @@ public class DrugSetup : MonoBehaviour {
 
     public void ClearAttributes() {
         drugName.text = "";
-        dose.text = "e.g. mg/mL";
+        dose.text = "";
         minimum.text = "Min";
         maximum.text = "Max";
         seconds.text = "Secs";
@@ -79,21 +73,20 @@ public class DrugSetup : MonoBehaviour {
     }
 
     void PopulateAdministrations() {
-        Drugs drugs = ExportManager.instance.Load("drugs") as Drugs;
-        foreach (Drug drug in drugs.drugs) {
-            foreach (Administration admin in drug.administrations) {
-                if (administrations.transform.FindChild(admin.name) == null) {
+        foreach (Drug drug in ConditionSetup.Instance.drugs.drugs) {
+          //  foreach (Administration admin in drug.administrations) {
+                if (administrations.transform.FindChild(drug.administration.name) == null) {
                     GameObject toggleObject = Instantiate(togglePrefab);
                     toggleObject.transform.SetParent(administrations.transform);
                     toggleObject.transform.localScale = Vector3.one;
                     toggleObject.transform.localPosition = Vector3.zero;
-                    toggleObject.transform.GetChild(1).GetComponent<Text>().text = admin.name;
+                    toggleObject.transform.GetChild(1).GetComponent<Text>().text = drug.administration.name;
                     Toggle toggle = toggleObject.GetComponent<Toggle>();
-                    toggle.name = admin.name;
+                    toggle.name = drug.administration.name;
                     toggle.isOn = false;
-                    toggle.onValueChanged.AddListener((bool value) => LoadChosenAdministration(value, toggleObject.transform.GetSiblingIndex(), admin.name));
+                    toggle.onValueChanged.AddListener((bool value) => LoadChosenAdministration(value, toggleObject.transform.GetSiblingIndex(), drug.administration.name));
                 }
-            }
+          //  }
         }
     }
 
@@ -181,7 +174,7 @@ public class DrugSetup : MonoBehaviour {
                 Toggle toggle = toggleObject.GetComponent<Toggle>();
                 toggle.name = vital.name;
                 toggle.isOn = false;
-                toggle.onValueChanged.AddListener((bool value) => loadChosenVital(value, toggleObject.transform.GetSiblingIndex(), vital.name));
+                toggle.onValueChanged.AddListener((bool value) => LoadChosenVital(value, toggleObject.transform.GetSiblingIndex(), vital.name));
             }
         }
     }
@@ -239,7 +232,7 @@ public class DrugSetup : MonoBehaviour {
 
                 toggle.onValueChanged.RemoveAllListeners();
                 toggle.isOn = true;
-                toggle.onValueChanged.AddListener((bool value) => loadChosenVital(value, i, vitalName));
+                toggle.onValueChanged.AddListener((bool value) => LoadChosenVital(value, i, vitalName));
 
                 if (i != 0) {
                     graph.transform.gameObject.SetActive(false);
@@ -276,7 +269,7 @@ public class DrugSetup : MonoBehaviour {
         }
     }
 
-    public void loadChosenVital(bool chosen, int index, string vitalName) {
+    public void LoadChosenVital(bool chosen, int index, string vitalName) {
         SubmitDuration();
         // clear the background area ready for display
         tabManager.activeTabs.transform.GetComponent<ToggleGroup>().SetAllTogglesOff();
@@ -391,7 +384,7 @@ public class DrugSetup : MonoBehaviour {
     }
 
     public void AddNewDrug() {
-
+        // ensure drug name is in place
         if (drugName.text.Length == 0) {
             Error.instance.informMessageText.text = "Enter a name for the drug.";
             Error.instance.informOkButton.onClick.AddListener(Error.instance.DeactivateErrorInformPanel);
@@ -399,19 +392,31 @@ public class DrugSetup : MonoBehaviour {
             return;
         }
 
-        Drug drug = new Drug();
-        List<Administration> administrations = new List<Administration>();
-
-        for (int i = 0; i < tabManager.contentArea.transform.childCount; i++) {
-            Administration administration = GetAdministration();
-            if (administration == null) {
-                return;
-            } else {
-                administrations.Add(GetAdministration());
-            }
+        if (dose.text.Length == 0) {
+            Error.instance.informMessageText.text = "Enter a Dose for the drug.";
+            Error.instance.informOkButton.onClick.AddListener(Error.instance.DeactivateErrorInformPanel);
+            Error.instance.informPanel.SetActive(true);
+            return;
         }
-        drug.administrations = administrations;
-        drug.name = drugName.text;
+
+        // instanciate the new drug template
+        Drug drug = new Drug();
+
+        // This would be for adding multiple administration types
+        //List<Administration> administrations = new List<Administration>();
+
+        //for (int i = 0; i < tabManager.contentArea.transform.childCount; i++) {
+        //    Administration administration = GetAdministration();
+        //    if (administration == null) {
+        //        return;
+        //    } else {
+        //        administrations.Add(GetAdministration());
+        //    }
+        //}
+       
+        drug.administration = GetAdministration();
+        drug.name = drugName.text + " (" + drug.administration.name + "" + drug.administration.dose +")";
+        // add the drug to the condition list
         ConditionSetup.Instance.drugs.drugs.Add(drug);
 
         GameObject toggleObject = Instantiate(togglePrefab);
@@ -421,6 +426,9 @@ public class DrugSetup : MonoBehaviour {
         toggleObject.transform.GetChild(1).GetComponent<Text>().text = drug.name;
         Toggle toggle = toggleObject.GetComponent<Toggle>();
         toggle.name = drug.name;
+
+        ExportManager.instance.SaveDrug(drug, "/Resources/Drugs/"+drug.name+".xml");
+        // change the drug window for the condition one and display
         ConditionSetup.Instance.ToggleActiveDrugWindow();
     }
 
@@ -496,8 +504,8 @@ public class DrugSetup : MonoBehaviour {
             }
         }
         administration.duration = duration;
-        administration.units = dose.text;
-        administration.name = name;
+        administration.dose = dose.text;
+        administration.name = drugName.text;
         return administration;
     }
 
@@ -506,6 +514,8 @@ public class DrugSetup : MonoBehaviour {
         WindowManager.instance.visualise.SetActive(!WindowManager.instance.visualise.activeInHierarchy);
         if (WindowManager.instance.visualise.activeInHierarchy) {
             VisualizationSetup.instance.SetVisualization();
-        } 
+        } else {
+            LerpFromView.onEnd();
+        }
     }
 }

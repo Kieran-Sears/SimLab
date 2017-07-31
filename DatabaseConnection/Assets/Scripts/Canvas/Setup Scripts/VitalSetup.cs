@@ -87,6 +87,7 @@ public class VitalSetup : MonoBehaviour {
         
         ConditionSetup.Instance.vitals.vitalList.Insert(0, vital);
 
+        ExportManager.instance.SaveVital(vital, "/Resources/Vitals/"+vital.name+".xml");
        // ConditionSetup.instance.LoadChosenVital(true, 0, vital.name);
 
         // add checking here for is duplicate exists. If so then overwrite the existing vital

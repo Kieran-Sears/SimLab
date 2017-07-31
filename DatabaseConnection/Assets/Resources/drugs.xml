@@ -2,113 +2,114 @@
 <Drugs>
   <DrugList>
     <Drug name="adrenaline">
+      <NodeID>0</NodeID>
+      <Administration>
+        <Name>Intra-Muscular</Name>
+        <Units>mg/mL</Units>
+        <Min>0.01</Min>
+        <Max>5.00</Max>
+        <Duration>100</Duration>
+        <VitalsData>
+          <VitalData>
+            <Vital name="breathingRate">
+              <NodeID>0</NodeID>
+              <Units>bpm</Units>
+              <Min>0</Min>
+              <Max>100</Max>
+            </Vital>
+            <TimeLine>
+              <VitalValues>
+                <Value second="0">
+                  <Value>50</Value>
+                </Value>
+                <Value second="16.8685551">
+                  <Value>33.49264</Value>
+                </Value>
+                <Value second="28.2123013">
+                  <Value>9.69954</Value>
+                </Value>
+                <Value second="47.993557">
+                  <Value>3.837476</Value>
+                </Value>
+                <Value second="60">
+                  <Value>50</Value>
+                </Value>
+              </VitalValues>
+              <UpperThreshold>
+                <Value second="0">
+                  <Value>25</Value>
+                </Value>
+                <Value second="60">
+                  <Value>25</Value>
+                </Value>
+              </UpperThreshold>
+              <LowerThreshold>
+                <Value second="0">
+                  <Value>75</Value>
+                </Value>
+                <Value second="60">
+                  <Value>75</Value>
+                </Value>
+              </LowerThreshold>
+            </TimeLine>
+          </VitalData>
+        </VitalsData>
+      </Administration>
+    </Drug>
+    <Drug name="adrenaline">
       <NodeID>1</NodeID>
-      <Administrations>
-        <Administration>
-          <Name>Intra-Muscular</Name>
-          <Units>mg/mL</Units>
-          <Min>0.01</Min>
-          <Max>5.00</Max>
-          <Duration>100</Duration>
-          <VitalsData>
-            <VitalData>
-              <Vital name="breathingRate">
-                <NodeID>0</NodeID>
-                <Units>bpm</Units>
-                <Min>0</Min>
-                <Max>100</Max>
-              </Vital>
-              <TimeLine>
-                <VitalValues>
-                  <Value second="0">
-                    <Value>50</Value>
-                  </Value>
-                  <Value second="16.8685551">
-                    <Value>33.49264</Value>
-                  </Value>
-                  <Value second="28.2123013">
-                    <Value>9.69954</Value>
-                  </Value>
-                  <Value second="47.993557">
-                    <Value>3.837476</Value>
-                  </Value>
-                  <Value second="60">
-                    <Value>50</Value>
-                  </Value>
-                </VitalValues>
-                <UpperThreshold>
-                  <Value second="0">
-                    <Value>25</Value>
-                  </Value>
-                  <Value second="60">
-                    <Value>25</Value>
-                  </Value>
-                </UpperThreshold>
-                <LowerThreshold>
-                  <Value second="0">
-                    <Value>75</Value>
-                  </Value>
-                  <Value second="60">
-                    <Value>75</Value>
-                  </Value>
-                </LowerThreshold>
-              </TimeLine>
-            </VitalData>
-          </VitalsData>
-        </Administration>
-        <Administration>
-          <Name>Intravenous</Name>
-          <Units>mg/mL</Units>
-          <Min>0.0</Min>
-          <Max>5.00</Max>
-          <Duration>100</Duration>
-          <VitalsData>
-            <VitalData>
-              <Vital name="breathingRate">
-                <NodeID>0</NodeID>
-                <Units>bpm</Units>
-                <Min>0</Min>
-                <Max>100</Max>
-              </Vital>
-              <TimeLine>
-                <VitalValues>
-                  <Value second="0">
-                    <Value>50</Value>
-                  </Value>
-                  <Value second="16.8685551">
-                    <Value>33.49264</Value>
-                  </Value>
-                  <Value second="28.2123013">
-                    <Value>9.69954</Value>
-                  </Value>
-                  <Value second="47.993557">
-                    <Value>3.837476</Value>
-                  </Value>
-                  <Value second="60">
-                    <Value>50</Value>
-                  </Value>
-                </VitalValues>
-                <UpperThreshold>
-                  <Value second="0">
-                    <Value>25</Value>
-                  </Value>
-                  <Value second="60">
-                    <Value>25</Value>
-                  </Value>
-                </UpperThreshold>
-                <LowerThreshold>
-                  <Value second="0">
-                    <Value>75</Value>
-                  </Value>
-                  <Value second="60">
-                    <Value>75</Value>
-                  </Value>
-                </LowerThreshold>
-              </TimeLine>
-            </VitalData>
-          </VitalsData>
-        </Administration>
-      </Administrations>
+      <Administration>
+        <Name>Intravenous</Name>
+        <Units>mg/mL</Units>
+        <Min>0.0</Min>
+        <Max>5.00</Max>
+        <Duration>100</Duration>
+        <VitalsData>
+          <VitalData>
+            <Vital name="breathingRate">
+              <NodeID>0</NodeID>
+              <Units>bpm</Units>
+              <Min>0</Min>
+              <Max>100</Max>
+            </Vital>
+            <TimeLine>
+              <VitalValues>
+                <Value second="0">
+                  <Value>50</Value>
+                </Value>
+                <Value second="16.8685551">
+                  <Value>33.49264</Value>
+                </Value>
+                <Value second="28.2123013">
+                  <Value>9.69954</Value>
+                </Value>
+                <Value second="47.993557">
+                  <Value>3.837476</Value>
+                </Value>
+                <Value second="60">
+                  <Value>50</Value>
+                </Value>
+              </VitalValues>
+              <UpperThreshold>
+                <Value second="0">
+                  <Value>25</Value>
+                </Value>
+                <Value second="60">
+                  <Value>25</Value>
+                </Value>
+              </UpperThreshold>
+              <LowerThreshold>
+                <Value second="0">
+                  <Value>75</Value>
+                </Value>
+                <Value second="60">
+                  <Value>75</Value>
+                </Value>
+              </LowerThreshold>
+            </TimeLine>
+          </VitalData>
+        </VitalsData>
+      </Administration>
     </Drug>
   </DrugList>
 </Drugs>

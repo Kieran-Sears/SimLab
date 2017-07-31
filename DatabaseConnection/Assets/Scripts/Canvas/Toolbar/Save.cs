@@ -91,7 +91,7 @@ public class Save : MonoBehaviour {
 
             }
         }
-        ExportManager.instance.SaveCondition(condition, Path.GetFullPath(Application.dataPath + filepathInputField.text));
+        ExportManager.instance.SaveCondition(condition, filepathInputField.text);
         gameObject.SetActive(false);
     }
 }

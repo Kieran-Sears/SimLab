@@ -101,6 +101,7 @@ public class VisualizationSetup : MonoBehaviour {
         KeyValuePair<float, Slider> vitalPointBefore = new KeyValuePair<float, Slider>(-1, null);
         KeyValuePair<float, Slider> vitalPointAfter = new KeyValuePair<float, Slider>(-1, null);
 
+      
         overlayDrugLine.numPositions = drugGraph.duration + 1;
         overlayDrugLine.transform.localPosition = Vector3.down * (vitalGraph.graph.GetComponent<RectTransform>().rect.height / 2);
 
@@ -155,10 +156,18 @@ public class VisualizationSetup : MonoBehaviour {
             // set position on line
             Vector3 newPos = new Vector3(xCoordinate, yCoordinate, 0);
             // convert point values into world positions
-            //print(i + " pos " + newPos);
-            overlayDrugLine.SetPosition(i, newPos);
-        }
+           // print(i + " pos " + newPos);
+            if (((newPos.x > -(overlayRect.sizeDelta.x / 2)) && (newPos.x < (overlayRect.sizeDelta.x / 2))
+                && (newPos.y > 0) && (newPos.y < (overlayRect.sizeDelta.y))) || i == 0) {
+                overlayDrugLine.SetPosition(i, newPos);
+            } else {
+                print("(" + newPos.x + " > (" + -(overlayRect.sizeDelta.x / 2) + ")) = " + (newPos.x > -(overlayRect.sizeDelta.x / 2)));
+                print("(" + newPos.x + " < (" + (overlayRect.sizeDelta.x / 2) + ")) = " + (newPos.x < (overlayRect.sizeDelta.x / 2)));
 
+                overlayDrugLine.numPositions--;
+            } 
+        }
+      
     }
 
     private void SaveChanges() {
@@ -210,14 +219,24 @@ public class VisualizationSetup : MonoBehaviour {
         Destroy(originalDrugGraph.gameObject);
     }
 
-    private void RevertChanges() { }
+    private void RevertChanges() {
+        LerpFromView.onEnd -= vitalGraph.ResizeGraph;
+        LerpFromView.onEnd -= drugGraph.ResizeGraph;
+        Destroy(vitalGraph.gameObject);
+        Destroy(drugGraph.gameObject);
+        vitalDescription.text = "";
+        drugDescription.text = "";
+        DrugSetup.Instance.ToggleActiveVisualizeWindow();
+    }
+
 
     public void NavitageBackToDrugSetup() {
         Error.instance.boolPanel.SetActive(true);
         Error.instance.boolMessageText.text = "Would you like to save your changes?";
         Error.instance.boolLeftButton.onClick.AddListener(RevertChanges);
         Error.instance.boolRightButton.onClick.AddListener(SaveChanges);
-        
+        Error.instance.boolCancelButton.gameObject.SetActive(true);
+        Error.instance.boolCancelButton.onClick.AddListener(Error.instance.DeactivateErrorBoolPanel);
     
     }
 }

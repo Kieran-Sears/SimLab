@@ -26,6 +26,8 @@ public class ExportManager : MonoBehaviour {
         }
     }
 
+
+
    public System.Object Load(string path) {
 
         switch (path) {
@@ -43,13 +45,7 @@ public class ExportManager : MonoBehaviour {
                  drugs = serializer.Deserialize(reader) as Drugs;
                 reader.Close();
                 return drugs;
-            case "equipment":
-                _xml = Resources.Load<TextAsset>(path);
-                serializer = new XmlSerializer(typeof(Equipment));
-                reader = new StringReader(_xml.text);
-                equipment = serializer.Deserialize(reader) as Equipment;
-                reader.Close();
-                return equipment;
+           
             default:
                 _xml = Resources.Load<TextAsset>(path);
                 if (_xml == null) {
@@ -72,21 +68,27 @@ public class ExportManager : MonoBehaviour {
     public void SaveCondition(Condition condition, string path) {
         print("saving condition in: " + path);
         var serializer = new XmlSerializer(typeof(Condition));
-        var stream = new FileStream(path, FileMode.Create);
+        var stream = new FileStream(Path.GetFullPath(Application.dataPath) + path, FileMode.Create);
         serializer.Serialize(stream, condition);
         stream.Close();
 
     }
 
-    public void AddVital(Vital vital) {
+    public void SaveVital(Vital vital, string path) {
+        print("saving vital ("+vital.name+") in: " + path);
+        var serializer = new XmlSerializer(typeof(Vital));
+        var stream = new FileStream(Path.GetFullPath(Application.dataPath) + path, FileMode.Create);
+        serializer.Serialize(stream, vital);
+        stream.Close();
 
     }
 
-    public void AddDrug() {
-
-    }
-
-    public void AddEquipment() {
+    public void SaveDrug(Drug drug, string path) {
+        print("saving drug ("+drug.name+") in: " + path);
+        var serializer = new XmlSerializer(typeof(Drug));
+        var stream = new FileStream(Path.GetFullPath(Application.dataPath) + path, FileMode.Create);
+        serializer.Serialize(stream, drug);
+        stream.Close();
 
     }
 

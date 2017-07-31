@@ -15,6 +15,7 @@ public class Error : MonoBehaviour {
     public Text boolMessageText;
     public Button boolRightButton;
     public Button boolLeftButton;
+    public Button boolCancelButton;
     public Dropdown boolDropdown;
 
     private void Awake() {
@@ -31,5 +32,12 @@ public class Error : MonoBehaviour {
         instance.informPanel.SetActive(false);
     }
 
+    public void DeactivateErrorBoolPanel() {
+        instance.boolCancelButton.gameObject.SetActive(false);
+        instance.boolMessageText.text = "";
+        instance.boolLeftButton.onClick.RemoveAllListeners();
+        instance.boolRightButton.onClick.RemoveAllListeners();
+        boolCancelButton.onClick.RemoveAllListeners();
+    }
 
 }
