@@ -50,20 +50,20 @@ public class VitalSetup : MonoBehaviour {
 
         int vitalIndex = -1;
 
-        for (int i = 0; i < ConditionSetup.Instance.vitals.vitalList.Count; i++) {
-            if (ConditionSetup.Instance.vitals.vitalList[i].name == vitalName.text) {
+        for (int i = 0; i < ConditionSetup.Instance.vitals.Count; i++) {
+            if (ConditionSetup.Instance.vitals[i].name == vitalName.text) {
                 vitalIndex = i;
             }
         }
 
         if (vitalIndex != -1) {
-            ConditionSetup.Instance.vitals.vitalList.RemoveAt(vitalIndex);
+            ConditionSetup.Instance.vitals.RemoveAt(vitalIndex);
             Destroy(ConditionSetup.Instance.vitalsChosen.transform.FindChild(vitalName.text).gameObject);
         }
 
 
         Vital vital = new Vital();
-        vital.nodeID = ConditionSetup.Instance.vitals.vitalList.Count;
+        vital.nodeID = ConditionSetup.Instance.vitals.Count;
         vital.name = vitalName.text;
         vital.units = vitalUnit.text;
         vital.max = float.Parse(vitalMax.text);
@@ -85,9 +85,9 @@ public class VitalSetup : MonoBehaviour {
         toggle.isOn = false;
         toggle.onValueChanged.AddListener((bool value) => ConditionSetup.Instance.LoadChosenVital(value, toggleObject.transform.GetSiblingIndex(), vital.name));
         
-        ConditionSetup.Instance.vitals.vitalList.Insert(0, vital);
+        ConditionSetup.Instance.vitals.Insert(0, vital);
 
-        ExportManager.instance.SaveVital(vital, "/Resources/Vitals/"+vital.name+".xml");
+        ExportManager.Instance.SaveVital(vital, "/Resources/Vitals/"+vital.name+".xml");
        // ConditionSetup.instance.LoadChosenVital(true, 0, vital.name);
 
         // add checking here for is duplicate exists. If so then overwrite the existing vital

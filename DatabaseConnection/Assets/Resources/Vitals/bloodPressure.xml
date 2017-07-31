@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	<Vital name="bloodPressure">
+		<NodeID>1</NodeID>
+		<Units>mmHg</Units>
+		<Min>0</Min>
+		<Max>120</Max>
+	</Vital>

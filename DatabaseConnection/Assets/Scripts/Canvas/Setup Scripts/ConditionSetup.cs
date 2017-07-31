@@ -4,6 +4,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+using System.IO;
+using System.Xml.Serialization;
+using System.Linq;
+
 public class ConditionSetup : MonoBehaviour {
 
     public static ConditionSetup Instance { get; private set; }
@@ -32,8 +36,11 @@ public class ConditionSetup : MonoBehaviour {
     public GameObject newDrugPanel;
     #endregion
 
-    public Drugs drugs;
-    public Vitals vitals;
+    public List<Vital> vitals;
+    public List<Drug> drugs;
+    public List<Condition> conditions;
+    //public Drugs drugs;
+    //public Vitals vitals;
     public Graph graph;
 
     private bool replaceExistingGraphs;
@@ -132,11 +139,13 @@ public class ConditionSetup : MonoBehaviour {
         Error.instance.informOkButton.onClick.RemoveAllListeners();
     }
 
+
     void PopulatePresets() {
-        UnityEngine.Object[] files = Resources.LoadAll("Conditions");
+        conditions = ExportManager.Instance.LoadAllConditions();
         presets.options.Add(new Dropdown.OptionData() { text = "None" });
-        for (int i = 0; i < files.Length; i++) {
-            presets.options.Add(new Dropdown.OptionData() { text = files[i].name });
+        for (int i = 0; i < conditions.Count; i++) {
+            print(conditions[i].name);
+            presets.options.Add(new Dropdown.OptionData() { text = conditions[i].name });
         }
         presets.captionText.text = "Preset Conditions...";
         presets.onValueChanged.AddListener(LoadCondition);
@@ -153,8 +162,8 @@ public class ConditionSetup : MonoBehaviour {
     #endregion
 
     void PopulateVitals() {
-        vitals = ExportManager.instance.Load("vitals") as Vitals;
-        foreach (Vital vital in vitals.vitalList) {
+        vitals = ExportManager.Instance.LoadAllVitals();
+        foreach (Vital vital in vitals) {
             GameObject toggleObject = Instantiate(togglePrefab);
             toggleObject.transform.SetParent(vitalsChosen.transform);
             toggleObject.transform.localScale = Vector3.one;
@@ -168,8 +177,8 @@ public class ConditionSetup : MonoBehaviour {
     }
 
     void PopulateDrugs() {
-        drugs = ExportManager.instance.Load("drugs") as Drugs;
-        foreach (Drug item in drugs.drugs) {
+        drugs = ExportManager.Instance.LoadAllDrugs();
+        foreach (Drug item in drugs) {
             GameObject toggleObject = Instantiate(togglePrefab);
             toggleObject.transform.SetParent(drugsChosen.transform);
             toggleObject.transform.localScale = Vector3.one;
@@ -345,9 +354,8 @@ public class ConditionSetup : MonoBehaviour {
             Error.instance.boolRightButton.onClick.AddListener(ResetCondition);
          } else {
             if (duration == -1) {
-                print("initialising preset condition");
-                condition = ExportManager.instance.Load("Conditions/" + presets.options[index].text) as Condition;
-                previousConditionChosen = index;
+                condition = conditions[index -1];
+                previousConditionChosen = index -1;
                 duration = condition.duration;
                 simulationDurationMinutes.text = (condition.duration / 60).ToString();
                 simulationDurationSeconds.text = (condition.duration % 60).ToString();
@@ -364,6 +372,7 @@ public class ConditionSetup : MonoBehaviour {
 
                         // Add the listener to the vitals list toggles so graphs can be selected / deselected at will
                         Transform vitalChosen = vitalsChosen.transform.FindChild(vital.name);
+                        print(vital.name);
                         Toggle toggle = vitalChosen.GetComponent<Toggle>();
                         toggle.onValueChanged.RemoveAllListeners();
                         toggle.isOn = true;
@@ -463,20 +472,20 @@ public class ConditionSetup : MonoBehaviour {
                     return;
                 }
                 // if it is the first attempt of choosing a vital and a duration has been set then initialise the vital graph with starting values
-                graph = tabManager.GenerateTab(vitals.vitalList[index].name).GetComponent<Graph>();
-                graph.GenerateGraph(0, duration, (int)Math.Ceiling(vitals.vitalList[index].min), (int)Math.Ceiling(vitals.vitalList[index].max), vitals.vitalList[index].units);
+                graph = tabManager.GenerateTab(vitals[index].name).GetComponent<Graph>();
+                graph.GenerateGraph(0, duration, (int)Math.Ceiling(vitals[index].min), (int)Math.Ceiling(vitals[index].max), vitals[index].units);
                 if (graph.sortedGraphPointsList.Count == 0) {
-                    int halfValue = (int)Math.Ceiling(((vitals.vitalList[index].max - vitals.vitalList[index].min) / 2) + vitals.vitalList[index].min);
+                    int halfValue = (int)Math.Ceiling(((vitals[index].max - vitals[index].min) / 2) + vitals[index].min);
                     graph.AddPoint(0, halfValue);
                     graph.AddPoint(duration, halfValue);
                 }
                 if (graph.pointsUpperThreshold.Count == 0) {
-                    int quaterValue = (int)Math.Ceiling(((vitals.vitalList[index].max - vitals.vitalList[index].min) / 4) + vitals.vitalList[index].min);
+                    int quaterValue = (int)Math.Ceiling(((vitals[index].max - vitals[index].min) / 4) + vitals[index].min);
                     graph.AddThresholdPointUpper(0, quaterValue);
                     graph.AddThresholdPointUpper(duration, quaterValue);
                 }
                 if (graph.pointsLowerThreshold.Count == 0) {
-                    int threeQuaterValue = (int)Math.Ceiling((((vitals.vitalList[index].max - vitals.vitalList[index].min) / 4) * 3) + vitals.vitalList[index].min);
+                    int threeQuaterValue = (int)Math.Ceiling((((vitals[index].max - vitals[index].min) / 4) * 3) + vitals[index].min);
                     graph.AddThresholdPointLower(0, threeQuaterValue);
                     graph.AddThresholdPointLower(duration, threeQuaterValue);
                 }
@@ -538,7 +547,7 @@ public class ConditionSetup : MonoBehaviour {
     }
 
     public Vital GetVital(string vitalName) {
-        foreach (Vital vital in vitals.vitalList) {
+        foreach (Vital vital in vitals) {
             if (vital.name == vitalName) {
                 return vital;
             }

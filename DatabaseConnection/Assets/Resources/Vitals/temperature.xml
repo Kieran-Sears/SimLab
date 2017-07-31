@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	<Vital name="temperature">
+		<NodeID>3</NodeID>
+		<Units>Celsius</Units>
+		<Min>0</Min>
+      		<Max>60</Max>
+	</Vital>
+	

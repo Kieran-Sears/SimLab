@@ -106,6 +106,10 @@
   <ItemGroup>
     <None Include="Assets\Resources\Conditions\newCondition2.xml" />
     <None Include="Assets\Resources\Drugs\Drug.xml" />
+    <None Include="Assets\Resources\Vitals\bloodPressure.xml" />
+    <None Include="Assets\Resources\Vitals\breathingRate.xml" />
+    <None Include="Assets\Resources\Vitals\heartRate.xml" />
+    <None Include="Assets\Resources\Vitals\temperature.xml" />
     <None Include="Assets\Resources\drugs.xml" />
     <None Include="Assets\Resources\equipment (Depricated).xml" />
     <None Include="Assets\Resources\vitals.xml" />

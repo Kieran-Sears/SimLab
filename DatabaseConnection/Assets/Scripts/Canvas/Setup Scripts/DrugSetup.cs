@@ -73,7 +73,7 @@ public class DrugSetup : MonoBehaviour {
     }
 
     void PopulateAdministrations() {
-        foreach (Drug drug in ConditionSetup.Instance.drugs.drugs) {
+        foreach (Drug drug in ConditionSetup.Instance.drugs) {
           //  foreach (Administration admin in drug.administrations) {
                 if (administrations.transform.FindChild(drug.administration.name) == null) {
                     GameObject toggleObject = Instantiate(togglePrefab);
@@ -161,7 +161,7 @@ public class DrugSetup : MonoBehaviour {
     }
 
     void PopulateVitals() {
-        foreach (Vital vital in ConditionSetup.Instance.vitals.vitalList) {
+        foreach (Vital vital in ConditionSetup.Instance.vitals) {
             Transform child = vitals.transform.FindChild(vital.name);
             if (child != null) {
                 child.gameObject.SetActive(true);
@@ -324,8 +324,8 @@ public class DrugSetup : MonoBehaviour {
                 }
                 // if it is the first attempt of choosing a vital and a duration has been set then initialise the vital graph with starting values
                 tabManager.gameObject.SetActive(true);
-                graph = tabManager.GenerateTab(ConditionSetup.Instance.vitals.vitalList[index].name).GetComponent<Graph>();
-                graph.GenerateGraph(0, duration, (int)Math.Ceiling(min), (int)Math.Ceiling(max), ConditionSetup.Instance.vitals.vitalList[index].units);
+                graph = tabManager.GenerateTab(ConditionSetup.Instance.vitals[index].name).GetComponent<Graph>();
+                graph.GenerateGraph(0, duration, (int)Math.Ceiling(min), (int)Math.Ceiling(max), ConditionSetup.Instance.vitals[index].units);
                 if (graph.sortedGraphPointsList.Count == 0) {
                     // change to "halfValue" variable to make mid ranges, otherwise initialise points with value 0
                     graph.AddPoint(0, 0, false);
@@ -417,7 +417,7 @@ public class DrugSetup : MonoBehaviour {
         drug.administration = GetAdministration();
         drug.name = drugName.text + " (" + drug.administration.name + "" + drug.administration.dose +")";
         // add the drug to the condition list
-        ConditionSetup.Instance.drugs.drugs.Add(drug);
+        ConditionSetup.Instance.drugs.Add(drug);
 
         GameObject toggleObject = Instantiate(togglePrefab);
         toggleObject.transform.SetParent(ConditionSetup.Instance.drugsChosen.transform);
@@ -427,7 +427,7 @@ public class DrugSetup : MonoBehaviour {
         Toggle toggle = toggleObject.GetComponent<Toggle>();
         toggle.name = drug.name;
 
-        ExportManager.instance.SaveDrug(drug, "/Resources/Drugs/"+drug.name+".xml");
+        ExportManager.Instance.SaveDrug(drug, "/Resources/Drugs/"+drug.name+".xml");
         // change the drug window for the condition one and display
         ConditionSetup.Instance.ToggleActiveDrugWindow();
     }
